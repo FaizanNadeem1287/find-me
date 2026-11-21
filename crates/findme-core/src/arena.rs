@@ -5,16 +5,17 @@ use crate::error::{EngineError, Result};
 use crate::pool::StringPool;
 use crate::record::{reconstruct_path, FileFlags, FileRecord};
 use serde::{Deserialize, Serialize};
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 
 #[inline(always)]
 fn hash_filename(name: &str) -> u64 {
-    let mut s = DefaultHasher::new();
-    name.hash(&mut s);
-    s.finish()
+    let mut hash: u64 = 0xcbf29ce484222325;
+    for &byte in name.as_bytes() {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
 }
 
 /// Unified in-memory file index container
@@ -133,7 +134,9 @@ impl FileArena {
 
     /// Rebuilds the fast path lookup index from current records
     pub fn rebuild_lookup(&mut self) {
+        self.dirs.rebuild_lookup();
         self.lookup.clear();
+        self.lookup.reserve(self.records.len());
         for (idx, record) in self.records.iter().enumerate() {
             if !record.flags.is_deleted() {
                 if let Some(name) = self.pool.get(record.name_offset, record.name_len) {
@@ -141,6 +144,16 @@ impl FileArena {
                         .insert((record.dir_id, hash_filename(name)), idx);
                 }
             }
+        }
+    }
+
+    /// Creates a `FileArena` directly from its constituent components
+    pub fn from_parts(records: Vec<FileRecord>, pool: StringPool, dirs: DirectoryTable) -> Self {
+        Self {
+            records,
+            pool,
+            dirs,
+            lookup: HashMap::new(),
         }
     }
 
@@ -164,6 +177,20 @@ impl FileArena {
                 }
             }
         }
+
+        // Fallback scan if lookup index is empty / pending rebuild
+        if self.lookup.is_empty() {
+            for (idx, record) in self.records.iter().enumerate() {
+                if !record.flags.is_deleted() && record.dir_id == dir_id {
+                    if let Some(name) = self.pool.get(record.name_offset, record.name_len) {
+                        if name == file_name {
+                            return Some(idx);
+                        }
+                    }
+                }
+            }
+        }
+
         None
     }
 
