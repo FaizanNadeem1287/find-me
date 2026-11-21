@@ -605,5 +605,57 @@ Hash | Branch | Commit Message & Description
 - Task: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`) moved to `In Progress` (`6j45x632fhrVMmvQ`).
 
 ### Current Handoff State:
-- **Active Branch**: `feature/p6-index-mgmt`
-- **Active Task**: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`)
+- **Active Branch**: `main` (clean working tree).
+- **Completed Task**: `[TASK-6.1] UI: Advanced Search Form & Filter Builder` (`6j4626WQfF4HggVx`).
+
+---
+
+## Session 16: 2026-11-22 (Completion of Task 6.2 - UI: Index Management & Custom Folder Exclusion Screen)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 6.2: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`).
+2. Authored detailed implementation plan artifact: `task-6-2-implementation-plan.md`.
+3. Created feature branch `feature/p6-index-mgmt` from `main` and moved Todoist task to `In Progress`.
+4. Implemented `crates/findme-ui/src/index_mgmt.rs`:
+   - Data models: `RootStatus` (`Indexed`, `Scanning`, `Error`), `IndexedRoot` with file and folder counts.
+   - `ExcludedPattern` supporting custom and protected system built-in patterns (`/proc`, `/sys`, `/dev`).
+   - `IndexStats` with compact human-friendly formatting: `formatted_memory()` (B, KB, MB, GB), `formatted_files()`, `formatted_folders()`, `formatted_last_scan()`, `watcher_status_label()`.
+   - `IndexingState` (`Idle`, `Scanning { current_path, files_found, percent }`, `Error`).
+   - `IndexManagementState` with deduplicated addition and removal of roots and exclusions, plus quick-add standard defaults (`.git`, `node_modules`, `target`, `__pycache__`, `.venv`, `~/.cache`, `~/.local/share/Trash`).
+5. Implemented Elm architecture messaging in `crates/findme-ui/src/message.rs` and `crates/findme-ui/src/app.rs`:
+   - `IndexManagementMessage` with 14 action variants.
+   - Handlers for adding/removing roots with path normalization, exclusion management with system protection, "Rebuild Index", "Refresh Index", "Clear Index", and live crawl progress updates.
+6. Built rich visual layout in `crates/findme-ui/src/views/index_mgmt.rs`:
+   - Header action bar with "⚡ Rebuild Index", "🔄 Refresh Index", and "🗑️ Clear Index".
+   - Dynamic real-time Rebuilding Progress Banner with percent, scanned path, and files counter.
+   - 5 Statistics Cards: Total Files, Total Folders, Memory/DB Size, Last Full Scan, Real-time Watcher Status.
+   - Indexed Root Directories list with file counts, status badges, removal, and inline path input.
+   - Excluded Locations list with quick-add chips, removal for non-builtin patterns, and inline pattern input.
+7. Built comprehensive test suite in `crates/findme-ui/tests/index_mgmt_tests.rs` (8 tests):
+   - Default state initialization and stats formatting.
+   - Adding and removing roots with deduplication and trailing slash trimming.
+   - Adding and removing exclusion patterns with case-insensitive deduplication and system protection.
+   - Quick-add default exclusions without duplicates.
+   - Rebuilding, progress updates, and completion lifecycle.
+   - Clearing index database.
+   - Headless UI view rendering in both Idle and Scanning states.
+8. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 gates (formatting, clippy `-D warnings`, **171 passing tests** across workspace).
+9. Committed to `feature/p6-index-mgmt` (`eb4fbaa`) and merged into `main` via non-fast-forward merge (`26cacfe`).
+10. Preserved `feature/p6-index-mgmt` branch permanently in Git.
+11. Updated Todoist card `6j4626cC2qCCP5wQ`: posted implementation audit comment (`6j476RghmPmFp4gx`) and marked task `Completed`.
+12. Created branch `feature/p6-remaining-screens` from `main` and moved Todoist task `[TASK-6.3]` (`6j4626cHjFXRhvhQ`) to `In Progress`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`eb4fbaa` | `feature/p6-index-mgmt` | `feat(ui): index management, custom exclusions & directory roots (Task 6.2)`
+`26cacfe` (merge) | `main` | `feat(p6): index management & custom folder exclusion (Task 6.2)`
+
+### Todoist State Updates:
+- Task: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626cC2qCCP5wQ`.
+- Task: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`) moved to `In Progress` (`6j45x632fhrVMmvQ`).
+
+### Current Handoff State:
+- **Active Branch**: `feature/p6-remaining-screens`
+- **Active Task**: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`)
