@@ -140,7 +140,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .width(Length::FillPortion(1)),
             ],
             row![
-                text("• Alt + Enter : Open containing directory")
+                text("• Alt + Enter : File properties modal")
                     .size(12)
                     .width(Length::FillPortion(1)),
                 text("• Ctrl + Shift + C : Copy absolute path")
@@ -148,10 +148,34 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .width(Length::FillPortion(1)),
             ],
             row![
+                text("• Ctrl + Shift + N : Copy file name")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+                text("• Ctrl + Shift + U : Copy file URL")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+            ],
+            row![
                 text("• Ctrl + T : Toggle visual theme")
                     .size(12)
                     .width(Length::FillPortion(1)),
+                text("• Ctrl + B : Toggle sidebar")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+            ],
+            row![
                 text("• Ctrl + 1 .. 6 : Switch screens")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+                text("• F5 / Ctrl + R : Refresh search query")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+            ],
+            row![
+                text("• Alt + 1 .. 5 : Sort by Name/Path/Size/Date/Type")
+                    .size(12)
+                    .width(Length::FillPortion(1)),
+                text("• Shift + F10 : Open file context menu")
                     .size(12)
                     .width(Length::FillPortion(1)),
             ],

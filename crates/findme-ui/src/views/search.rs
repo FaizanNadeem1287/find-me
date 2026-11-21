@@ -75,6 +75,9 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         })
         .size(11),
         Space::new().width(Length::Fill),
+        text("Shortcuts: Ctrl+1..6 Screens • Ctrl+F Search • Ctrl+B Sidebar • Ctrl+T Theme • Enter Open • Alt+Enter Properties")
+            .size(11),
+        Space::new().width(Length::Fill),
         text("Find-Me Linux • Offline Engine Active").size(11),
     ]
     .align_y(Alignment::Center);
