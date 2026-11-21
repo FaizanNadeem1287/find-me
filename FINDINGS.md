@@ -155,3 +155,51 @@ Find-Me implements a recursive-descent query tokenizer and parser supporting sta
 3. **No UI Freezes**: All filesystem traversal, searching, sorting, and serialization must execute on dedicated Tokio/Rayon thread pools. The Iced UI thread must remain strictly at 60 FPS under all workloads.
 4. **No Shell Invocations for Core Operations**: Path resolution, file metadata queries, and filtering must use standard Rust POSIX APIs (`std::fs`, `nix`, `libc`), never shelling out to `find`, `ls`, or `grep`.
 5. **No Blind Unwraps**: All potential I/O, parsing, or filesystem errors must be explicitly mapped to strongly-typed error enums (`thiserror`) and gracefully communicated to the user.
+
+---
+
+## 6. Comprehensive Testing, Debugging & QA Architecture
+
+To guarantee that Find-Me is rock-solid and stable for thousands of users, the project implements a rigorous testing pyramid across every layer:
+
+```
+                  / \
+                 /   \       Manual Smoke & Release Packaging (.deb)
+                /     \      (Installed binary, desktop entry, Wayland/X11)
+               /       \
+              /---------\    Performance & Benchmarking (criterion)
+             /           \   (Throughput >200k files/s, query latency <5ms)
+            /-------------\  Headless UI Testing (iced_test Simulator)
+           /               \ (Deterministic message/state loops, no window)
+          /-----------------\ Integration Testing (tempfile, notify, jwalk)
+         /                   \ (Real directory trees, live inotify events)
+        /---------------------\ Property-Based Fuzzing (proptest)
+       /                       \ (Fuzzing query parser with millions of inputs)
+      /-------------------------\ Unit Testing (cargo test --lib)
+     /                           \ (Data structures, compact arena, tokenizers)
+```
+
+### 6.1 Testing Disciplines Explained for Non-QA Developers
+
+1. **Unit Testing (`cargo test --lib`)**:
+   - Tests individual functions in total isolation.
+   - Example: Testing that a file size string like `"15.4 MB"` parses into exact bytes, or that `FileRecord` bitflags correctly identify hidden files.
+
+2. **Property-Based Fuzz Testing (`proptest`)**:
+   - Instead of testing hand-crafted strings, `proptest` generates thousands of bizarre, random, and edge-case inputs (weird Unicode, control characters, null bytes, huge numbers) to prove that the parser never crashes or panics under any input.
+
+3. **Integration Testing (`tests/` with `tempfile`)**:
+   - Creates real directories and files in temporary isolated folders, tests multithreaded crawling with `jwalk`, and verifies that creating or deleting files triggers real-time `inotify` updates within 200ms.
+
+4. **Headless UI Testing (`iced_test::simulator`)**:
+   - Tests user interface interactions (typing into search box, clicking sidebar navigation, pressing Escape, sorting table columns) **without needing a physical monitor, GPU, or X11/Wayland display server**.
+   - Because Iced uses the Elm architecture, UI state transitions are pure functions that can be tested in automated CLI environments.
+
+5. **Performance & Regression Benchmarking (`criterion`)**:
+   - Mathematically measures execution time, preventing slow code from slipping in. Enforces crawl speeds >200k files/sec and search latencies <5ms.
+
+6. **Flaky Test Prevention**:
+   - Eliminates arbitrary `thread::sleep()` delays. All tests use Tokio asynchronous channels with explicit bounded timeouts (`tokio::time::timeout`).
+
+7. **Pre-Merge Verification Gate (`verify_task.sh`)**:
+   - An automated script that enforces formatting (`cargo fmt`), strict zero-warning linting (`cargo clippy -- -D warnings`), all unit/integration tests (`cargo test`), and documentation tests before any branch can be merged into `main`.
