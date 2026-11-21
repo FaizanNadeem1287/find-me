@@ -657,5 +657,51 @@ Hash | Branch | Commit Message & Description
 - Task: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`) moved to `In Progress` (`6j45x632fhrVMmvQ`).
 
 ### Current Handoff State:
-- **Active Branch**: `feature/p6-remaining-screens`
-- **Active Task**: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`)
+- **Active Branch**: `main` (clean working tree).
+- **Completed Task**: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`).
+
+---
+
+## Session 17: 2026-11-22 (Completion of Task 6.3 - UI: Search History, Settings Preferences & About Screens)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 6.3: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`).
+2. Authored detailed implementation plan artifact: `task-6-3-implementation-plan.md`.
+3. Created feature branch `feature/p6-remaining-screens` from `main` and moved Todoist task to `In Progress`.
+4. Implemented `crates/findme-ui/src/history.rs`:
+   - Data models: `HistoryEntry` storing unique ID, executed query string, timestamp, match count, duration in ms, and bookmark status.
+   - Formatted relative timestamp calculation (`30s ago`, `5m ago`, `2h ago`, `3d ago`) and match counts.
+   - `SearchHistoryState` managing up to 200 history items with LRU re-ordering, bookmark preservation, text filtering, and starred-only filtering.
+5. Implemented `crates/findme-ui/src/settings.rs`:
+   - `AppSettings` covering: General (autostart via XDG, close-to-tray), Search defaults (default regex, default case-sensitive, max results limit 1k/5k/10k/50k), Privacy (exclude hidden files, exclude `/proc`/`/sys`/`/dev`).
+   - JSON persistence to `$XDG_CONFIG_HOME/find-me/settings.json` with parent directory creation and fallback.
+6. Implemented Elm architecture messaging in `crates/findme-ui/src/message.rs` and `crates/findme-ui/src/app.rs`:
+   - `HistoryMessage` (ExecuteQuery, ToggleBookmark, RemoveEntry, ClearHistory, ToggleFilterBookmarked, UpdateSearchFilter).
+   - `SettingsMessage` (toggles for all preferences, SetMaxResults, ResetToDefaults, SaveSettings).
+   - Automatic history logging on every search query execution in `ResultsReceived`.
+7. Built all three completed screen views in `crates/findme-ui/src/views/`:
+   - `views/history.rs`: Search filter bar, starred-only filter toggle, clear all button, query cards with bookmark star toggle, latency/count metadata, and click-to-search action.
+   - `views/settings.rs`: General, Search behavior, Privacy, interactive keyboard shortcut cheatsheet, save and reset actions.
+   - `views/about.rs`: Application logo, version badge (`v0.1.0`), pure Rust architecture specs, system environment details, license, and copyable repository URL.
+8. Built comprehensive test suite in `crates/findme-ui/tests/remaining_screens_tests.rs` (8 tests):
+   - Formatting, history recording, bookmarking, filtering, JSON persistence roundtrip, message handling, and headless view rendering.
+9. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 gates (formatting, clippy `-D warnings`, **179 passing tests** across workspace).
+10. Committed to `feature/p6-remaining-screens` (`2ded8ac`) and merged into `main` via non-fast-forward merge (`79035ca`).
+11. Preserved `feature/p6-remaining-screens` branch permanently in Git (15 total branches retained).
+12. Updated Todoist card `6j4626cHjFXRhvhQ`: posted implementation audit comment (`6j4782FVRrGv347x`) and marked task `Completed`.
+13. **Phase 6 is now 100% complete!**
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`2ded8ac` | `feature/p6-remaining-screens` | `feat(ui): search history, settings preferences & about screens (Task 6.3)`
+`79035ca` (merge) | `main` | `feat(p6): search history, settings preferences & about screens (Task 6.3)`
+
+### Todoist State Updates:
+- Task: `[TASK-6.3] UI: Search History, Settings Preferences & About Screens` (`6j4626cHjFXRhvhQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626cHjFXRhvhQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Active Phase**: `Phase 7: Async Tokio Engine Integration & Live Streaming`
+- **Next Task**: `[TASK-7.1] Integration: Async Tokio Communication Bridge & Live Engine Streaming` (`6j4626cpqvW7qXPQ`)
