@@ -705,3 +705,51 @@ Hash | Branch | Commit Message & Description
 - **Active Branch**: `main` (clean working tree).
 - **Active Phase**: `Phase 7: Async Tokio Engine Integration & Live Streaming`
 - **Next Task**: `[TASK-7.1] Integration: Async Tokio Communication Bridge & Live Engine Streaming` (`6j4626cpqvW7qXPQ`)
+
+---
+
+## Session 18: 2026-11-22 (Completion of Task 7.1 - Integration: Async Tokio Communication Bridge & Live Engine Streaming)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 7.1: `[TASK-7.1] Integration: Async Tokio Communication Bridge & Live Engine Streaming` (`6j4626cpqvW7qXPQ`).
+2. Authored comprehensive implementation plan artifact: `task-7-1-implementation-plan.md`.
+3. Created feature branch `feature/p7-engine-integration` and moved Todoist card to `In Progress`.
+4. Implemented `crates/findme-ui/src/engine.rs`:
+   - `EngineEvent` lifecycle model (`Started`, `Progress`, `IndexReady`, `FsChange`, `Error`) with Tokio broadcast streaming and global bus distribution.
+   - `EngineBridge` managing shared `Arc<RwLock<FileArena>>`, `Arc<RwLock<Option<FsWatcher>>>`, `broadcast::Sender<EngineEvent>`, and atomic `is_indexing` flag.
+   - Zero-allocation off-thread search evaluation (`tokio::task::spawn_blocking`), AST query parsing, Rayon parallel matching, and full path reconstruction maintaining strict 60 FPS responsiveness.
+   - `default_sample_arena()` with ~30 diverse realistic development and system records for instant boot and deterministic testing.
+   - `rebuild_index` spawning background `Crawler` threads with live progress streaming and atomic arena swap.
+   - `clear_index` resetting the database and emitting `IndexReady` with 0 records.
+   - `engine_subscription()` integrating with Iced's `Subscription::run(engine_stream)`.
+5. Connected Elm architecture in `crates/findme-ui/src/app.rs` and `crates/findme-ui/src/message.rs`:
+   - Added `engine: Arc<EngineBridge>` to `FindMeApp`.
+   - Wired `Message::ExecuteSearch` to spawn async search `Task::future` resolving to `Message::ResultsReceived`.
+   - Wired `Message::RunQuery` to trigger immediate search execution.
+   - Handled `Message::Engine(EngineEvent)` dynamically updating index progress, stats, and search result tables.
+   - Connected `IndexManagementMessage::TriggerRebuildIndex` and `ClearIndex` directly to `EngineBridge`.
+   - Batched keyboard shortcuts and real-time engine events in `FindMeApp::subscription`.
+6. Authored 11 comprehensive integration tests in `crates/findme-ui/tests/engine_integration_tests.rs`:
+   - Bridge initialization, memory accounting, off-thread search latency, Everything query syntax (ext:, size:, path:, regex:), multi-column sorting, event broadcasting, `clear_index`, crawling real temporary directories, concurrent searches, and `FindMeApp` event dispatching.
+   - Total workspace tests reached **190 passing tests** (100% pass rate).
+7. Verified code quality via pre-merge gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - All 5 gates passed: formatting, zero-warning Clippy (`-D warnings`), 190 tests, doc tests, git status.
+8. Committed to `feature/p7-engine-integration` (`0c31e9e`) and merged into `main` via non-fast-forward merge (`9d08b2d`).
+9. Preserved `feature/p7-engine-integration` branch permanently (16 total branches retained).
+10. Synchronized Todoist: posted implementation audit comment (`6j47Q93rXHwMhp9Q`) and marked task `6j4626cpqvW7qXPQ` `Completed`.
+11. **Phase 7 is now 100% complete!**
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`0c31e9e` | `feature/p7-engine-integration` | `feat(integration): async tokio communication bridge & live engine streaming (Task 7.1)`
+`9d08b2d` (merge) | `main` | `feat(p7): async tokio communication bridge & live engine streaming (Task 7.1)`
+
+### Todoist State Updates:
+- Task: `[TASK-7.1] Integration: Async Tokio Communication Bridge & Live Engine Streaming` (`6j4626cpqvW7qXPQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626cpqvW7qXPQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Active Phase**: `Phase 8: Linux Desktop Integration & Power Navigation`
+- **Next Task**: `[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard` (`6j4626cvg5QJcqpQ`)
