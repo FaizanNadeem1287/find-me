@@ -24,6 +24,9 @@ Each phase contains granular, sequential tasks. Each task specifies its branch n
      git checkout main
      git merge --no-ff feature/<task-id>-<task-name> -m "feat(<task-id>): <task description>"
      ```
+3. **Permanent Branch Retention (Never Delete Feature Branches)**:
+   - **DO NOT REMOVE OR DELETE BRANCHES** after merging (`git branch -d` / `git branch -D` must never be executed).
+   - Every feature branch must be permanently retained in the Git repository so there is a complete, immutable historical audit trail of every task, commit, and code change completed throughout the project.
 
 ---
 

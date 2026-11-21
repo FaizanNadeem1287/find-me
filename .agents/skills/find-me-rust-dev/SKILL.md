@@ -16,10 +16,11 @@ This skill provides the core reference knowledge, design patterns, architecture 
 1. **Pure Rust Stack**: No web technologies (no Electron, no Tauri, no WebViews, no JS/HTML). All UI is implemented using **Iced**. All engine code is pure native Rust.
 2. **Zero Workarounds**: Every component must be built with production-grade, long-term engineering. No brittle shell hacks, no hardcoded `/proc` polling loops, no unsafe memory tampering, and no requiring root/sudo privileges for basic desktop operations.
 3. **Decoupled Architecture**: The desktop UI must remain strictly separated from the core indexing and search engine. Communication occurs via asynchronous message passing (Tokio MPSC/Broadcast channels).
-4. **Git Branching Strict Policy**:
+4. **Git Branching & History Retention Policy**:
    - The `main` branch is pristine and production-stable. **NEVER** write or commit code directly to `main`.
-   - All tasks must be implemented in a dedicated branch branched from `main` (e.g., `feature/ui-shell`, `feature/indexing-engine`).
-   - Merge back into `main` only after complete validation, tests passing, and user review.
+   - All tasks must be implemented in a dedicated branch branched from `main` (e.g., `feature/p0-workspace-init`, `feature/p1-memory-arena`).
+   - Merge back into `main` using non-fast-forward merge (`git merge --no-ff`).
+   - **PERMANENT BRANCH RETENTION**: **Never delete feature branches** after merging. Keep all branches preserved permanently to maintain a complete historical record of all completed tasks.
 
 ---
 
@@ -74,9 +75,12 @@ cargo test --all
 cargo build --release
 ```
 
-### 3. Merging Work
+### 3. Merging Work & Preserving Branch History
 ```bash
-# Switch to main and merge with clean fast-forward or squash
+# Switch to main and merge with non-fast-forward merge
 git checkout main
 git merge --no-ff feature/<task-name> -m "feat: complete <task-name>"
+
+# IMPORTANT: DO NOT delete the feature branch!
+# Keep feature/<task-name> intact for complete task audit trail.
 ```
