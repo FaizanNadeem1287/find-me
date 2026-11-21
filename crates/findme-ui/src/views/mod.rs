@@ -7,6 +7,7 @@ pub mod index_mgmt;
 pub mod search;
 pub mod settings;
 pub mod sidebar;
+pub mod table;
 
 use crate::message::Message;
 use iced::widget::{button, container, row, text, Space};

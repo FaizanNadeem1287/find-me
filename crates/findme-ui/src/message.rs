@@ -92,6 +92,8 @@ pub enum Message {
     SortByColumn(ColumnId),
     /// User selected a row in the results table
     SelectRow(Option<usize>),
+    /// Results table scrolled with vertical offset and viewport height
+    TableScrolled { scroll_y: f32, viewport_height: f32 },
     /// User requested to open selected file
     OpenFile(String),
     /// User requested to open enclosing folder in file manager

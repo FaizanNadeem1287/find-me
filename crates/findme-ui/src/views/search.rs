@@ -60,36 +60,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     ]
     .align_y(Alignment::Center);
 
-    // Results placeholder area (to be upgraded in Task 5.2 to virtualized table)
-    let results_content = if state.results.is_empty() {
-        column![
-            text("No matching files found.").size(14),
-            text("Try broader search terms, or check filter syntax like 'ext:rs', 'size:>10mb', or 'dm:today'").size(12),
-        ]
-        .spacing(6)
-        .align_x(Alignment::Center)
-    } else {
-        let sample_count = state.results.len().min(10);
-        let mut sample_items = column![].spacing(4);
-        for item in &state.results[0..sample_count] {
-            let row_item = row![
-                text(if item.is_dir { "📁" } else { "📄" }).size(12),
-                text(&item.name).size(13),
-                text(format!("({})", item.path)).size(11),
-                Space::new().width(Length::Fill),
-                text(item.formatted_size()).size(12),
-            ]
-            .spacing(8)
-            .align_y(Alignment::Center);
-            sample_items = sample_items.push(row_item);
-        }
-        sample_items
-    };
-
-    let results_panel = container(results_content)
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .padding(16);
+    // Results table view (virtualized 60 FPS table with sort headers)
+    let results_table = crate::views::table::view(state);
 
     // Bottom footer status bar
     let status_bar = row![
@@ -104,7 +76,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     ]
     .align_y(Alignment::Center);
 
-    column![search_bar, stats_header, results_panel, status_bar]
+    column![search_bar, stats_header, results_table, status_bar]
         .spacing(12)
         .padding(16)
         .width(Length::Fill)
