@@ -1,5 +1,6 @@
 //! UI Message enum representing all user and background events
 
+use crate::advanced::{DatePreset, PresetFilter, SizeUnit};
 use findme_core::SearchResultItem;
 
 /// Screen identifier for sidebar navigation
@@ -113,4 +114,35 @@ pub enum Message {
     },
     /// User toggled theme (Light / Dark)
     ToggleTheme,
+    /// Interaction inside the Advanced Search screen
+    AdvancedSearch(AdvancedSearchMessage),
+}
+
+/// Messages emitted by form controls inside the Advanced Search screen
+#[derive(Debug, Clone)]
+pub enum AdvancedSearchMessage {
+    UpdateAllWords(String),
+    UpdateExactPhrase(String),
+    UpdateAnyWords(String),
+    UpdateNoneWords(String),
+    ToggleExtDocuments(bool),
+    ToggleExtCode(bool),
+    ToggleExtImages(bool),
+    ToggleExtAudio(bool),
+    ToggleExtVideo(bool),
+    ToggleExtArchives(bool),
+    UpdateCustomExt(String),
+    UpdateSizeMin(String),
+    SelectSizeMinUnit(SizeUnit),
+    UpdateSizeMax(String),
+    SelectSizeMaxUnit(SizeUnit),
+    SelectDatePreset(DatePreset),
+    UpdateSearchPath(String),
+    UpdateExcludePath(String),
+    ToggleMatchCase(bool),
+    ToggleMatchWholeWord(bool),
+    ToggleRegexMode(bool),
+    ApplyPreset(PresetFilter),
+    ResetFilters,
+    SubmitSearch,
 }
