@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-21 23:14 PKT
+*Last Updated*: 2026-11-21 23:32 PKT
 
 ---
 
@@ -8,34 +8,27 @@
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 0: Workspace Initialization & Cargo Scaffolding** (COMPLETED) | Documented in `PHASES.md`
-**Active Task ID** | None (Awaiting user assignment) | User will specify next task
-**Active Git Branch** | `main` | Clean working tree; `feature/p0-workspace-init` retained permanently
-**Todoist Card** | `Task 0.1: Initialize Cargo Workspace Structure` (`id: 6j4626Mjv2q39JvQ`) | Section: **Completed** (`6j45x63Fqh349Gxx`)
+**Active Phase** | **Phase 1: Core Engine - Multithreaded Crawler & In-Memory Arena** | Documented in `PHASES.md`
+**Active Task ID** | **[TASK-1.1] Core: Compact 32-Byte FileRecord, Arena & String Pool** (`6j4626Qxrf4Q6vRx`) | Moved to `In Progress`
+**Active Git Branch** | `feature/p1-memory-arena` | Branched from `main`; will be retained permanently
+**Todoist Card** | `[TASK-1.1] Core: Compact 32-Byte FileRecord, Arena & String Pool` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
 
-## 2. Completed Milestones in Task 0.1
+## 2. Active Implementation Objectives in Task 1.1
 
-- [x] Initialized Git repository with protected `main` branch.
-- [x] Defined 10 specialized subagents and 9 domain skills.
-- [x] Installed Rust toolchain in user-space (`rustc 1.100.0`, `cargo 1.100.0`, `clippy`, `rustfmt`).
-- [x] Installed standard Linux build tools (`build-essential`, `pkg-config`, `libxkbcommon-dev`, `libwayland-dev`).
-- [x] Configured multi-crate Cargo workspace:
-  - `crates/findme-core`: Core engine data structures (`FileRecord`, `DirectoryTable`, `EngineError`, 4 unit tests passing).
-  - `crates/findme-ui`: Pure Rust Iced desktop GUI model (`FindMeApp`, `AppState`, `Message`, `theme`, 3 unit tests passing).
-  - `crates/findme-cli`: Command-line test harness (`main.rs`).
-- [x] Configured `rustfmt.toml` and verified `cargo fmt --all -- --check` passes cleanly.
-- [x] Verified strict Clippy (`cargo clippy --all-targets --all-features -- -D warnings`) passes with zero warnings.
-- [x] Verified `verify_task.sh` passed all 5 pre-merge quality gates.
-- [x] Committed on `feature/p0-workspace-init` and merged into `main` with `--no-ff`.
-- [x] Posted implementation audit comment on Todoist card `6j4626Mjv2q39JvQ` and moved to `Completed`.
-- [x] Retained `feature/p0-workspace-init` branch permanently in Git.
+- [ ] Implement `StringPool` append-only arena with UTF-8 slice borrowing (`crates/findme-core/src/pool.rs`).
+- [ ] Refactor `DirectoryTable` with $O(1)$ `HashMap` index and hierarchical parent pointer deduplication (`crates/findme-core/src/directory.rs`).
+- [ ] Refine `FileRecord` 32-byte layout with explicit `_reserved: u32` and `reconstruct_path` (`crates/findme-core/src/record.rs`).
+- [ ] Implement `FileFlags` operators and `IS_READONLY`.
+- [ ] Implement `FileArena` unified container (`crates/findme-core/src/arena.rs`).
+- [ ] Write comprehensive unit tests and memory footprint benchmark (<45 bytes / record).
+- [ ] Run `verify_task.sh` pre-merge quality gate.
+- [ ] Merge into `main` with `--no-ff`, retain branch permanently, and post Todoist audit comment.
 
 ---
 
-## 3. Immediate State & Next Steps
+## 3. Immediate Next Steps
 
-- **Current Status**: Standby / Ready.
-- **Awaiting User Instruction**: Waiting for user to assign the next task.
+- Execute implementation of `pool.rs`, `directory.rs`, `record.rs`, `arena.rs`, and tests.

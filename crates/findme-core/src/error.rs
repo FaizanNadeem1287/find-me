@@ -34,6 +34,18 @@ pub enum EngineError {
 
     #[error("Engine channel closed unexpectedly: {0}")]
     ChannelClosed(String),
+
+    #[error("Filename length {0} exceeds maximum limit of 65535 bytes")]
+    NameTooLong(usize),
+
+    #[error("String pool capacity exceeded (offset {0} exceeds u32::MAX)")]
+    StringPoolOverflow(usize),
+
+    #[error("Invalid record index: {0}")]
+    InvalidRecordIndex(usize),
+
+    #[error("Directory loop detected while resolving path for directory id {0}")]
+    DirectoryLoop(u32),
 }
 
 /// Specialized Result alias for findme-core operations
