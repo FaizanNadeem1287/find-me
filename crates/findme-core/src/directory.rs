@@ -81,7 +81,11 @@ impl DirectoryTable {
         // Extract directory segment name
         let comp_name = match path.file_name() {
             Some(os_name) => os_name.to_string_lossy().into_owned(),
-            None => String::new(),
+            None => match path.components().next_back() {
+                Some(std::path::Component::ParentDir) => "..".to_string(),
+                Some(std::path::Component::CurDir) => ".".to_string(),
+                _ => String::new(),
+            },
         };
 
         let id = self.entries.len() as u32;
@@ -182,6 +186,22 @@ impl DirectoryTable {
     pub fn shrink_to_fit(&mut self) {
         self.entries.shrink_to_fit();
         self.lookup.shrink_to_fit();
+    }
+
+    /// Returns a slice of all directory entries
+    #[inline(always)]
+    pub fn entries(&self) -> &[DirectoryEntry] {
+        &self.entries
+    }
+
+    /// Creates a directory table directly from directory entries
+    pub fn from_entries(entries: Vec<DirectoryEntry>) -> Self {
+        let mut table = Self {
+            entries,
+            lookup: HashMap::new(),
+        };
+        table.rebuild_lookup();
+        table
     }
 }
 
