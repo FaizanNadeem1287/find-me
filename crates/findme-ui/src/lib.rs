@@ -12,4 +12,7 @@ pub mod views;
 pub use app::{window_settings, FindMeApp};
 pub use message::{ColumnId, Message, ScreenId};
 pub use state::AppState;
-pub use theme::AppTheme;
+pub use theme::{
+    colors, contrast_ratio, custom_dark_theme, custom_light_theme, detect_system_theme, AppTheme,
+    ThemePreference,
+};

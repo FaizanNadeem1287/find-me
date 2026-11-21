@@ -131,6 +131,14 @@ impl FindMeApp {
             }
             Message::ToggleTheme => {
                 self.state.theme = self.state.theme.toggle();
+                self.state.theme_pref = match self.state.theme {
+                    crate::theme::AppTheme::Dark => crate::theme::ThemePreference::Dark,
+                    crate::theme::AppTheme::Light => crate::theme::ThemePreference::Light,
+                };
+                let _ = self
+                    .state
+                    .theme_pref
+                    .save_to_path(&crate::theme::ThemePreference::config_path());
                 Task::none()
             }
         }
@@ -220,11 +228,7 @@ impl FindMeApp {
 
     /// Resolves theme for Iced engine
     pub fn theme(&self) -> Theme {
-        if self.state.theme.is_dark() {
-            Theme::Dark
-        } else {
-            Theme::Light
-        }
+        self.state.theme.as_iced_theme()
     }
 
     /// Background event subscriptions (e.g. engine channels, window resizing)
@@ -265,10 +269,13 @@ mod tests {
     #[test]
     fn test_theme_toggle() {
         let mut app = FindMeApp::new();
-        assert!(app.state.theme.is_dark());
+        let initial_is_dark = app.state.theme.is_dark();
 
         let _ = app.update(Message::ToggleTheme);
-        assert!(!app.state.theme.is_dark());
+        assert_eq!(app.state.theme.is_dark(), !initial_is_dark);
+
+        let _ = app.update(Message::ToggleTheme);
+        assert_eq!(app.state.theme.is_dark(), initial_is_dark);
     }
 
     #[test]

@@ -1,7 +1,7 @@
 //! Application state and model definitions
 
 use crate::message::{ColumnId, ScreenId};
-use crate::theme::AppTheme;
+use crate::theme::{AppTheme, ThemePreference};
 use findme_core::SearchResultItem;
 
 /// Central state model for Find-Me desktop UI
@@ -27,7 +27,9 @@ pub struct AppState {
     pub sort_column: ColumnId,
     /// Sort direction (ascending if true, descending if false)
     pub sort_ascending: bool,
-    /// Active theme (Dark by default)
+    /// User's persistent theme preference (System, Dark, Light)
+    pub theme_pref: ThemePreference,
+    /// Active theme (resolved from preference or system)
     pub theme: AppTheme,
     /// Total files indexed by background engine
     pub indexed_files_count: usize,
@@ -41,6 +43,10 @@ pub struct AppState {
 
 impl Default for AppState {
     fn default() -> Self {
+        let theme_pref =
+            ThemePreference::load_from_path(&ThemePreference::config_path()).unwrap_or_default();
+        let theme = theme_pref.resolve();
+
         Self {
             active_screen: ScreenId::Search,
             sidebar_expanded: true,
@@ -52,7 +58,8 @@ impl Default for AppState {
             selected_row: None,
             sort_column: ColumnId::Name,
             sort_ascending: true,
-            theme: AppTheme::Dark,
+            theme_pref,
+            theme,
             indexed_files_count: 0,
             indexed_folders_count: 0,
             last_search_duration_ms: 0,

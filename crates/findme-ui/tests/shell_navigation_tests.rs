@@ -1,8 +1,8 @@
 //! Headless integration test suite for Find-Me application shell, Elm loop, and navigation routes
 
 use findme_core::SearchResultItem;
-use findme_ui::{window_settings, AppTheme, ColumnId, FindMeApp, Message, ScreenId};
-use iced::{Size, Theme};
+use findme_ui::{window_settings, ColumnId, FindMeApp, Message, ScreenId};
+use iced::Size;
 
 #[test]
 fn test_shell_initial_state() {
@@ -12,7 +12,7 @@ fn test_shell_initial_state() {
     assert!(app.state.sidebar_expanded);
     assert_eq!(app.state.window_width, 1200.0);
     assert_eq!(app.state.window_height, 800.0);
-    assert_eq!(app.state.theme, AppTheme::Dark);
+    assert_eq!(app.state.theme, app.state.theme_pref.resolve());
     assert_eq!(app.state.query, "");
     assert!(app.state.results.is_empty());
     assert_eq!(app.state.notification, None);
@@ -129,16 +129,13 @@ fn test_shell_run_query_redirect() {
 #[test]
 fn test_shell_theme_toggle() {
     let mut app = FindMeApp::new();
-    assert_eq!(app.state.theme, AppTheme::Dark);
-    assert!(matches!(app.theme(), Theme::Dark));
+    let initial_theme = app.state.theme;
 
     let _ = app.update(Message::ToggleTheme);
-    assert_eq!(app.state.theme, AppTheme::Light);
-    assert!(matches!(app.theme(), Theme::Light));
+    assert_eq!(app.state.theme, initial_theme.toggle());
 
     let _ = app.update(Message::ToggleTheme);
-    assert_eq!(app.state.theme, AppTheme::Dark);
-    assert!(matches!(app.theme(), Theme::Dark));
+    assert_eq!(app.state.theme, initial_theme);
 }
 
 #[test]
