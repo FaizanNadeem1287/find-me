@@ -17,6 +17,7 @@ impl FileFlags {
     pub const IS_HIDDEN: Self = Self(1 << 2);
     pub const IS_EXECUTABLE: Self = Self(1 << 3);
     pub const IS_READONLY: Self = Self(1 << 4);
+    pub const IS_DELETED: Self = Self(1 << 5);
 
     #[inline(always)]
     pub fn is_dir(&self) -> bool {
@@ -41,6 +42,11 @@ impl FileFlags {
     #[inline(always)]
     pub fn is_readonly(&self) -> bool {
         (self.0 & Self::IS_READONLY.0) != 0
+    }
+
+    #[inline(always)]
+    pub fn is_deleted(&self) -> bool {
+        (self.0 & Self::IS_DELETED.0) != 0
     }
 
     #[inline(always)]

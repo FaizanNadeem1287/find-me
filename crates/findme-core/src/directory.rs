@@ -51,6 +51,14 @@ impl DirectoryTable {
         table
     }
 
+    /// Retrieves a directory ID for the given path if already present in the lookup table
+    pub fn get_id(&self, path: &Path) -> Option<u32> {
+        if path == Path::new("/") || path.as_os_str().is_empty() {
+            return Some(ROOT_DIR_ID);
+        }
+        self.lookup.get(path).copied()
+    }
+
     /// Inserts or retrieves a directory ID for the given path with $O(1)$ lookup
     pub fn get_or_insert(&mut self, path: &Path) -> u32 {
         if path == Path::new("/") || path.as_os_str().is_empty() {

@@ -285,6 +285,10 @@ fn eval_predicate(
     matcher: &mut Matcher,
     char_buf: &mut Vec<char>,
 ) -> Option<u32> {
+    if record.flags.is_deleted() {
+        return None;
+    }
+
     match pred {
         // --- Stage 1: SIMD / Fast Integer Predicates (32-byte header checks) ---
         SearchPredicate::SizeRange { min, max } => {
