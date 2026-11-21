@@ -203,3 +203,34 @@ To guarantee that Find-Me is rock-solid and stable for thousands of users, the p
 
 7. **Pre-Merge Verification Gate (`verify_task.sh`)**:
    - An automated script that enforces formatting (`cargo fmt`), strict zero-warning linting (`cargo clippy -- -D warnings`), all unit/integration tests (`cargo test`), and documentation tests before any branch can be merged into `main`.
+
+---
+
+## 7. Autonomous Engineering Roster (10 Subagents & 9 Skills)
+
+To enable 90% autonomous agentic execution with uncompromising software quality, Find-Me operates with 10 specialized subagents and 9 domain skills:
+
+### 7.1 The 10 Specialized Subagents
+| # | Subagent Identifier | Domain & Responsibility |
+| :-: | :--- | :--- |
+| 1 | **`findme-core-engine`** | Multithreaded parallel directory crawler (`jwalk`), compact 32-byte in-memory arena, `nucleo-matcher`, and `inotify` watcher. |
+| 2 | **`findme-ui-developer`** | Pure Rust **Iced** GUI, Elm architecture, virtualized tables (100k+ rows at 60 FPS), themes, and keyboard navigation. |
+| 3 | **`findme-qa-tester`** | Automated unit tests, property-based fuzzing (`proptest`), and headless UI test suites (`iced_test`). |
+| 4 | **`findme-performance-profiler`** | Throughput (>200k files/s) and latency (<5ms) profiling, Criterion benchmarks, and memory leak audits. |
+| 5 | **`findme-code-reviewer`** | Senior Architect auditing code for memory safety, zero workarounds, zero unwraps, and non-blocking UI. |
+| 6 | **`findme-packager-qa`** | Debian `.deb` packaging (`cargo-deb`), FreeDesktop standards, and system installation checks. |
+| 7 | **`findme-desktop-integrator`** | FreeDesktop standards, DBus file highlighting (`FileManager1`), Wayland/X11 clipboard, and OS theme sync. |
+| 8 | **`findme-query-architect`** | Query language lexing, parsing, boolean expression trees, and SIMD predicate evaluation. |
+| 9 | **`findme-researcher`** | Deep technical internet research (Stack Overflow, Reddit `r/rust`, GitHub, Linux man pages) with zero-workaround vetting. |
+| 10 | **`findme-todoist-manager`** | Todoist task and board lifecycle management, moving cards across sections, and logging progress. |
+
+### 7.2 The 9 Specialized Skills
+1. **`find-me-rust-dev`**: Pure Rust systems programming, Iced Elm architecture, and packaging.
+2. **`find-me-qa-verification`**: 6-tier testing pyramid, headless UI testing, and pre-merge quality gate.
+3. **`find-me-autonomous-dev`**: 8-step autonomous execution cycle ("vibe coding"), self-healing compiler guide.
+4. **`todoist-task-workflow`**: Todoist MCP runbook, project & section IDs, lifecycle transitions.
+5. **`find-me-git-workflow`**: Branch lifecycles, Conventional Commits, non-fast-forward merges, permanent branch retention.
+6. **`linux-desktop-integration`**: DBus `FileManager1` file highlighting, OS theme auto-detection, Wayland/X11 clipboard, and desktop entries.
+7. **`query-syntax-and-parser`**: Full Everything-style query grammar (EBNF), tokenization, size units, date math, and AST predicate compilation.
+8. **`linux-filesystem-internals`**: POSIX metadata extraction, symlink cycle prevention, virtual filesystem exclusion, and kernel inotify overflow recovery.
+9. **`technical-internet-research`**: High-precision research methodology across Stack Overflow, Reddit, GitHub, Linux man pages, and Google.
