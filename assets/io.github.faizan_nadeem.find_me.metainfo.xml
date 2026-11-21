@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.faizan_nadeem.find_me</id>
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>MIT OR Apache-2.0</project_license>
+  <name>Find-Me</name>
+  <summary>Instant, offline-first Linux desktop file search inspired by Windows Everything</summary>
+  <description>
+    <p>
+      Find-Me is an ultra-fast, lightweight Linux desktop search utility written in 100% pure Rust.
+      Inspired by Windows Everything, it indexes millions of local filesystem records into a compact
+      in-memory arena (&lt;45 MB RAM per 1,000,000 files) and evaluates fuzzy and structured Everything-style
+      queries in under 5 milliseconds.
+    </p>
+    <p>Features include:</p>
+    <ul>
+      <li>100% Pure Rust stack with hardware-accelerated Iced GUI (Elm architecture, 60 FPS virtualized rendering).</li>
+      <li>Instant real-time search evaluation via nucleo-matcher fuzzy scoring and SIMD filters.</li>
+      <li>Everything query syntax support: ext:, size:, dm:, path:, regex:, and boolean operators (AND, OR, NOT).</li>
+      <li>Real-time filesystem change tracking with Linux inotify kernel events and 150ms debouncing.</li>
+      <li>Zero-copy memory-mapped disk persistence with SIMD CRC32 validation (cold boot &lt;35ms).</li>
+      <li>Desktop integration: DBus org.freedesktop.FileManager1 file highlighting, Wayland/X11 clipboard, and POSIX properties inspection.</li>
+      <li>Power navigation: 100% keyboard operable without touching the mouse.</li>
+      <li>Zero root/sudo requirements; executes completely within unprivileged user space.</li>
+    </ul>
+  </description>
+  <developer id="io.github.faizan_nadeem">
+    <name>Faizan Nadeem</name>
+  </developer>
+  <launchable type="desktop-id">find-me.desktop</launchable>
+  <url type="homepage">https://github.com/Faizan-Nadeem/Find-Me</url>
+  <url type="bugtracker">https://github.com/Faizan-Nadeem/Find-Me/issues</url>
+  <provides>
+    <binary>find-me</binary>
+  </provides>
+  <categories>
+    <category>Utility</category>
+    <category>Filesystem</category>
+    <category>Core</category>
+  </categories>
+  <keywords>
+    <keyword>search</keyword>
+    <keyword>find</keyword>
+    <keyword>everything</keyword>
+    <keyword>files</keyword>
+    <keyword>fast</keyword>
+    <keyword>index</keyword>
+  </keywords>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-11-22">
+      <description>
+        <p>Initial production release of Find-Me Linux desktop search engine.</p>
+      </description>
+    </release>
+  </releases>
+</component>
