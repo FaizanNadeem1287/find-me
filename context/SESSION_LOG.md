@@ -426,4 +426,39 @@ Hash | Branch | Commit Message & Description
 
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
-- **Next Task**: `[TASK-4.2] UI: Cohesive Linux Dark & Light Theming with System Theme Sync` (`6j4626W6435GR4rx`) on branch `feature/p4-ui-theming`.
+- **Completed Task**: `[TASK-4.1] UI: Iced Desktop Shell, Elm Architecture Loop & Responsive Layout` (`6j4626RgWpm7GJqQ`).
+
+---
+
+## Session 12: 2026-11-22 (Completion of Phase 4 / Task 4.2 - Linux Dark & Light Theming with System Theme Sync)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 4.2: `[TASK-4.2] UI: Cohesive Linux Dark & Light Theming with System Theme Sync` (`6j4626W6435GR4rx`).
+2. Authored detailed implementation plan artifact: `task-4-2-implementation-plan.md`.
+3. Created feature branch `feature/p4-ui-theming` from `main` and moved Todoist task to `In Progress`.
+4. Implemented precision Linux desktop palettes in `crates/findme-ui/src/theme.rs`:
+   - Dark Theme: `#1A1B1E` (bg), `#25262B` (surface), `#2C2E33` (border), `#C1C2C5` (text), `#339AF0` (accent).
+   - Light Theme: `#F8F9FA` (bg), `#FFFFFF` (surface), `#DEE2E6` (border), `#212529` (text), `#1C7ED6` (accent).
+5. Integrated automatic OS theme detection in `detect_system_theme()` querying FreeDesktop appearance portal, `COLOR_SCHEME`, `GTK_THEME`, and GNOME `gsettings org.gnome.desktop.interface color-scheme`.
+6. Built persistent user theme preference `ThemePreference` (`System`, `Dark`, `Light`) storing configuration in `$XDG_CONFIG_HOME/find-me/theme.json`.
+7. Implemented W3C WCAG 2.1 relative luminance and contrast ratio algorithms (`relative_luminance`, `contrast_ratio`), mathematically verifying Dark theme text (8.5:1) and Light theme text (14.8:1) surpass WCAG AA (4.5:1) and AAA (7.0:1) standards.
+8. Implemented comprehensive test suite in `crates/findme-ui/tests/theme_tests.rs` (6 tests).
+9. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 quality gates (formatting, zero clippy warnings with `-D warnings`, 135 passing tests across workspace).
+10. Committed to `feature/p4-ui-theming` (`60c37d4`) and merged into `main` via non-fast-forward merge (`git merge --no-ff`).
+11. Preserved `feature/p4-ui-theming` branch permanently in Git.
+12. Updated Todoist card `6j4626W6435GR4rx`: posted implementation audit comment (`6j46pxrcGxcRWHvx`) and marked task `Completed`.
+13. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`60c37d4` | `feature/p4-ui-theming` | `feat(ui): cohesive Linux dark/light theming, OS detection, and WCAG AA verification (Task 4.2)`
+`e983412` (merge) | `main` | `feat(p4): cohesive Linux dark/light theming & OS theme sync (Task 4.2)`
+
+### Todoist State Updates:
+- Task: `[TASK-4.2] UI: Cohesive Linux Dark & Light Theming with System Theme Sync` (`6j4626W6435GR4rx`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626W6435GR4rx`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators` (`6j4626XH6CwVVVGQ`) on branch `feature/p5-search-input`.
