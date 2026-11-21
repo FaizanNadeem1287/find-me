@@ -1,0 +1,25 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Local test database and cache
+*.index
+*.db
+*.log
+/scratch/
+debug_index/
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Debian build temp
+/debian/.debhelper/
+/debian/files
+/debian/find-me/
+/debian/find-me.substvars
