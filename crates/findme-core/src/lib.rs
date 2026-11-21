@@ -5,12 +5,16 @@
 //! fuzzy and exact query evaluation, and Linux inotify event synchronization.
 
 pub mod arena;
+pub mod crawler;
 pub mod directory;
 pub mod error;
 pub mod pool;
 pub mod record;
 
 pub use arena::FileArena;
+pub use crawler::{
+    extract_flags, Crawler, CrawlerConfig, CrawlerProgress, CrawlerStats, CycleDetector,
+};
 pub use directory::{DirectoryEntry, DirectoryTable, ROOT_DIR_ID};
 pub use error::{EngineError, Result};
 pub use pool::StringPool;
