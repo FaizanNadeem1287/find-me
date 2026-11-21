@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-21 23:49 PKT
+*Last Updated*: 2026-11-21 23:51 PKT
 
 ---
 
@@ -8,33 +8,29 @@
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 1: Core Engine - Multithreaded Crawler & In-Memory Arena** (COMPLETED) | Documented in `PHASES.md`
-**Active Task ID** | None (Task 1.2 Completed; awaiting Phase 2 Task 2.1) | Next: Task 2.1 Query Parser
-**Active Git Branch** | `main` | Clean working tree; all feature branches retained permanently
-**Todoist Card** | `[TASK-1.2] Core: Parallel Multi-Threaded Filesystem Crawler` (`6j4626QpPrPhCc6x`) | Section: **Completed** (`6j45x63Fqh349Gxx`)
+**Active Phase** | **Phase 2: Core Engine - Query Parser, Nucleo-Matcher & Filtering** | Documented in `PHASES.md`
+**Active Task ID** | **[TASK-2.1] Query: Everything Search Syntax Tokenizer & AST Parser** (`6j4626PQcQCQCh6x`) | Moved to `In Progress`
+**Active Git Branch** | `feature/p2-query-parser` | Branched from `main`; will be retained permanently
+**Todoist Card** | `[TASK-2.1] Query: Everything Search Syntax Tokenizer & AST Parser` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
 
-## 2. Completed Milestones in Task 1.2
+## 2. Active Implementation Objectives in Task 2.1
 
-- [x] Implemented `CrawlerConfig` builder supporting roots, exclusions, max depth, symlinks, and virtual mounts (`crates/findme-core/src/crawler.rs`).
-- [x] Implemented multi-threaded parallel directory crawler using `jwalk` work-stealing across Rayon worker threads.
-- [x] Implemented automated skipping of virtual Linux kernel mounts (`/proc`, `/sys`, `/dev`, `/run`, `/sys/fs/cgroup`, `/var/lib/docker`).
-- [x] Implemented pruning of version control and build folders (`.git`, `.svn`, `.hg`, `node_modules`, `target`).
-- [x] Implemented `CycleDetector` tracking visited `(st_dev, st_ino)` pairs to eliminate symlink infinite recursion.
-- [x] Implemented graceful `EACCES` permission isolation without aborting traversal.
-- [x] Implemented direct lock-free ingestion from crawler into `FileArena`.
-- [x] Implemented real-time batch `CrawlerProgress` and final `CrawlerStats` telemetry.
-- [x] Authored 7 integration tests in `crates/findme-core/tests/crawler_edge_cases.rs` (permissions, symlinks, exclusions, depth, progress, throughput).
-- [x] Verified full pre-merge quality gate `verify_task.sh` passed 100% (51 passing tests, 0 warnings).
-- [x] Merged `feature/p1-parallel-crawler` into `main` via non-fast-forward merge (`ed5008c`).
-- [x] Permanently retained `feature/p1-parallel-crawler` branch in Git.
-- [x] Posted audit comment and moved Todoist card `6j4626QpPrPhCc6x` to `Completed`.
+- [ ] Implement AST nodes in `crates/findme-core/src/query/ast.rs` (`QueryNode`, `SearchPredicate`, `QueryAst`).
+- [ ] Implement unit and date conversions in `crates/findme-core/src/query/units.rs` (size binary units, ISO/relative dates).
+- [ ] Implement zero-allocation lexer in `crates/findme-core/src/query/lexer.rs`.
+- [ ] Implement fault-tolerant Pratt / recursive-descent parser in `crates/findme-core/src/query/parser.rs`.
+- [ ] Export query API in `crates/findme-core/src/query/mod.rs` and `crates/findme-core/src/lib.rs`.
+- [ ] Implement 50+ query variations unit test suite.
+- [ ] Implement proptest property-based fuzz tests verifying 0 panics on arbitrary string queries.
+- [ ] Benchmark query parsing latency confirming $<50\,\mu\text{s}$.
+- [ ] Run pre-merge quality gate `verify_task.sh` (formatting, clippy -D warnings, tests).
+- [ ] Merge into `main` with `--no-ff`, retain branch permanently, and post Todoist audit comment.
 
 ---
 
-## 3. Immediate State & Next Steps
+## 3. Immediate Next Steps
 
-- **Current Status**: Phase 1 completely finished! Working tree clean on `main`.
-- **Next Task in Roadmap**: `[TASK-2.1] Query: Everything Search Syntax Tokenizer & AST Parser` (`feature/p2-query-parser`).
+- Implement `crates/findme-core/src/query/` submodules.
