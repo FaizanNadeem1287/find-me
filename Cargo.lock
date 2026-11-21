@@ -1111,6 +1111,9 @@ dependencies = [
  "iced",
  "iced_test",
  "open",
+ "serde",
+ "serde_json",
+ "tempfile",
  "tokio",
  "tracing",
 ]
