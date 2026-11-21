@@ -1,5 +1,6 @@
 //! Application state and model definitions
 
+use crate::advanced::AdvancedFilterState;
 use crate::message::{ColumnId, ScreenId};
 use crate::theme::{AppTheme, ThemePreference};
 use findme_core::SearchResultItem;
@@ -45,6 +46,8 @@ pub struct AppState {
     pub scroll_y: f32,
     /// Active viewport height of the results table (pixels)
     pub table_viewport_height: f32,
+    /// Active state of visual query builder in Advanced Search screen
+    pub advanced_filters: AdvancedFilterState,
 }
 
 /// Constant ID string for the main search input field
@@ -172,6 +175,7 @@ impl Default for AppState {
             search_generation: 0,
             scroll_y: 0.0,
             table_viewport_height: 600.0,
+            advanced_filters: AdvancedFilterState::default(),
         }
     }
 }

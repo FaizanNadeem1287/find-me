@@ -1,6 +1,6 @@
 //! Top-level FindMeApp Elm-architecture loop
 
-use crate::message::{ColumnId, Message, ScreenId};
+use crate::message::{AdvancedSearchMessage, ColumnId, Message, ScreenId};
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
 use iced::widget::{column, operation, row};
@@ -287,6 +287,85 @@ impl FindMeApp {
                     .state
                     .theme_pref
                     .save_to_path(&crate::theme::ThemePreference::config_path());
+                Task::none()
+            }
+            Message::AdvancedSearch(adv_msg) => {
+                match adv_msg {
+                    AdvancedSearchMessage::UpdateAllWords(w) => {
+                        self.state.advanced_filters.all_words = w;
+                    }
+                    AdvancedSearchMessage::UpdateExactPhrase(w) => {
+                        self.state.advanced_filters.exact_phrase = w;
+                    }
+                    AdvancedSearchMessage::UpdateAnyWords(w) => {
+                        self.state.advanced_filters.any_words = w;
+                    }
+                    AdvancedSearchMessage::UpdateNoneWords(w) => {
+                        self.state.advanced_filters.none_words = w;
+                    }
+                    AdvancedSearchMessage::ToggleExtDocuments(b) => {
+                        self.state.advanced_filters.ext_documents = b;
+                    }
+                    AdvancedSearchMessage::ToggleExtCode(b) => {
+                        self.state.advanced_filters.ext_code = b;
+                    }
+                    AdvancedSearchMessage::ToggleExtImages(b) => {
+                        self.state.advanced_filters.ext_images = b;
+                    }
+                    AdvancedSearchMessage::ToggleExtAudio(b) => {
+                        self.state.advanced_filters.ext_audio = b;
+                    }
+                    AdvancedSearchMessage::ToggleExtVideo(b) => {
+                        self.state.advanced_filters.ext_video = b;
+                    }
+                    AdvancedSearchMessage::ToggleExtArchives(b) => {
+                        self.state.advanced_filters.ext_archives = b;
+                    }
+                    AdvancedSearchMessage::UpdateCustomExt(w) => {
+                        self.state.advanced_filters.custom_ext = w;
+                    }
+                    AdvancedSearchMessage::UpdateSizeMin(s) => {
+                        self.state.advanced_filters.size_min = s;
+                    }
+                    AdvancedSearchMessage::SelectSizeMinUnit(u) => {
+                        self.state.advanced_filters.size_min_unit = u;
+                    }
+                    AdvancedSearchMessage::UpdateSizeMax(s) => {
+                        self.state.advanced_filters.size_max = s;
+                    }
+                    AdvancedSearchMessage::SelectSizeMaxUnit(u) => {
+                        self.state.advanced_filters.size_max_unit = u;
+                    }
+                    AdvancedSearchMessage::SelectDatePreset(p) => {
+                        self.state.advanced_filters.date_preset = p;
+                    }
+                    AdvancedSearchMessage::UpdateSearchPath(p) => {
+                        self.state.advanced_filters.search_path = p;
+                    }
+                    AdvancedSearchMessage::UpdateExcludePath(p) => {
+                        self.state.advanced_filters.exclude_path = p;
+                    }
+                    AdvancedSearchMessage::ToggleMatchCase(b) => {
+                        self.state.advanced_filters.match_case = b;
+                    }
+                    AdvancedSearchMessage::ToggleMatchWholeWord(b) => {
+                        self.state.advanced_filters.match_whole_word = b;
+                    }
+                    AdvancedSearchMessage::ToggleRegexMode(b) => {
+                        self.state.advanced_filters.regex_mode = b;
+                    }
+                    AdvancedSearchMessage::ApplyPreset(preset) => {
+                        self.state.advanced_filters.apply_preset(preset);
+                    }
+                    AdvancedSearchMessage::ResetFilters => {
+                        self.state.advanced_filters =
+                            crate::advanced::AdvancedFilterState::default();
+                    }
+                    AdvancedSearchMessage::SubmitSearch => {
+                        let synthesized = self.state.advanced_filters.synthesize_query();
+                        return self.update(Message::RunQuery(synthesized));
+                    }
+                }
                 Task::none()
             }
         }
