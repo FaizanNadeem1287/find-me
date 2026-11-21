@@ -60,6 +60,14 @@ impl StringPool {
         std::str::from_utf8(bytes).ok()
     }
 
+    /// Borrows raw byte slice from the pool by `offset` and `len`
+    #[inline(always)]
+    pub fn get_bytes(&self, offset: u32, len: u16) -> Option<&[u8]> {
+        let start = offset as usize;
+        let end = start.checked_add(len as usize)?;
+        self.buffer.get(start..end)
+    }
+
     /// Total number of bytes stored in the string pool
     #[inline(always)]
     pub fn len(&self) -> usize {

@@ -94,6 +94,7 @@ impl SearchEngine {
             return results;
         }
 
+        let compiled_root = CompiledNode::from_ast(&ast.root);
         let records = arena.records();
 
         // Parallel map-init over Rayon worker threads
@@ -102,6 +103,7 @@ impl SearchEngine {
         let mut results: Vec<MatchResult> = records
             .par_iter()
             .enumerate()
+            .with_min_len(4096)
             .map_init(
                 || {
                     let matcher = Matcher::new(Config::DEFAULT);
@@ -109,7 +111,8 @@ impl SearchEngine {
                     (matcher, char_buf)
                 },
                 |(matcher, char_buf), (record_idx, record)| {
-                    let score = eval_node(&ast.root, record, arena, matcher, char_buf)?;
+                    let score =
+                        eval_compiled_node(&compiled_root, record, arena, matcher, char_buf)?;
                     Some(MatchResult { record_idx, score })
                 },
             )
@@ -174,7 +177,7 @@ impl SearchEngine {
     ) {
         match column {
             SortColumn::Score => {
-                results.sort_by(|a, b| match direction {
+                results.par_sort_unstable_by(|a, b| match direction {
                     SortDirection::Descending => b
                         .score
                         .cmp(&a.score)
@@ -186,7 +189,7 @@ impl SearchEngine {
                 });
             }
             SortColumn::Name => {
-                results.sort_by(|a, b| {
+                results.par_sort_unstable_by(|a, b| {
                     let name_a = arena.get_name(a.record_idx).unwrap_or("");
                     let name_b = arena.get_name(b.record_idx).unwrap_or("");
                     let ord = name_a.cmp(name_b).then_with(|| b.score.cmp(&a.score));
@@ -197,7 +200,7 @@ impl SearchEngine {
                 });
             }
             SortColumn::Size => {
-                results.sort_by(|a, b| {
+                results.par_sort_unstable_by(|a, b| {
                     let size_a = arena.get(a.record_idx).map_or(0, |r| r.size_bytes);
                     let size_b = arena.get(b.record_idx).map_or(0, |r| r.size_bytes);
                     let ord = size_a.cmp(&size_b).then_with(|| b.score.cmp(&a.score));
@@ -208,7 +211,7 @@ impl SearchEngine {
                 });
             }
             SortColumn::Modified => {
-                results.sort_by(|a, b| {
+                results.par_sort_unstable_by(|a, b| {
                     let mtime_a = arena.get(a.record_idx).map_or(0, |r| r.mtime_secs);
                     let mtime_b = arena.get(b.record_idx).map_or(0, |r| r.mtime_secs);
                     let ord = mtime_a.cmp(&mtime_b).then_with(|| b.score.cmp(&a.score));
@@ -219,7 +222,7 @@ impl SearchEngine {
                 });
             }
             SortColumn::Path => {
-                results.sort_by(|a, b| {
+                results.par_sort_unstable_by(|a, b| {
                     let path_a = arena.reconstruct_path_by_index(a.record_idx);
                     let path_b = arena.reconstruct_path_by_index(b.record_idx);
                     let ord = path_a.cmp(&path_b).then_with(|| b.score.cmp(&a.score));
@@ -233,42 +236,165 @@ impl SearchEngine {
     }
 }
 
-/// Recursively evaluates an AST node against a single `FileRecord`
-fn eval_node(
-    node: &QueryNode,
+/// Pre-compiled search predicate with pre-initialized patterns and matcher atoms
+#[derive(Clone, Debug)]
+pub enum CompiledPredicate {
+    SizeRange {
+        min: Option<u64>,
+        max: Option<u64>,
+    },
+    DateRange {
+        min_secs: u64,
+        max_secs: u64,
+    },
+    Attributes {
+        required: FileFlags,
+        forbidden: FileFlags,
+    },
+    Extension(Vec<Vec<u8>>),
+    PathPrefix(std::path::PathBuf),
+    Regex(Option<regex::bytes::Regex>),
+    Text {
+        term: String,
+        term_bytes: Vec<u8>,
+        quoted: bool,
+        atom: Atom,
+    },
+}
+
+impl CompiledPredicate {
+    pub fn from_ast(pred: &SearchPredicate) -> Self {
+        match pred {
+            SearchPredicate::SizeRange { min, max } => Self::SizeRange {
+                min: *min,
+                max: *max,
+            },
+            SearchPredicate::DateRange { min_secs, max_secs } => Self::DateRange {
+                min_secs: *min_secs,
+                max_secs: *max_secs,
+            },
+            SearchPredicate::Attributes {
+                required,
+                forbidden,
+            } => Self::Attributes {
+                required: *required,
+                forbidden: *forbidden,
+            },
+            SearchPredicate::Extension(exts) => {
+                let raw_exts = exts.iter().map(|e| e.as_bytes().to_vec()).collect();
+                Self::Extension(raw_exts)
+            }
+            SearchPredicate::PathPrefix(p) => Self::PathPrefix(p.clone()),
+            SearchPredicate::Regex(r) => {
+                let bytes_re = regex::bytes::Regex::new(r.as_str()).ok();
+                Self::Regex(bytes_re)
+            }
+            SearchPredicate::Text { term, quoted } => {
+                let atom = Atom::new(
+                    term,
+                    CaseMatching::Ignore,
+                    Normalization::Smart,
+                    AtomKind::Fuzzy,
+                    false,
+                );
+                Self::Text {
+                    term: term.clone(),
+                    term_bytes: term.as_bytes().to_vec(),
+                    quoted: *quoted,
+                    atom,
+                }
+            }
+        }
+    }
+}
+
+/// Pre-compiled query AST node optimized for zero-allocation evaluation
+#[derive(Clone, Debug)]
+pub enum CompiledNode {
+    True,
+    Predicate(CompiledPredicate),
+    Not(Box<CompiledNode>),
+    And(Vec<CompiledNode>),
+    Or(Vec<CompiledNode>),
+}
+
+impl CompiledNode {
+    pub fn from_ast(node: &QueryNode) -> Self {
+        match node {
+            QueryNode::True => Self::True,
+            QueryNode::Predicate(p) => Self::Predicate(CompiledPredicate::from_ast(p)),
+            QueryNode::Not(inner) => Self::Not(Box::new(Self::from_ast(inner))),
+            QueryNode::And(children) => {
+                let mut compiled: Vec<CompiledNode> = children.iter().map(Self::from_ast).collect();
+                // Sort children by evaluation cost ascending (fast integer checks first)
+                compiled.sort_by_key(Self::cost);
+                Self::And(compiled)
+            }
+            QueryNode::Or(children) => {
+                let compiled: Vec<CompiledNode> = children.iter().map(Self::from_ast).collect();
+                Self::Or(compiled)
+            }
+        }
+    }
+
+    pub fn cost(&self) -> u8 {
+        match self {
+            Self::True => 0,
+            Self::Predicate(p) => match p {
+                CompiledPredicate::SizeRange { .. } => 0,
+                CompiledPredicate::DateRange { .. } => 0,
+                CompiledPredicate::Attributes { .. } => 0,
+                CompiledPredicate::Extension(_) => 1,
+                CompiledPredicate::PathPrefix(_) => 2,
+                CompiledPredicate::Text { quoted: true, .. } => 3,
+                CompiledPredicate::Text { quoted: false, .. } => 4,
+                CompiledPredicate::Regex(_) => 5,
+            },
+            Self::Not(inner) => inner.cost().saturating_add(1),
+            Self::And(children) => children.iter().map(Self::cost).min().unwrap_or(0),
+            Self::Or(children) => children.iter().map(Self::cost).max().unwrap_or(0),
+        }
+    }
+}
+
+/// Recursively evaluates a compiled AST node against a single `FileRecord`
+fn eval_compiled_node(
+    node: &CompiledNode,
     record: &FileRecord,
     arena: &FileArena,
     matcher: &mut Matcher,
     char_buf: &mut Vec<char>,
 ) -> Option<u32> {
     match node {
-        QueryNode::True => Some(1),
-        QueryNode::Predicate(pred) => eval_predicate(pred, record, arena, matcher, char_buf),
-        QueryNode::Not(inner) => {
-            if eval_node(inner, record, arena, matcher, char_buf).is_some() {
+        CompiledNode::True => Some(1),
+        CompiledNode::Predicate(pred) => {
+            eval_compiled_predicate(pred, record, arena, matcher, char_buf)
+        }
+        CompiledNode::Not(inner) => {
+            if eval_compiled_node(inner, record, arena, matcher, char_buf).is_some() {
                 None
             } else {
                 Some(1)
             }
         }
-        QueryNode::And(children) => {
+        CompiledNode::And(children) => {
             if children.is_empty() {
                 return Some(1);
             }
             let mut total_score: u32 = 0;
             for child in children {
-                let score = eval_node(child, record, arena, matcher, char_buf)?;
+                let score = eval_compiled_node(child, record, arena, matcher, char_buf)?;
                 total_score = total_score.saturating_add(score);
             }
             Some(total_score)
         }
-        QueryNode::Or(children) => {
+        CompiledNode::Or(children) => {
             if children.is_empty() {
                 return Some(1);
             }
             let mut best_score: Option<u32> = None;
             for child in children {
-                if let Some(score) = eval_node(child, record, arena, matcher, char_buf) {
+                if let Some(score) = eval_compiled_node(child, record, arena, matcher, char_buf) {
                     best_score = Some(best_score.map_or(score, |m| m.max(score)));
                 }
             }
@@ -277,9 +403,9 @@ fn eval_node(
     }
 }
 
-/// Evaluates a leaf search predicate against a `FileRecord`
-fn eval_predicate(
-    pred: &SearchPredicate,
+/// Evaluates a compiled leaf search predicate against a `FileRecord`
+fn eval_compiled_predicate(
+    pred: &CompiledPredicate,
     record: &FileRecord,
     arena: &FileArena,
     matcher: &mut Matcher,
@@ -291,7 +417,7 @@ fn eval_predicate(
 
     match pred {
         // --- Stage 1: SIMD / Fast Integer Predicates (32-byte header checks) ---
-        SearchPredicate::SizeRange { min, max } => {
+        CompiledPredicate::SizeRange { min, max } => {
             if let Some(min_bytes) = min {
                 if record.size_bytes < *min_bytes {
                     return None;
@@ -304,13 +430,13 @@ fn eval_predicate(
             }
             Some(100)
         }
-        SearchPredicate::DateRange { min_secs, max_secs } => {
+        CompiledPredicate::DateRange { min_secs, max_secs } => {
             if record.mtime_secs < *min_secs || record.mtime_secs > *max_secs {
                 return None;
             }
             Some(100)
         }
-        SearchPredicate::Attributes {
+        CompiledPredicate::Attributes {
             required,
             forbidden,
         } => {
@@ -321,16 +447,16 @@ fn eval_predicate(
         }
 
         // --- Stage 2: String & Path Predicates ---
-        SearchPredicate::Extension(exts) => {
-            let name = arena.get_record_name(record)?;
-            let ext = extract_extension(name)?;
+        CompiledPredicate::Extension(exts) => {
+            let name_bytes = arena.get_record_name_bytes(record)?;
+            let ext = extract_extension_bytes(name_bytes)?;
             if exts.iter().any(|e| e.eq_ignore_ascii_case(ext)) {
                 Some(150)
             } else {
                 None
             }
         }
-        SearchPredicate::PathPrefix(prefix) => {
+        CompiledPredicate::PathPrefix(prefix) => {
             let dir_path = arena.dirs().get_path(record.dir_id)?;
             if dir_path.starts_with(prefix) {
                 Some(100)
@@ -338,54 +464,66 @@ fn eval_predicate(
                 None
             }
         }
-        SearchPredicate::Regex(re) => {
-            let name = arena.get_record_name(record)?;
-            if re.is_match(name) {
-                Some(500)
+        CompiledPredicate::Regex(opt_re) => {
+            let name_bytes = arena.get_record_name_bytes(record)?;
+            if let Some(re) = opt_re {
+                if re.is_match(name_bytes) {
+                    Some(500)
+                } else {
+                    None
+                }
             } else {
                 None
             }
         }
-        SearchPredicate::Text { term, quoted } => {
-            let name = arena.get_record_name(record)?;
-            eval_text_term(name, term, *quoted, matcher, char_buf)
+        CompiledPredicate::Text {
+            term,
+            term_bytes,
+            quoted,
+            atom,
+        } => {
+            let name_bytes = arena.get_record_name_bytes(record)?;
+            eval_compiled_text_term_bytes(
+                name_bytes, term, term_bytes, *quoted, atom, matcher, char_buf,
+            )
         }
     }
 }
 
-/// Evaluates a text term against a filename with strict score ordering:
-/// Exact Match (20,000+) > Prefix Match (10,000+) > Substring Match (5,000+) > Fuzzy Match (1..1,000)
+/// Evaluates a text term against a filename with pre-compiled Atom
 #[inline(always)]
-fn eval_text_term(
-    name: &str,
-    term: &str,
+fn eval_compiled_text_term_bytes(
+    name_bytes: &[u8],
+    _term: &str,
+    term_bytes: &[u8],
     quoted: bool,
+    atom: &Atom,
     matcher: &mut Matcher,
     char_buf: &mut Vec<char>,
 ) -> Option<u32> {
-    if term.is_empty() {
+    if term_bytes.is_empty() {
         return Some(1);
     }
 
     // 1. Exact full name match (case-insensitive)
-    if equals_case_insensitive(name, term) {
-        return Some(30_000 + (term.len() as u32).min(5_000));
+    if name_bytes.eq_ignore_ascii_case(term_bytes) {
+        return Some(30_000 + (term_bytes.len() as u32).min(5_000));
     }
 
     // 2. Exact stem match (case-insensitive filename without extension)
-    let stem = extract_stem(name);
-    if equals_case_insensitive(stem, term) {
-        return Some(20_000 + (term.len() as u32).min(5_000));
+    let stem = extract_stem_bytes(name_bytes);
+    if stem.eq_ignore_ascii_case(term_bytes) {
+        return Some(20_000 + (term_bytes.len() as u32).min(5_000));
     }
 
     // 3. Prefix match (case-insensitive)
-    if starts_with_case_insensitive(name, term) {
-        return Some(10_000 + (term.len() as u32).min(5_000));
+    if starts_with_case_insensitive_bytes(name_bytes, term_bytes) {
+        return Some(10_000 + (term_bytes.len() as u32).min(5_000));
     }
 
-    // 4. Substring match (case-insensitive)
-    if contains_case_insensitive(name, term) {
-        return Some(5_000 + (term.len() as u32).min(4_000));
+    // 4. Substring match (case-insensitive via SIMD memchr)
+    if contains_case_insensitive_bytes(name_bytes, term_bytes) {
+        return Some(5_000 + (term_bytes.len() as u32).min(4_000));
     }
 
     // If quoted, fuzzy matching is disabled; must match as exact substring
@@ -393,29 +531,25 @@ fn eval_text_term(
         return None;
     }
 
-    // 4. Fuzzy match via nucleo-matcher
-    let utf32_name = if name.is_ascii() {
-        Utf32Str::Ascii(name.as_bytes())
-    } else {
-        Utf32Str::new(name, char_buf)
+    // 5. Fuzzy match via pre-compiled nucleo-matcher Atom
+    let name_str = match std::str::from_utf8(name_bytes) {
+        Ok(s) => s,
+        Err(_) => return None,
     };
-
-    let atom = Atom::new(
-        term,
-        CaseMatching::Ignore,
-        Normalization::Smart,
-        AtomKind::Fuzzy,
-        false,
-    );
+    let utf32_name = if name_str.is_ascii() {
+        Utf32Str::Ascii(name_bytes)
+    } else {
+        Utf32Str::new(name_str, char_buf)
+    };
 
     let fuzzy_score = atom.score(utf32_name, matcher)?;
     Some(fuzzy_score as u32)
 }
 
-/// Extracts the filename stem (excluding extension if present)
-#[inline]
-fn extract_stem(name: &str) -> &str {
-    if let Some(dot_idx) = name.as_bytes().iter().rposition(|&b| b == b'.') {
+/// Extracts the filename stem (excluding extension if present) from raw bytes
+#[inline(always)]
+fn extract_stem_bytes(name: &[u8]) -> &[u8] {
+    if let Some(dot_idx) = memchr::memrchr(b'.', name) {
         if dot_idx > 0 {
             return &name[..dot_idx];
         }
@@ -423,16 +557,65 @@ fn extract_stem(name: &str) -> &str {
     name
 }
 
-/// Extracts the file extension after the last dot in the filename
-#[inline]
-fn extract_extension(name: &str) -> Option<&str> {
-    let bytes = name.as_bytes();
-    let dot_idx = bytes.iter().rposition(|&b| b == b'.')?;
+/// Extracts the file extension after the last dot in the filename from raw bytes
+#[inline(always)]
+fn extract_extension_bytes(bytes: &[u8]) -> Option<&[u8]> {
+    let dot_idx = memchr::memrchr(b'.', bytes)?;
     if dot_idx > 0 && dot_idx + 1 < bytes.len() {
-        Some(&name[dot_idx + 1..])
+        Some(&bytes[dot_idx + 1..])
     } else {
         None
     }
+}
+
+/// Zero-allocation case-insensitive ASCII prefix check for bytes
+#[inline(always)]
+fn starts_with_case_insensitive_bytes(haystack: &[u8], prefix: &[u8]) -> bool {
+    if haystack.len() < prefix.len() {
+        return false;
+    }
+    haystack[..prefix.len()].eq_ignore_ascii_case(prefix)
+}
+
+/// High-performance SIMD-accelerated case-insensitive ASCII substring search
+#[inline(always)]
+pub fn contains_case_insensitive_bytes(haystack: &[u8], needle: &[u8]) -> bool {
+    if needle.is_empty() {
+        return true;
+    }
+    if haystack.len() < needle.len() {
+        return false;
+    }
+
+    let b0 = needle[0];
+    let b0_lower = b0.to_ascii_lowercase();
+    let b0_upper = b0.to_ascii_uppercase();
+
+    let mut remaining = haystack;
+    let needle_len = needle.len();
+
+    while remaining.len() >= needle_len {
+        let match_idx = if b0_lower == b0_upper {
+            memchr::memchr(b0_lower, remaining)
+        } else {
+            memchr::memchr2(b0_lower, b0_upper, remaining)
+        };
+
+        match match_idx {
+            Some(idx) => {
+                if idx + needle_len > remaining.len() {
+                    return false;
+                }
+                if remaining[idx..idx + needle_len].eq_ignore_ascii_case(needle) {
+                    return true;
+                }
+                remaining = &remaining[idx + 1..];
+            }
+            None => return false,
+        }
+    }
+
+    false
 }
 
 /// Zero-allocation case-insensitive ASCII equality check
@@ -444,42 +627,11 @@ pub fn equals_case_insensitive(haystack: &str, needle: &str) -> bool {
 /// Zero-allocation case-insensitive ASCII prefix check
 #[inline]
 pub fn starts_with_case_insensitive(haystack: &str, prefix: &str) -> bool {
-    if haystack.len() < prefix.len() {
-        return false;
-    }
-    haystack[..prefix.len()].eq_ignore_ascii_case(prefix)
+    starts_with_case_insensitive_bytes(haystack.as_bytes(), prefix.as_bytes())
 }
 
 /// Zero-allocation case-insensitive ASCII substring search
 #[inline]
 pub fn contains_case_insensitive(haystack: &str, needle: &str) -> bool {
-    let needle_bytes = needle.as_bytes();
-    let haystack_bytes = haystack.as_bytes();
-
-    if needle_bytes.is_empty() {
-        return true;
-    }
-    if haystack_bytes.len() < needle_bytes.len() {
-        return false;
-    }
-
-    let first_byte = needle_bytes[0];
-    let max_start = haystack_bytes.len() - needle_bytes.len();
-
-    for start in 0..=max_start {
-        if haystack_bytes[start].eq_ignore_ascii_case(&first_byte) {
-            let mut matches = true;
-            for j in 1..needle_bytes.len() {
-                if !haystack_bytes[start + j].eq_ignore_ascii_case(&needle_bytes[j]) {
-                    matches = false;
-                    break;
-                }
-            }
-            if matches {
-                return true;
-            }
-        }
-    }
-
-    false
+    contains_case_insensitive_bytes(haystack.as_bytes(), needle.as_bytes())
 }
