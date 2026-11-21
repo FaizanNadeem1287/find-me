@@ -5,7 +5,17 @@ use crate::error::{EngineError, Result};
 use crate::pool::StringPool;
 use crate::record::{reconstruct_path, FileFlags, FileRecord};
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
+use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
+
+#[inline(always)]
+fn hash_filename(name: &str) -> u64 {
+    let mut s = DefaultHasher::new();
+    name.hash(&mut s);
+    s.finish()
+}
 
 /// Unified in-memory file index container
 ///
@@ -17,6 +27,8 @@ pub struct FileArena {
     records: Vec<FileRecord>,
     pool: StringPool,
     dirs: DirectoryTable,
+    #[serde(skip)]
+    lookup: HashMap<(u32, u64), usize>,
 }
 
 impl FileArena {
@@ -26,6 +38,7 @@ impl FileArena {
             records: Vec::new(),
             pool: StringPool::new(),
             dirs: DirectoryTable::new(),
+            lookup: HashMap::new(),
         }
     }
 
@@ -35,6 +48,7 @@ impl FileArena {
             records: Vec::with_capacity(records),
             pool: StringPool::with_capacity(string_bytes),
             dirs: DirectoryTable::with_capacity(dirs),
+            lookup: HashMap::with_capacity(records),
         }
     }
 
@@ -70,6 +84,8 @@ impl FileArena {
 
         let record = FileRecord::new(dir_id, name_offset, name_len, flags, size_bytes, mtime_secs);
         self.records.push(record);
+        self.lookup
+            .insert((dir_id, hash_filename(&file_name)), record_idx);
 
         Ok(record_idx as u32)
     }
@@ -77,6 +93,10 @@ impl FileArena {
     /// Adds an already constructed `FileRecord` directly to the arena
     pub fn add_record(&mut self, record: FileRecord) -> u32 {
         let idx = self.records.len() as u32;
+        if let Some(name) = self.pool.get(record.name_offset, record.name_len) {
+            self.lookup
+                .insert((record.dir_id, hash_filename(name)), idx as usize);
+        }
         self.records.push(record);
         idx
     }
@@ -109,6 +129,119 @@ impl FileArena {
     #[inline(always)]
     pub fn get_record_name(&self, record: &FileRecord) -> Option<&str> {
         self.pool.get(record.name_offset, record.name_len)
+    }
+
+    /// Rebuilds the fast path lookup index from current records
+    pub fn rebuild_lookup(&mut self) {
+        self.lookup.clear();
+        for (idx, record) in self.records.iter().enumerate() {
+            if !record.flags.is_deleted() {
+                if let Some(name) = self.pool.get(record.name_offset, record.name_len) {
+                    self.lookup
+                        .insert((record.dir_id, hash_filename(name)), idx);
+                }
+            }
+        }
+    }
+
+    /// Finds a record index by its full POSIX path in O(1)
+    pub fn find_record_by_path(&self, path: &Path) -> Option<usize> {
+        let parent = match path.parent() {
+            Some(p) if !p.as_os_str().is_empty() => p,
+            _ => Path::new("/"),
+        };
+        let dir_id = self.dirs.get_id(parent)?;
+        let file_name = path.file_name()?.to_str()?;
+        let h = hash_filename(file_name);
+
+        if let Some(&idx) = self.lookup.get(&(dir_id, h)) {
+            let record = self.records.get(idx)?;
+            if !record.flags.is_deleted() && record.dir_id == dir_id {
+                if let Some(name) = self.pool.get(record.name_offset, record.name_len) {
+                    if name == file_name {
+                        return Some(idx);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    /// Removes a file from the arena by marking its record as deleted (tombstoned)
+    pub fn remove_file(&mut self, path: &Path) -> bool {
+        if let Some(idx) = self.find_record_by_path(path) {
+            if let Some(record) = self.records.get_mut(idx) {
+                record.flags.insert(FileFlags::IS_DELETED);
+            }
+            let parent = match path.parent() {
+                Some(p) if !p.as_os_str().is_empty() => p,
+                _ => Path::new("/"),
+            };
+            if let Some(dir_id) = self.dirs.get_id(parent) {
+                if let Some(file_name) = path.file_name().and_then(|s| s.to_str()) {
+                    self.lookup.remove(&(dir_id, hash_filename(file_name)));
+                }
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Updates existing file metadata (size, mtime, flags)
+    pub fn update_file_metadata(
+        &mut self,
+        path: &Path,
+        size_bytes: u64,
+        mtime_secs: u64,
+        flags: FileFlags,
+    ) -> bool {
+        if let Some(idx) = self.find_record_by_path(path) {
+            if let Some(record) = self.records.get_mut(idx) {
+                record.size_bytes = size_bytes;
+                record.mtime_secs = mtime_secs;
+                record.flags = flags;
+                return true;
+            }
+        }
+        false
+    }
+
+    /// Renames a file from `from` to `to` in-place without creating duplicate records
+    pub fn rename_file(&mut self, from: &Path, to: &Path) -> Result<bool> {
+        if let Some(idx) = self.find_record_by_path(from) {
+            let from_parent = match from.parent() {
+                Some(p) if !p.as_os_str().is_empty() => p,
+                _ => Path::new("/"),
+            };
+            if let Some(from_dir_id) = self.dirs.get_id(from_parent) {
+                if let Some(from_name) = from.file_name().and_then(|s| s.to_str()) {
+                    self.lookup.remove(&(from_dir_id, hash_filename(from_name)));
+                }
+            }
+
+            let to_parent = match to.parent() {
+                Some(p) if !p.as_os_str().is_empty() => p,
+                _ => Path::new("/"),
+            };
+            let to_dir_id = self.dirs.get_or_insert(to_parent);
+            let to_name = match to.file_name() {
+                Some(n) => n.to_string_lossy(),
+                None => std::borrow::Cow::Borrowed(""),
+            };
+            let (new_offset, new_len) = self.pool.append(&to_name)?;
+
+            if let Some(record) = self.records.get_mut(idx) {
+                record.dir_id = to_dir_id;
+                record.name_offset = new_offset;
+                record.name_len = new_len;
+            }
+            self.lookup
+                .insert((to_dir_id, hash_filename(&to_name)), idx);
+            Ok(true)
+        } else {
+            Ok(false)
+        }
     }
 
     /// Read-only slice of all file records in the arena

@@ -12,6 +12,7 @@ pub mod matcher;
 pub mod pool;
 pub mod query;
 pub mod record;
+pub mod watcher;
 
 pub use arena::FileArena;
 pub use crawler::{
@@ -26,6 +27,7 @@ pub use query::{
     Lexer, QueryAst, QueryNode, QueryParser, SearchPredicate, Token, KNOWN_OPERATORS,
 };
 pub use record::{reconstruct_path, FileFlags, FileRecord, SearchResultItem};
+pub use watcher::{FsWatcher, FsWatcherConfig};
 
 /// Engine version information
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
