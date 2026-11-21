@@ -505,4 +505,57 @@ Hash | Branch | Commit Message & Description
 
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
-- **Next Task**: `[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting` (`6j4626WxWR8QpqCQ`) on branch `feature/p5-virtual-table`.
+- **Completed Task**: `[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators` (`6j4626XH6CwVVVGQ`).
+
+---
+
+## Session 14: 2026-11-22 (Completion of Phase 5 / Task 5.2 - Virtualized 60 FPS Tabular Results View & Column Sorting)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 5.2: `[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting` (`6j4626WxWR8QpqCQ`).
+2. Authored detailed implementation plan artifact: `task-5-2-implementation-plan.md`.
+3. Created feature branch `feature/p5-virtual-table` from `main` and moved Todoist task to `In Progress`.
+4. Implemented $O(1)$ windowed slice virtualization engine in `crates/findme-ui/src/views/table.rs` and `crates/findme-ui/src/state.rs`:
+   - `compute_virtual_range()` computes visible range `(start_idx, end_idx, top_spacer, bottom_spacer)` based on scroll Y, viewport height, row height (30px), and overscan rows (5).
+   - Only ~30 rows instantiated per frame regardless of total record count (100k+ records).
+   - Exact scrollbar thumb proportion maintained via top and bottom layout spacers.
+5. Implemented 5 information-rich columns:
+   - Name: `📁` / `📄` icon + filename string (`Length::FillPortion(4)`).
+   - Path: Enclosing directory path (`Length::FillPortion(5)`).
+   - Size: Formatted binary size via `formatted_size()` (`Length::FillPortion(2)`).
+   - Date Modified: Formatted timestamp via `formatted_mtime()` (`Length::FillPortion(2)`).
+   - Type: Categorized extension via `item_type_str()` (`Length::FillPortion(1)`).
+6. Implemented interactive column header sorting with visual direction indicators (`▲` / `▼`):
+   - Multi-column sorting across Name, Path, Size, Modified, and Type with secondary filename tiebreaker.
+   - Header button clicks toggle ascending/descending order.
+7. Implemented full keyboard navigation and row selection:
+   - `ArrowUp` / `ArrowDown`: Step selection up/down with automatic viewport tracking via `scroll_to_selected_row()`.
+   - `PageUp` / `PageDown`: 15-row page jumping.
+   - `Home` / `End`: Jump to first or last item.
+   - `Enter`: Trigger `OpenFile`.
+   - `Alt + Enter`: Trigger `OpenContainingFolder`.
+8. Built comprehensive test suite in `crates/findme-ui/tests/virtual_table_tests.rs` (7 integration tests):
+   - Virtual range edge cases (0 rows, invalid height, small list, medium list, 100k items).
+   - 100,000 records performance stress test: view rendering computed in **234µs** (<5ms budget met).
+   - All 5 columns sorting verification (Ascending and Descending).
+   - Item type string categorization.
+   - Keyboard selection navigation and action triggers.
+9. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 quality gates (formatting, zero clippy warnings with `-D warnings`, **151 passing tests** across workspace).
+10. Committed to `feature/p5-virtual-table` (`702974f`) and merged into `main` via non-fast-forward merge (`git merge --no-ff`).
+11. Preserved `feature/p5-virtual-table` branch permanently in Git.
+12. Updated Todoist card `6j4626WxWR8QpqCQ`: posted implementation audit comment (`6j46xpxjQ4gQWqxx`) and marked task `Completed`.
+13. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`702974f` | `feature/p5-virtual-table` | `feat(ui): virtualized 60 FPS tabular results view and column sorting (Task 5.2)`
+`5a01bc1` (merge) | `main` | `feat(p5): virtualized 60 FPS tabular results view & column sorting (Task 5.2)`
+
+### Todoist State Updates:
+- Task: `[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting` (`6j4626WxWR8QpqCQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626WxWR8QpqCQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-6.1] UI: Advanced Search Form & Filter Builder` (`6j4626WQfF4HggVx`) on branch `feature/p6-advanced-screen`.
