@@ -41,14 +41,54 @@ pub struct AppState {
     pub is_searching: bool,
     /// Monotonically increasing generation counter to invalidate stale debounced queries
     pub search_generation: u64,
+    /// Current vertical scroll position in results table (pixels)
+    pub scroll_y: f32,
+    /// Active viewport height of the results table (pixels)
+    pub table_viewport_height: f32,
 }
 
 /// Constant ID string for the main search input field
 pub const SEARCH_INPUT_ID: &str = "main_search_input";
 
+/// Constant ID string for the results table scrollable container
+pub const TABLE_SCROLLABLE_ID: &str = "results_table_scrollable";
+
 /// Returns the widget ID for the main search text input
 pub fn search_input_id() -> iced::widget::Id {
     iced::widget::Id::new(SEARCH_INPUT_ID)
+}
+
+/// Returns the widget ID for the results table scrollable container
+pub fn table_scrollable_id() -> iced::widget::Id {
+    iced::widget::Id::new(TABLE_SCROLLABLE_ID)
+}
+
+/// Computes the visible window (start_index, end_index, top_spacer_px, bottom_spacer_px)
+/// for high-performance virtualized tabular rendering.
+pub fn compute_virtual_range(
+    total_rows: usize,
+    scroll_y: f32,
+    viewport_height: f32,
+    row_height: f32,
+    overscan: usize,
+) -> (usize, usize, f32, f32) {
+    if total_rows == 0 || row_height <= 0.0 {
+        return (0, 0, 0.0, 0.0);
+    }
+
+    let y = scroll_y.max(0.0);
+    let vh = viewport_height.max(100.0);
+
+    let raw_start = (y / row_height).floor() as usize;
+    let start = raw_start.saturating_sub(overscan).min(total_rows);
+
+    let visible_count = (vh / row_height).ceil() as usize + (overscan * 2);
+    let end = (start + visible_count).min(total_rows);
+
+    let top_spacer = start as f32 * row_height;
+    let bottom_spacer = (total_rows.saturating_sub(end)) as f32 * row_height;
+
+    (start, end, top_spacer, bottom_spacer)
 }
 
 /// Determines whether a search query is "heavy" and requires debouncing
@@ -130,6 +170,8 @@ impl Default for AppState {
             last_search_duration_ms: 0,
             is_searching: false,
             search_generation: 0,
+            scroll_y: 0.0,
+            table_viewport_height: 600.0,
         }
     }
 }
