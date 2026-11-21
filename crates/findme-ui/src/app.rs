@@ -1,6 +1,9 @@
 //! Top-level FindMeApp Elm-architecture loop
 
-use crate::message::{AdvancedSearchMessage, ColumnId, IndexManagementMessage, Message, ScreenId};
+use crate::message::{
+    AdvancedSearchMessage, ColumnId, HistoryMessage, IndexManagementMessage, Message, ScreenId,
+    SettingsMessage,
+};
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
 use iced::widget::{column, operation, row};
@@ -247,8 +250,18 @@ impl FindMeApp {
             Message::ResultsReceived {
                 results,
                 search_duration_ms,
-                total_matches: _,
+                total_matches,
             } => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                self.state.history.record_query(
+                    &self.state.query,
+                    total_matches,
+                    search_duration_ms,
+                    now,
+                );
                 self.state.results = results;
                 self.state.last_search_duration_ms = search_duration_ms;
                 self.state.is_searching = false;
@@ -471,6 +484,78 @@ impl FindMeApp {
                             crate::index_mgmt::IndexingState::Idle;
                         self.state.notification =
                             Some("Index rebuild completed successfully".to_string());
+                    }
+                }
+                Task::none()
+            }
+            Message::History(hist_msg) => {
+                match hist_msg {
+                    HistoryMessage::ExecuteQuery(query) => {
+                        self.state.query = query.clone();
+                        self.state.active_screen = ScreenId::Search;
+                        return self.update(Message::RunQuery(query));
+                    }
+                    HistoryMessage::ToggleBookmark(id) => {
+                        self.state.history.toggle_bookmark(id);
+                    }
+                    HistoryMessage::RemoveEntry(id) => {
+                        if self.state.history.remove_entry(id) {
+                            self.state.notification =
+                                Some("Removed query from history".to_string());
+                        }
+                    }
+                    HistoryMessage::ClearHistory => {
+                        self.state.history.clear();
+                        self.state.notification = Some("Search history cleared".to_string());
+                    }
+                    HistoryMessage::ToggleFilterBookmarked(b) => {
+                        self.state.history.filter_bookmarked_only = b;
+                    }
+                    HistoryMessage::UpdateSearchFilter(filter) => {
+                        self.state.history.search_filter = filter;
+                    }
+                }
+                Task::none()
+            }
+            Message::Settings(settings_msg) => {
+                match settings_msg {
+                    SettingsMessage::ToggleAutostart(b) => {
+                        self.state.settings.autostart = b;
+                    }
+                    SettingsMessage::ToggleCloseToTray(b) => {
+                        self.state.settings.close_to_tray = b;
+                    }
+                    SettingsMessage::ToggleDefaultRegex(b) => {
+                        self.state.settings.default_regex = b;
+                    }
+                    SettingsMessage::ToggleDefaultCase(b) => {
+                        self.state.settings.default_case_sensitive = b;
+                    }
+                    SettingsMessage::SetMaxResults(limit) => {
+                        self.state.settings.max_results = limit;
+                    }
+                    SettingsMessage::ToggleExcludeHidden(b) => {
+                        self.state.settings.exclude_hidden_files = b;
+                    }
+                    SettingsMessage::ToggleExcludeSystem(b) => {
+                        self.state.settings.exclude_system_paths = b;
+                    }
+                    SettingsMessage::ResetToDefaults => {
+                        self.state.settings = crate::settings::AppSettings::default();
+                        self.state.notification = Some("Settings restored to defaults".to_string());
+                    }
+                    SettingsMessage::SaveSettings => {
+                        let path = crate::settings::AppSettings::config_path();
+                        match self.state.settings.save_to_path(&path) {
+                            Ok(()) => {
+                                self.state.notification =
+                                    Some("Preferences saved successfully".to_string());
+                            }
+                            Err(e) => {
+                                self.state.notification =
+                                    Some(format!("Error saving preferences: {e}"));
+                            }
+                        }
                     }
                 }
                 Task::none()
