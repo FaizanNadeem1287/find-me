@@ -377,3 +377,53 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Next Task**: `[TASK-4.1] UI: Iced Desktop Shell, Elm Architecture Loop & Responsive Layout` (`6j4626RgWpm7GJqQ`) on branch `feature/p4-ui-shell`.
+
+---
+
+## Session 11: 2026-11-22 (Completion of Phase 4 / Task 4.1 - Iced Desktop Shell & Navigation Layout)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 4.1: `[TASK-4.1] UI: Iced Desktop Shell, Elm Architecture Loop & Responsive Layout` (`6j4626RgWpm7GJqQ`).
+2. Authored detailed implementation plan artifact: `task-4-1-implementation-plan.md`.
+3. Created feature branch `feature/p4-ui-shell` from `main` and moved Todoist task to `In Progress`.
+4. Extended `AppState` in `crates/findme-ui/src/state.rs` with `sidebar_expanded`, `window_width`, `window_height`, and `notification`.
+5. Extended `Message` in `crates/findme-ui/src/message.rs` with `ToggleSidebar`, `WindowResized`, `ShowNotification`, `DismissNotification`, and `RunQuery`.
+6. Built responsive sidebar component in `crates/findme-ui/src/views/sidebar.rs` with active route indicators, 220px expanded / 68px compact modes, sidebar collapse toggle, and theme toggle.
+7. Created modular view dispatcher and screens in `crates/findme-ui/src/views/`:
+   - `search.rs`: Search bar, stats summary, and results container.
+   - `advanced.rs`: Visual query builder for extensions, sizes, dates, and paths.
+   - `index_mgmt.rs`: System index statistics cards, exclusions overview, and crawler rebuild/refresh actions.
+   - `history.rs`: Search history and quick-run saved queries.
+   - `settings.rs`: Search defaults, hotkeys reference sheet, and theme preferences.
+   - `about.rs`: Application branding, architecture summary, and repository links.
+   - `mod.rs`: Top-level view router and notification banner toast widget.
+8. Configured standard window settings (`window_settings`: 1200x800 default, 800x600 minimum size).
+9. Implemented headless integration test suite `crates/findme-ui/tests/shell_navigation_tests.rs` (10 tests):
+   - Initial state & window settings verification.
+   - Exhaustive routing across all 6 screens (`Search`, `AdvancedSearch`, `IndexManagement`, `SearchHistory`, `Settings`, `About`).
+   - View rendering validation for every screen in both expanded and collapsed sidebar modes.
+   - Sidebar toggle state transitions.
+   - Window resize event tracking.
+   - Notification banner display and dismissal lifecycle.
+   - Query redirect from Advanced Search to Search view.
+   - Dark/Light theme toggles.
+   - Search results reception and multi-column sorting.
+10. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 quality gates (zero warnings, 129 passing tests across workspace).
+11. Committed to `feature/p4-ui-shell` (`940c3d1`) and merged into `main` via non-fast-forward merge (`9379655`).
+12. Preserved `feature/p4-ui-shell` branch permanently in Git.
+13. Updated Todoist card `6j4626RgWpm7GJqQ`: posted implementation audit comment (`6j46jvq9CfQ8GG5x`) and marked task `Completed`.
+14. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`940c3d1` | `feature/p4-ui-shell` | `feat(ui): implement Iced desktop shell, Elm architecture loop and responsive layout (Task 4.1)`
+`9379655` (merge) | `main` | `feat(p4): Iced desktop shell, Elm architecture loop & responsive layout (Task 4.1)`
+
+### Todoist State Updates:
+- Task: `[TASK-4.1] UI: Iced Desktop Shell, Elm Architecture Loop & Responsive Layout` (`6j4626RgWpm7GJqQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626RgWpm7GJqQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-4.2] UI: Cohesive Linux Dark & Light Theming with System Theme Sync` (`6j4626W6435GR4rx`) on branch `feature/p4-ui-theming`.
