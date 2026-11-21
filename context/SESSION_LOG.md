@@ -321,3 +321,59 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Next Task**: `[TASK-3.2] Storage: Zero-Copy Binary Index Persistence & Instant Startup` on branch `feature/p3-index-persistence`.
+
+---
+
+## Session 10: 2026-11-22 (Completion of Phase 3 / Task 3.2 - Binary Index Persistence & Instant Startup)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 3.2: `[TASK-3.2] Storage: Zero-Copy Binary Index Persistence & Instant Startup` (`6j4626Rgg9VW7fcQ`).
+2. Authored detailed implementation plan artifact: `task-3-2-implementation-plan.md`.
+3. Created feature branch `feature/p3-index-persistence` from `main` and verified Todoist task status.
+4. Added `crc32fast = "1.4"` to workspace dependencies in root `Cargo.toml` and enabled in `findme-core`.
+5. Implemented `crates/findme-core/src/storage.rs`:
+   - `StorageHeader`: 32-byte header with magic bytes `FINDME\x01\0`, schema version `1`, creation timestamp, record count, and CRC32 checksum.
+   - `IndexStorage`: Atomic write engine writing to `.index.bin.tmp.<pid>.<ts>`, issuing `.sync_all()`, and executing atomic `rename`.
+   - FreeDesktop XDG compliance via `$XDG_CACHE_HOME/find-me/index.bin`.
+   - Memory-mapped zero-copy reading via `memmap2`.
+   - Hardware SIMD-accelerated IEEE 802.3 CRC32 verification using `crc32fast`.
+   - Zero-copy sectional payload serialization and deserialization (DirectoryTable, StringPool, and raw `FileRecord` slice).
+   - Safe corruption recovery via `load_or_fallback` returning `None` gracefully on truncated, invalid, or corrupted files.
+6. Optimized `FileArena` and `DirectoryTable`:
+   - Fast FNV-1a hashing algorithm for filename lookups.
+   - Added `FileArena::from_parts`, `StringPool::as_bytes`, `StringPool::from_bytes`, and `DirectoryTable::entries`.
+   - Fixed `DirectoryTable::get_or_insert` to handle `..` and `.` parent traversal without losing segments.
+7. Benchmarked 1,000,000 synthetic records persistence and cold startup:
+   - Persisting 1,000,000 records completed in 46.06ms (46.81 MB on disk).
+   - Cold startup from disk completed in **34.8ms**, well under the 50ms performance budget.
+8. Created exhaustive integration and edge-case test suite `crates/findme-core/tests/storage_edge_cases.rs` (11 tests):
+   - Basic roundtrip with nested directories and flags.
+   - Missing file error and fallback.
+   - 0-byte empty file handling.
+   - Truncated header (<32 bytes) rejection.
+   - Invalid magic bytes detection.
+   - Schema version mismatch detection.
+   - Bit-flip CRC32 checksum mismatch detection.
+   - Truncated payload detection.
+   - Atomic overwrite and temporary file cleanup verification.
+   - FreeDesktop XDG cache path resolution.
+   - 1,000,000 records cold load latency benchmark (<50ms).
+9. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 quality gates (formatting, clippy `-D warnings`, full test suite with 124 passing tests).
+10. Committed to `feature/p3-index-persistence` (`7f1d111`) and merged into `main` via non-fast-forward merge (`cdd9bed`).
+11. Preserved `feature/p3-index-persistence` branch permanently in Git.
+12. Updated Todoist card `6j4626Rgg9VW7fcQ`: posted implementation audit comment (`6j46cMJM7j24Qc6Q`) and marked task `Completed`.
+13. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`7f1d111` | `feature/p3-index-persistence` | `feat(storage): zero-copy binary index persistence and instant cold startup`
+`cdd9bed` (merge) | `main` | `feat(TASK-3.2): zero-copy binary index persistence & instant startup`
+
+### Todoist State Updates:
+- Task: `[TASK-3.2] Storage: Zero-Copy Binary Index Persistence & Instant Startup` (`6j4626Rgg9VW7fcQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626Rgg9VW7fcQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-4.1] UI: Iced Desktop Shell, Elm Architecture Loop & Responsive Layout` (`6j4626RgWpm7GJqQ`) on branch `feature/p4-ui-shell`.
