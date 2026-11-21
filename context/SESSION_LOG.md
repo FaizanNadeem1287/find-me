@@ -753,3 +753,82 @@ Hash | Branch | Commit Message & Description
 - **Active Branch**: `main` (clean working tree).
 - **Active Phase**: `Phase 8: Linux Desktop Integration & Power Navigation`
 - **Next Task**: `[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard` (`6j4626cvg5QJcqpQ`)
+
+---
+
+## Session 19: 2026-11-22 (Completion of Task 8.1 - Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 8.1: `[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard` (`6j4626cvg5QJcqpQ`).
+2. Authored comprehensive implementation plan artifact: `task-8-1-implementation-plan.md`.
+3. Created feature branch `feature/p8-desktop-integration` and moved Todoist card to `In Progress`.
+4. Implemented `crates/findme-ui/src/desktop.rs`:
+   - `FileProperties` data structure and POSIX formatters (`format_mode`, `format_timestamp`).
+   - `get_file_properties`: Low-level POSIX metadata extraction (`mode`, `ino`, `dev`, byte size, mtime, file flags).
+   - `show_in_file_manager`: Direct FreeDesktop DBus `org.freedesktop.FileManager1.ShowItems` file highlighting with graceful fallback to `open::that_detached(parent)`.
+   - `copy_to_clipboard` and `copy_file_uri`: Native cross-protocol clipboard handling across Wayland and X11 via `arboard`.
+5. Created modular visual components:
+   - `crates/findme-ui/src/views/context_menu.rs`: 6-action floating context menu component (`Open`, `Show in Containing Folder`, `Copy Full Path`, `Copy File Name`, `Copy File URL`, `Properties...`, `Cancel`).
+   - `crates/findme-ui/src/views/properties.rs`: Detailed POSIX metadata, octal mode, inode, size, timestamps modal dialog.
+6. Connected Elm loop in `crates/findme-ui/src/app.rs`:
+   - Wired messages `OpenContextMenu`, `CloseContextMenu`, `ShowProperties`, `CloseProperties`, `CopyFileName`, `CopyFileUri`, `OpenFile`, `OpenContainingFolder`, `CopyPath`.
+   - Multi-layered modal and context menu rendering via `iced::widget::Stack`.
+   - Right-click (`mouse_area.on_right_press`), double-click (`on_double_click`), and dedicated `⋮` button on results table rows.
+7. Authored 10 integration and unit tests in `crates/findme-ui/tests/desktop_integration_tests.rs`:
+   - Validated POSIX mode formatting, timestamp conversion, real filesystem property extraction on repository files and directories, clipboard and file URI handling, DBus call safety, context menu lifecycle, properties modal lifecycle, keyboard Escape dismissal, selection shortcuts, and UI rendering.
+   - Total workspace tests reached **200 passing tests**.
+8. Pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passed 5/5.
+9. Committed to `feature/p8-desktop-integration` (`d3f2fd4`) and merged into `main` via non-fast-forward merge (`082531e`).
+10. Preserved `feature/p8-desktop-integration` branch permanently (17 branches retained).
+11. Updated Todoist card `6j4626cvg5QJcqpQ`: posted implementation audit comment (`6j47WmrR49j76XPQ`) and marked task `Completed`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`d3f2fd4` | `feature/p8-desktop-integration` | `feat(desktop): file context menu, dbus filemanager1 highlighting & clipboard (Task 8.1)`
+`082531e` (merge) | `main` | `feat(p8): file context menu, dbus filemanager1 highlighting & clipboard (Task 8.1)`
+
+---
+
+## Session 20: 2026-11-22 (Completion of Task 8.2 - Desktop: Comprehensive Keyboard-First Shortcuts & Navigation)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 8.2: `[TASK-8.2] Desktop: Comprehensive Keyboard-First Shortcuts & Navigation` (`6j4626fX8jQG3JPQ`).
+2. Authored comprehensive implementation plan artifact: `task-8-2-implementation-plan.md`.
+3. Created feature branch `feature/p8-keyboard-nav` and moved Todoist card to `In Progress`.
+4. Extended keyboard navigation in `crates/findme-ui/src/app.rs`:
+   - `Ctrl + 1` .. `Ctrl + 6`: Instant screen navigation (Search, Advanced, Index Management, History, Settings, About) with automatic search input autofocus for `Ctrl + 1`.
+   - Focus trap prevention: Switching screens immediately dismisses active context menus and modal dialogs.
+   - `Ctrl + B`: Smooth toggle of sidebar expansion/collapse.
+   - `Ctrl + T`: Instant toggle between Dark and Light visual themes with disk persistence.
+   - `F5` / `Ctrl + R`: Re-executes current search query against the index.
+   - `Alt + 1` .. `Alt + 5`: Rapid column sort switching (Name, Path, Size, Modified, Type) with direction toggling.
+   - `Ctrl + Shift + C`, `Ctrl + Shift + N`, `Ctrl + Shift + U`: Instant clipboard actions on the currently selected table row.
+   - Hierarchical `Escape` handling: Closes properties modal -> closes context menu -> clears search query -> dismisses notification banner.
+5. Updated UI views:
+   - `views::search`: Added keyboard shortcut hints to the footer status bar.
+   - `views::settings`: Expanded Desktop Shortcuts Cheat Sheet with all new navigation, theme, sidebar, sorting, and clipboard keybindings.
+6. Authored 9 exhaustive QA and headless tests in `crates/findme-ui/tests/keyboard_navigation_tests.rs`:
+   - Screen switching (`Ctrl + 1..6`), focus trap prevention, sidebar toggle (`Ctrl + B`), theme toggle (`Ctrl + T`), query refresh (`F5` / `Ctrl + R`), column sorting (`Alt + 1..5`), clipboard shortcuts (`Ctrl + Shift + C/N/U`), table stepping (`Up`, `Down`, `PageUp`, `PageDown`, `Home`, `End`), and the multi-tier Escape dismissal hierarchy.
+   - Total workspace tests reached **209 passing tests** (100% pass rate).
+7. Verified code quality via pre-merge gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - All 5 gates passed: formatting, zero-warning Clippy (`-D warnings`), 209 tests, doc tests, git status.
+8. Committed to `feature/p8-keyboard-nav` (`57aa03e`) and merged into `main` via non-fast-forward merge (`87819bf`).
+9. Preserved `feature/p8-keyboard-nav` branch permanently (18 total branches retained).
+10. Synchronized Todoist: posted implementation audit comment (`6j47Xf439V9vXvvQ`) and marked task `6j4626fX8jQG3JPQ` `Completed`.
+11. **Phase 8 (Linux Desktop Integration & Power Navigation) is 100% complete!**
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`57aa03e` | `feature/p8-keyboard-nav` | `feat(desktop): comprehensive keyboard-first shortcuts & navigation (Task 8.2)`
+`87819bf` (merge) | `main` | `feat(p8): comprehensive keyboard-first shortcuts & navigation (Task 8.2)`
+
+### Todoist State Updates:
+- Task: `[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard` (`6j4626cvg5QJcqpQ`) marked `Completed`.
+- Task: `[TASK-8.2] Desktop: Comprehensive Keyboard-First Shortcuts & Navigation` (`6j4626fX8jQG3JPQ`) marked `Completed`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Active Phase**: `Phase 9: Packaging, Release Engineering & Production QA`
+- **Next Task**: `[TASK-9.1] Release: Debian Packaging (cargo-deb), AppStream & Desktop Integration` (`6j4626XmGvvwxP8x`)
