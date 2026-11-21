@@ -1,0 +1,35 @@
+[package]
+name = "findme-core"
+description = "High-performance indexing and search engine for Find-Me"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+tokio.workspace = true
+rayon.workspace = true
+parking_lot.workspace = true
+jwalk.workspace = true
+notify.workspace = true
+walkdir.workspace = true
+nucleo-matcher.workspace = true
+regex.workspace = true
+aho-corasick.workspace = true
+memchr.workspace = true
+rkyv.workspace = true
+bincode.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+memmap2.workspace = true
+directories.workspace = true
+libc.workspace = true
+nix.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+proptest.workspace = true
+criterion.workspace = true

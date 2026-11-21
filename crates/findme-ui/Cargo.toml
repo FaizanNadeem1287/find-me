@@ -1,0 +1,19 @@
+[package]
+name = "findme-ui"
+description = "Pure Rust desktop UI for Find-Me using the Iced framework"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+findme-core.workspace = true
+iced.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+arboard.workspace = true
+open.workspace = true
+
+[dev-dependencies]
+iced_test.workspace = true
