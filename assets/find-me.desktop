@@ -1,0 +1,23 @@
+[Desktop Entry]
+Version=1.5
+Type=Application
+Name=Find-Me
+GenericName=File Search Utility
+Comment=Instant, lightweight Linux desktop file search inspired by Windows Everything
+Exec=find-me %F
+Icon=find-me
+Terminal=false
+Categories=System;Filesystem;
+Keywords=search;find;everything;files;fast;index;
+StartupNotify=true
+StartupWMClass=find-me
+MimeType=inode/directory;
+Actions=NewWindow;RebuildIndex;
+
+[Desktop Action NewWindow]
+Name=New Search Window
+Exec=find-me --new-window
+
+[Desktop Action RebuildIndex]
+Name=Rebuild Search Index
+Exec=find-me --rebuild-index

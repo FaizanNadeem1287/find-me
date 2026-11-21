@@ -1,6 +1,6 @@
 [package]
 name = "findme-cli"
-description = "Command-line harness and benchmark utility for Find-Me"
+description = "Command-line harness, GUI launcher, and release packaging target for Find-Me"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -14,7 +14,26 @@ path = "src/main.rs"
 [dependencies]
 findme-core.workspace = true
 findme-ui.workspace = true
+iced.workspace = true
 tokio.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+
+[package.metadata.deb]
+name = "find-me"
+maintainer = "Find-Me Team <dev@find-me.local>"
+copyright = "2026 Find-Me Authors"
+extended-description = """\
+Find-Me is an offline-first, high-performance Linux desktop file search \
+utility written in 100% pure Rust. It indexes millions of files into an \
+in-memory arena and evaluates queries in sub-5ms."""
+depends = "$auto, libc6 (>= 2.31), libxkbcommon0 (>= 1.0.0), libwayland-client0 (>= 1.20.0)"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/find-me", "usr/bin/find-me", "755"],
+    ["../../assets/find-me.desktop", "usr/share/applications/find-me.desktop", "644"],
+    ["../../assets/icons/find-me.svg", "usr/share/icons/hicolor/scalable/apps/find-me.svg", "644"],
+    ["../../assets/io.github.faizan_nadeem.find_me.metainfo.xml", "usr/share/metainfo/io.github.faizan_nadeem.find_me.metainfo.xml", "644"],
+]
