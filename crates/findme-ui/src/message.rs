@@ -101,6 +101,22 @@ pub enum Message {
     OpenContainingFolder(String),
     /// User requested to copy file path to clipboard
     CopyPath(String),
+    /// User requested to copy file name to clipboard
+    CopyFileName(String),
+    /// User requested to copy file URL (file://...) to clipboard
+    CopyFileUri(String),
+    /// Open context menu for item at position (x, y)
+    OpenContextMenu {
+        item: SearchResultItem,
+        x: f32,
+        y: f32,
+    },
+    /// Dismiss context menu
+    CloseContextMenu,
+    /// Open file properties modal dialog
+    ShowProperties(String),
+    /// Close file properties modal dialog
+    CloseProperties,
     /// Background engine sent search results
     ResultsReceived {
         results: Vec<SearchResultItem>,
