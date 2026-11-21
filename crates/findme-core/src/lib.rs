@@ -9,6 +9,7 @@ pub mod crawler;
 pub mod directory;
 pub mod error;
 pub mod pool;
+pub mod query;
 pub mod record;
 
 pub use arena::FileArena;
@@ -18,6 +19,10 @@ pub use crawler::{
 pub use directory::{DirectoryEntry, DirectoryTable, ROOT_DIR_ID};
 pub use error::{EngineError, Result};
 pub use pool::StringPool;
+pub use query::{
+    parse_attrib_filter, parse_date_filter, parse_iso_date, parse_size_bytes, parse_size_filter,
+    Lexer, QueryAst, QueryNode, QueryParser, SearchPredicate, Token, KNOWN_OPERATORS,
+};
 pub use record::{reconstruct_path, FileFlags, FileRecord, SearchResultItem};
 
 /// Engine version information
