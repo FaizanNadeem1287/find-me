@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-21 23:32 PKT
+*Last Updated*: 2026-11-21 23:35 PKT
 
 ---
 
@@ -9,26 +9,30 @@
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 1: Core Engine - Multithreaded Crawler & In-Memory Arena** | Documented in `PHASES.md`
-**Active Task ID** | **[TASK-1.1] Core: Compact 32-Byte FileRecord, Arena & String Pool** (`6j4626Qxrf4Q6vRx`) | Moved to `In Progress`
-**Active Git Branch** | `feature/p1-memory-arena` | Branched from `main`; will be retained permanently
-**Todoist Card** | `[TASK-1.1] Core: Compact 32-Byte FileRecord, Arena & String Pool` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
+**Active Task ID** | None (Task 1.1 Completed; awaiting Task 1.2 assignment) | Next: Task 1.2 Parallel Crawler
+**Active Git Branch** | `main` | Clean working tree; `feature/p1-memory-arena` retained permanently
+**Todoist Card** | `[TASK-1.1] Core: Compact 32-Byte FileRecord, Arena & String Pool` (`6j4626Qxrf4Q6vRx`) | Section: **Completed** (`6j45x63Fqh349Gxx`)
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
 
-## 2. Active Implementation Objectives in Task 1.1
+## 2. Completed Milestones in Task 1.1
 
-- [ ] Implement `StringPool` append-only arena with UTF-8 slice borrowing (`crates/findme-core/src/pool.rs`).
-- [ ] Refactor `DirectoryTable` with $O(1)$ `HashMap` index and hierarchical parent pointer deduplication (`crates/findme-core/src/directory.rs`).
-- [ ] Refine `FileRecord` 32-byte layout with explicit `_reserved: u32` and `reconstruct_path` (`crates/findme-core/src/record.rs`).
-- [ ] Implement `FileFlags` operators and `IS_READONLY`.
-- [ ] Implement `FileArena` unified container (`crates/findme-core/src/arena.rs`).
-- [ ] Write comprehensive unit tests and memory footprint benchmark (<45 bytes / record).
-- [ ] Run `verify_task.sh` pre-merge quality gate.
-- [ ] Merge into `main` with `--no-ff`, retain branch permanently, and post Todoist audit comment.
+- [x] Refined `FileRecord` struct to exactly 32 bytes (`#[repr(C)]`, 8-byte aligned) with explicit `_reserved: u32`.
+- [x] Expanded `FileFlags` with bitwise operator traits (`BitOr`, `BitAnd`, `Not`) and `IS_READONLY`.
+- [x] Implemented `StringPool` continuous append-only byte arena with zero-copy UTF-8 slice borrowing (`crates/findme-core/src/pool.rs`).
+- [x] Refactored `DirectoryTable` with $O(1)$ fast `HashMap` lookup and hierarchical parent pointer deduplication (`crates/findme-core/src/directory.rs`).
+- [x] Implemented POSIX path reconstruction `reconstruct_path` resolving parent pointers and string offsets.
+- [x] Implemented `FileArena` unified storage container with memory accounting (`crates/findme-core/src/arena.rs`).
+- [x] Verified memory footprint benchmark confirming $<45.0$ bytes total per record including string heap on 100,000 files (~42.8 bytes).
+- [x] Passed all 5 quality verification gates in `verify_task.sh` (formatting, clippy -D warnings, 21 unit tests, doc tests).
+- [x] Merged `feature/p1-memory-arena` into `main` via non-fast-forward merge (`6fa23c7`).
+- [x] Permanently retained `feature/p1-memory-arena` branch in Git.
+- [x] Posted audit comment and moved Todoist card `6j4626Qxrf4Q6vRx` to `Completed`.
 
 ---
 
-## 3. Immediate Next Steps
+## 3. Immediate State & Next Steps
 
-- Execute implementation of `pool.rs`, `directory.rs`, `record.rs`, `arena.rs`, and tests.
+- **Current Status**: Task 1.1 complete. Working tree clean on `main`.
+- **Next Task in Roadmap**: `[TASK-1.2] Core: Parallel Directory Crawler (jwalk / Rayon)` (`feature/p1-parallel-crawler`).
