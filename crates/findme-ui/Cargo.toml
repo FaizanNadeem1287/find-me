@@ -11,6 +11,7 @@ repository.workspace = true
 findme-core.workspace = true
 iced.workspace = true
 tokio.workspace = true
+parking_lot.workspace = true
 tracing.workspace = true
 arboard.workspace = true
 open.workspace = true
