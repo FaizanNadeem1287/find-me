@@ -56,7 +56,27 @@ Move a task to `Completed`:
 
 ---
 
-## 3. Adding New Tasks (`add-tasks`)
+## 3. Adding Implementation Summary Comment (`add-comments`)
+
+Post an implementation audit trail comment upon task completion:
+```json
+{
+  "ServerName": "todoist",
+  "ToolName": "add-comments",
+  "Arguments": {
+    "comments": [
+      {
+        "taskId": "6j4626Mjv2q39JvQ",
+        "content": "### Implementation Summary\n- **Branch**: `feature/p0-workspace-init`\n- **Merge Commit**: `bc88ada`\n- **Deliverables**: Multi-crate Cargo workspace, findme-core, findme-ui, findme-cli, and rustfmt.\n- **Verification**: `verify_task.sh` passed cleanly with 0 errors and 0 warnings."
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 4. Adding New Tasks (`add-tasks`)
 
 Add a task to `Future Ideas`:
 ```json

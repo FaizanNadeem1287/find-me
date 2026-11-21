@@ -29,4 +29,8 @@ Step-by-step checklists to follow when managing tasks during autonomous developm
 4. [ ] Checkout `main`: `git checkout main`.
 5. [ ] Merge with non-fast-forward: `git merge --no-ff feature/<task-id>-<name> -m "feat(<task-id>): <description>"`.
 6. [ ] **Do NOT delete the feature branch!** Keep it intact.
-7. [ ] Call `update-tasks` to move the task to `Completed` (`sectionId: "6j45x63Fqh349Gxx"`).
+7. [ ] **Post Implementation Audit Comment**: Call `add-comments` on the Todoist task with:
+   - Branch name and merge commit hash
+   - Summary of implemented components and architecture
+   - QA verification results
+8. [ ] Call `update-tasks` to move the task to `Completed` (`sectionId: "6j45x63Fqh349Gxx"`).

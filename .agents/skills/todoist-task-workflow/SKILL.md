@@ -82,7 +82,22 @@ When development is finished:
    git checkout main
    git merge --no-ff feature/<task-id>-<name> -m "feat(<task-id>): <description>"
    ```
-4. Move the task to **Completed** in Todoist:
+4. **Post Implementation Audit Comment**: Call `add-comments` on the Todoist task to record:
+   - Git branch name and merge commit hash
+   - Summary of features, structs, and interfaces implemented
+   - Key files created/modified
+   - QA verification status (`verify_task.sh` passed)
+   ```json
+   {
+     "comments": [
+       {
+         "taskId": "<task_id>",
+         "content": "### Implementation Summary\n- **Branch**: `feature/<task-id>-<name>`\n- **Merge Commit**: `<commit-hash>`\n- **Deliverables**: <summary of code>\n- **Verification**: `verify_task.sh` passed (fmt, clippy, unit/doc tests)."
+       }
+     ]
+   }
+   ```
+5. Move the task to **Completed** in Todoist:
    ```json
    {
      "tasks": [

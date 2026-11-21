@@ -97,7 +97,8 @@ git checkout main
 git merge --no-ff feature/<task-id>-<task-name> -m "feat(<task-id>): <task description>"
 # CRITICAL: DO NOT DELETE THE FEATURE BRANCH!
 ```
-- In Todoist, move the completed task from `In Progress` into the `Completed` section.
+- **Post Audit Comment in Todoist**: Call `add-comments` on the Todoist task with a detailed implementation summary (branch name, merge commit hash, deliverables, and verification pass status).
+- **Move to Completed**: Move the task from `In Progress` into `Completed` (`sectionId: "6j45x63Fqh349Gxx"`).
 
 ---
 
