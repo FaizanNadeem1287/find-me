@@ -558,4 +558,52 @@ Hash | Branch | Commit Message & Description
 
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
-- **Next Task**: `[TASK-6.1] UI: Advanced Search Form & Filter Builder` (`6j4626WQfF4HggVx`) on branch `feature/p6-advanced-screen`.
+- **Completed Task**: `[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting` (`6j4626WxWR8QpqCQ`).
+
+---
+
+## Session 15: 2026-11-22 (Completion of Task 6.1 - UI: Advanced Search Form & Filter Builder)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 6.1: `[TASK-6.1] UI: Advanced Search Form & Filter Builder` (`6j4626WQfF4HggVx`).
+2. Authored detailed implementation plan artifact: `task-6-1-implementation-plan.md`.
+3. Created feature branch `feature/p6-advanced-screen` from `main` and moved Todoist task to `In Progress`.
+4. Implemented `crates/findme-ui/src/advanced.rs`:
+   - Data models: `SizeUnit` (`B`, `KB`, `MB`, `GB`), `DatePreset` (`Any`, `Today`, `Yesterday`, `PastWeek`, `PastMonth`, `PastYear`), `PresetFilter` (`LargeCode`, `RecentDocuments`, `GiganticFiles`, `ArchivesOnly`).
+   - `AdvancedFilterState` holding Keywords (All words, Exact phrase, Any words, None words), Extension categories (Documents, Code, Images, Audio, Video, Archives) + custom extensions, Size bounds (min/max with units), Date preset, Target & Excluded folder paths, and Search flags (Case, Whole Word, Regex).
+   - Real-time Everything query compiler `synthesize_query(&self) -> String` generating standardized syntax (`ext:*`, `size:*`, `dm:*`, `path:*`, `!*`, `case:`, `regex:`).
+5. Implemented Elm architecture messaging in `crates/findme-ui/src/message.rs` and `crates/findme-ui/src/app.rs`:
+   - `AdvancedSearchMessage` with 24 action variants.
+   - Handlers for filter mutations, 1-click preset template application, filter resets, and `SubmitSearch` (synthesizes query and routes to `ScreenId::Search`).
+6. Built rich visual form in `crates/findme-ui/src/views/advanced.rs`:
+   - Live query preview card with "Reset Filters" and "Search Now" actions.
+   - Keywords card, File types & extensions card, Size bounds card, Modification date presets card, Path restrictions card, Options card, and 1-Click preset templates card.
+7. Built comprehensive test suite in `crates/findme-ui/tests/advanced_search_tests.rs` (12 tests):
+   - All words, exact phrase quoting, OR grouping with parens, NOT negation.
+   - Category extensions, custom extension normalization, deduplication.
+   - Size bounds, Date presets, Path quoting for paths with spaces.
+   - Template presets application.
+   - Message dispatching and reset state verification.
+   - Search submission routing to `ScreenId::Search` with synthesized query.
+   - End-to-end AST validation via `findme_core::QueryParser::parse()`.
+   - Headless UI view rendering.
+8. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 gates (formatting, clippy `-D warnings`, **163 passing tests** across workspace).
+9. Committed to `feature/p6-advanced-screen` (`fe77754`) and merged into `main` via non-fast-forward merge (`0e0a1aa`).
+10. Preserved `feature/p6-advanced-screen` branch permanently in Git.
+11. Updated Todoist card `6j4626WQfF4HggVx`: posted implementation audit comment (`6j474W7XrgHvGfGQ`) and marked task `Completed`.
+12. Created branch `feature/p6-index-mgmt` from `main` and moved Todoist task `[TASK-6.2]` (`6j4626cC2qCCP5wQ`) to `In Progress`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`fe77754` | `feature/p6-advanced-screen` | `feat(ui): advanced search form, visual filter builder & query synthesizer (Task 6.1)`
+`0e0a1aa` (merge) | `main` | `feat(p6): advanced search form & filter builder (Task 6.1)`
+
+### Todoist State Updates:
+- Task: `[TASK-6.1] UI: Advanced Search Form & Filter Builder` (`6j4626WQfF4HggVx`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626WQfF4HggVx`.
+- Task: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`) moved to `In Progress` (`6j45x632fhrVMmvQ`).
+
+### Current Handoff State:
+- **Active Branch**: `feature/p6-index-mgmt`
+- **Active Task**: `[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen` (`6j4626cC2qCCP5wQ`)

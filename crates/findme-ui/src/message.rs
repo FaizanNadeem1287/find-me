@@ -116,6 +116,31 @@ pub enum Message {
     ToggleTheme,
     /// Interaction inside the Advanced Search screen
     AdvancedSearch(AdvancedSearchMessage),
+    /// Interaction inside the Index Management screen
+    IndexManagement(IndexManagementMessage),
+}
+
+/// Messages emitted by controls inside the Index Management screen
+#[derive(Debug, Clone, PartialEq)]
+pub enum IndexManagementMessage {
+    UpdateNewRootInput(String),
+    AddRootFromInput,
+    AddRoot(std::path::PathBuf),
+    RemoveRoot(std::path::PathBuf),
+    UpdateNewExclusionInput(String),
+    AddExclusionFromInput,
+    AddExclusion(String),
+    RemoveExclusion(String),
+    AddDefaultExclusions,
+    TriggerRebuildIndex,
+    TriggerRefreshIndex,
+    ClearIndex,
+    UpdateProgress {
+        current_path: String,
+        files_found: u64,
+        percent: f32,
+    },
+    RebuildFinished(crate::index_mgmt::IndexStats),
 }
 
 /// Messages emitted by form controls inside the Advanced Search screen
