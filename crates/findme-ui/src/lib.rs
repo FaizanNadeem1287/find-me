@@ -5,6 +5,7 @@
 
 pub mod advanced;
 pub mod app;
+pub mod desktop;
 pub mod engine;
 pub mod history;
 pub mod index_mgmt;
@@ -16,6 +17,9 @@ pub mod views;
 
 pub use advanced::{AdvancedFilterState, DatePreset, PresetFilter, SizeUnit};
 pub use app::{window_settings, FindMeApp};
+pub use desktop::{
+    copy_file_uri, copy_to_clipboard, get_file_properties, show_in_file_manager, FileProperties,
+};
 pub use engine::{engine_subscription, EngineBridge, EngineEvent};
 pub use history::{HistoryEntry, SearchHistoryState};
 pub use index_mgmt::{

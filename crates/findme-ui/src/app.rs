@@ -7,7 +7,7 @@ use crate::message::{
 };
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
-use iced::widget::{column, operation, row};
+use iced::widget::{column, container, operation, row};
 use iced::{Element, Length, Size, Subscription, Task, Theme};
 use std::sync::Arc;
 
@@ -149,7 +149,13 @@ impl FindMeApp {
             Message::KeyboardEvent(event) => {
                 if let iced::keyboard::Event::KeyPressed { key, modifiers, .. } = event {
                     if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
-                        if !self.state.query.is_empty() {
+                        if self.state.properties_modal.is_some() {
+                            self.state.properties_modal = None;
+                            return Task::none();
+                        } else if self.state.context_menu.is_open {
+                            self.state.context_menu.is_open = false;
+                            return Task::none();
+                        } else if !self.state.query.is_empty() {
                             self.state.query.clear();
                             self.state.results.clear();
                             self.state.is_searching = false;
@@ -213,10 +219,24 @@ impl FindMeApp {
                             if let Some(item) = self.state.results.get(idx) {
                                 let path = item.path.clone();
                                 if modifiers.alt() {
-                                    return self.update(Message::OpenContainingFolder(path));
+                                    return self.update(Message::ShowProperties(path));
                                 } else {
                                     return self.update(Message::OpenFile(path));
                                 }
+                            }
+                        }
+                    } else if key
+                        == iced::keyboard::Key::Named(iced::keyboard::key::Named::ContextMenu)
+                        || (modifiers.shift()
+                            && key == iced::keyboard::Key::Named(iced::keyboard::key::Named::F10))
+                    {
+                        if let Some(idx) = self.state.selected_row {
+                            if let Some(item) = self.state.results.get(idx) {
+                                return self.update(Message::OpenContextMenu {
+                                    item: item.clone(),
+                                    x: 0.0,
+                                    y: 0.0,
+                                });
                             }
                         }
                     }
@@ -277,19 +297,81 @@ impl FindMeApp {
                 Task::none()
             }
             Message::OpenFile(path) => {
+                self.state.context_menu.is_open = false;
                 let _ = open::that_detached(path);
                 Task::none()
             }
             Message::OpenContainingFolder(path) => {
-                if let Some(parent) = std::path::Path::new(&path).parent() {
-                    let _ = open::that_detached(parent);
+                self.state.context_menu.is_open = false;
+                match crate::desktop::show_in_file_manager(std::path::Path::new(&path)) {
+                    Ok(()) => {
+                        self.state.notification = Some("Highlighted in file manager".to_string())
+                    }
+                    Err(e) => self.state.notification = Some(format!("Failed to open folder: {e}")),
                 }
                 Task::none()
             }
             Message::CopyPath(path) => {
-                if let Ok(mut clipboard) = arboard::Clipboard::new() {
-                    let _ = clipboard.set_text(path);
+                self.state.context_menu.is_open = false;
+                match crate::desktop::copy_to_clipboard(&path) {
+                    Ok(()) => {
+                        self.state.notification = Some("Copied full path to clipboard".to_string())
+                    }
+                    Err(e) => self.state.notification = Some(format!("Failed to copy path: {e}")),
                 }
+                Task::none()
+            }
+            Message::CopyFileName(name) => {
+                self.state.context_menu.is_open = false;
+                match crate::desktop::copy_to_clipboard(&name) {
+                    Ok(()) => {
+                        self.state.notification =
+                            Some(format!("Copied file name to clipboard: {name}"))
+                    }
+                    Err(e) => {
+                        self.state.notification = Some(format!("Failed to copy file name: {e}"))
+                    }
+                }
+                Task::none()
+            }
+            Message::CopyFileUri(path) => {
+                self.state.context_menu.is_open = false;
+                match crate::desktop::copy_file_uri(std::path::Path::new(&path)) {
+                    Ok(uri) => {
+                        self.state.notification =
+                            Some(format!("Copied file URL to clipboard: {uri}"))
+                    }
+                    Err(e) => {
+                        self.state.notification = Some(format!("Failed to copy file URL: {e}"))
+                    }
+                }
+                Task::none()
+            }
+            Message::OpenContextMenu { item, x, y } => {
+                self.state.context_menu = crate::state::ContextMenuState {
+                    is_open: true,
+                    target_item: Some(item),
+                    position: (x, y),
+                };
+                Task::none()
+            }
+            Message::CloseContextMenu => {
+                self.state.context_menu.is_open = false;
+                Task::none()
+            }
+            Message::ShowProperties(path) => {
+                self.state.context_menu.is_open = false;
+                match crate::desktop::get_file_properties(std::path::Path::new(&path)) {
+                    Ok(props) => self.state.properties_modal = Some(props),
+                    Err(e) => {
+                        self.state.notification =
+                            Some(format!("Could not read file properties: {e}"))
+                    }
+                }
+                Task::none()
+            }
+            Message::CloseProperties => {
+                self.state.properties_modal = None;
                 Task::none()
             }
             Message::ResultsReceived {
@@ -818,10 +900,45 @@ impl FindMeApp {
                 .height(Length::Fill)
         };
 
-        row![sidebar, workspace_content]
+        let base_layout: Element<'_, Message> = row![sidebar, workspace_content]
             .width(Length::Fill)
             .height(Length::Fill)
-            .into()
+            .into();
+
+        if self.state.properties_modal.is_some() || self.state.context_menu.is_open {
+            let mut layers: Vec<Element<'_, Message>> = vec![base_layout];
+
+            if self.state.context_menu.is_open {
+                if let Some(ref item) = self.state.context_menu.target_item {
+                    let menu_elem = views::context_menu::view(item);
+                    let menu_overlay = container(menu_elem)
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .center_x(Length::Fill)
+                        .center_y(Length::Fill);
+
+                    layers.push(menu_overlay.into());
+                }
+            }
+
+            if let Some(ref props) = self.state.properties_modal {
+                let modal_elem = views::properties::view(props);
+                let modal_overlay = container(modal_elem)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .center_x(Length::Fill)
+                    .center_y(Length::Fill);
+
+                layers.push(modal_overlay.into());
+            }
+
+            iced::widget::Stack::from_vec(layers)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .into()
+        } else {
+            base_layout
+        }
     }
 
     /// Resolves theme for Iced engine

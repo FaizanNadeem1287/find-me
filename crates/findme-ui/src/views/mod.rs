@@ -2,8 +2,10 @@
 
 pub mod about;
 pub mod advanced;
+pub mod context_menu;
 pub mod history;
 pub mod index_mgmt;
+pub mod properties;
 pub mod search;
 pub mod settings;
 pub mod sidebar;

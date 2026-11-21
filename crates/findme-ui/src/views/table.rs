@@ -4,7 +4,7 @@ use crate::message::{ColumnId, Message};
 use crate::state::{compute_virtual_range, table_scrollable_id, AppState};
 use crate::theme::colors;
 use findme_core::SearchResultItem;
-use iced::widget::{button, column, container, row, scrollable, text, Space};
+use iced::widget::{button, column, container, mouse_area, row, scrollable, text, Space};
 use iced::{Alignment, Element, Length};
 
 /// Row height in pixels
@@ -83,6 +83,7 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
         column_header("Size", ColumnId::Size, active_col, asc, 2),
         column_header("Date Modified", ColumnId::Modified, active_col, asc, 2),
         column_header("Type", ColumnId::Type, active_col, asc, 1),
+        Space::new().width(Length::Fixed(28.0)),
     ]
     .spacing(4)
     .align_y(Alignment::Center)
@@ -134,12 +135,22 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
             let mtime_text = item.formatted_mtime();
             let type_text = item_type_str(item);
 
+            let menu_btn =
+                button(text("⋮").size(13))
+                    .padding([2, 6])
+                    .on_press(Message::OpenContextMenu {
+                        item: item.clone(),
+                        x: 0.0,
+                        y: 0.0,
+                    });
+
             let row_cells = row![
                 text(name_text).size(12).width(Length::FillPortion(4)),
                 text(&item.path).size(11).width(Length::FillPortion(5)),
                 text(size_text).size(11).width(Length::FillPortion(2)),
                 text(mtime_text).size(11).width(Length::FillPortion(2)),
                 text(type_text).size(11).width(Length::FillPortion(1)),
+                menu_btn,
             ]
             .spacing(4)
             .align_y(Alignment::Center)
@@ -164,7 +175,15 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
                 container(row_btn).width(Length::Fill)
             };
 
-            rows = rows.push(styled_row);
+            let row_area = mouse_area(styled_row)
+                .on_right_press(Message::OpenContextMenu {
+                    item: item.clone(),
+                    x: 0.0,
+                    y: 0.0,
+                })
+                .on_double_click(Message::OpenFile(item.path.clone()));
+
+            rows = rows.push(row_area);
         }
 
         if bottom_spacer > 0.0 {
