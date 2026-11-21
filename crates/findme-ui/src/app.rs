@@ -242,6 +242,8 @@ impl FindMeApp {
                     }
 
                     let is_ctrl_f = modifiers.control()
+                        && !modifiers.shift()
+                        && !modifiers.alt()
                         && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("f"));
                     let is_slash = key == iced::keyboard::Key::Character("/".into())
                         && !modifiers.control()
@@ -252,12 +254,128 @@ impl FindMeApp {
                         self.state.active_screen = ScreenId::Search;
                         return operation::focus(search_input_id());
                     }
+
+                    // Ctrl + 1 .. 6: Navigation screen switching
+                    if modifiers.control() && !modifiers.shift() && !modifiers.alt() {
+                        let target_screen = match key {
+                            iced::keyboard::Key::Character(ref s) if s == "1" => {
+                                Some(ScreenId::Search)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "2" => {
+                                Some(ScreenId::AdvancedSearch)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "3" => {
+                                Some(ScreenId::IndexManagement)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "4" => {
+                                Some(ScreenId::SearchHistory)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "5" => {
+                                Some(ScreenId::Settings)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "6" => {
+                                Some(ScreenId::About)
+                            }
+                            _ => None,
+                        };
+                        if let Some(screen) = target_screen {
+                            return self.update(Message::SwitchScreen(screen));
+                        }
+                    }
+
+                    // Ctrl + B: Toggle sidebar expansion
+                    let is_ctrl_b = modifiers.control()
+                        && !modifiers.shift()
+                        && !modifiers.alt()
+                        && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("b"));
+                    if is_ctrl_b {
+                        return self.update(Message::ToggleSidebar);
+                    }
+
+                    // Ctrl + T: Toggle visual theme (dark/light)
+                    let is_ctrl_t = modifiers.control()
+                        && !modifiers.shift()
+                        && !modifiers.alt()
+                        && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("t"));
+                    if is_ctrl_t {
+                        return self.update(Message::ToggleTheme);
+                    }
+
+                    // F5 or Ctrl + R: Refresh / re-execute current search query
+                    let is_f5 = key == iced::keyboard::Key::Named(iced::keyboard::key::Named::F5);
+                    let is_ctrl_r = modifiers.control()
+                        && !modifiers.shift()
+                        && !modifiers.alt()
+                        && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("r"));
+                    if is_f5 || is_ctrl_r {
+                        let q = self.state.query.clone();
+                        return self.update(Message::ExecuteSearch(q));
+                    }
+
+                    // Ctrl + Shift + C / N / U: Instant clipboard actions for selected row
+                    if modifiers.control() && modifiers.shift() {
+                        if let Some(idx) = self.state.selected_row {
+                            if let Some(item) = self.state.results.get(idx) {
+                                match key {
+                                    iced::keyboard::Key::Character(ref s)
+                                        if s.eq_ignore_ascii_case("c") =>
+                                    {
+                                        return self.update(Message::CopyPath(item.path.clone()));
+                                    }
+                                    iced::keyboard::Key::Character(ref s)
+                                        if s.eq_ignore_ascii_case("n") =>
+                                    {
+                                        return self
+                                            .update(Message::CopyFileName(item.name.clone()));
+                                    }
+                                    iced::keyboard::Key::Character(ref s)
+                                        if s.eq_ignore_ascii_case("u") =>
+                                    {
+                                        return self
+                                            .update(Message::CopyFileUri(item.path.clone()));
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                    }
+
+                    // Alt + 1 .. 5: Sort table by column
+                    if modifiers.alt() && !modifiers.control() && !modifiers.shift() {
+                        let col = match key {
+                            iced::keyboard::Key::Character(ref s) if s == "1" => {
+                                Some(ColumnId::Name)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "2" => {
+                                Some(ColumnId::Path)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "3" => {
+                                Some(ColumnId::Size)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "4" => {
+                                Some(ColumnId::Modified)
+                            }
+                            iced::keyboard::Key::Character(ref s) if s == "5" => {
+                                Some(ColumnId::Type)
+                            }
+                            _ => None,
+                        };
+                        if let Some(col_id) = col {
+                            return self.update(Message::SortByColumn(col_id));
+                        }
+                    }
                 }
                 Task::none()
             }
             Message::SwitchScreen(screen) => {
                 self.state.active_screen = screen;
-                Task::none()
+                self.state.context_menu.is_open = false;
+                self.state.properties_modal = None;
+                if screen == ScreenId::Search {
+                    operation::focus(search_input_id())
+                } else {
+                    Task::none()
+                }
             }
             Message::ToggleSidebar => {
                 self.state.sidebar_expanded = !self.state.sidebar_expanded;
