@@ -278,8 +278,13 @@ async fn test_rebuild_index_with_temp_directory() {
     let file2 = sub.join("doc_beta.rs");
     let mut f1 = File::create(&file1).unwrap();
     f1.write_all(b"Hello from alpha!").unwrap();
+    f1.sync_all().unwrap();
+    drop(f1);
+
     let mut f2 = File::create(&file2).unwrap();
     f2.write_all(b"fn main() {}").unwrap();
+    f2.sync_all().unwrap();
+    drop(f2);
 
     let bridge = EngineBridge::empty();
     let mut rx = bridge.subscribe_events();
