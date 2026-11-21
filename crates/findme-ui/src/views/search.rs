@@ -1,53 +1,62 @@
 //! Main search view layout
 
 use crate::message::Message;
-use crate::state::AppState;
+use crate::state::{format_number, search_input_id, AppState};
 use iced::widget::{button, column, container, row, text, text_input, Space};
 use iced::{Alignment, Element, Length};
 
 /// Renders the primary Search screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
     // Top search bar
+    let search_icon = text("🔍").size(16);
+
     let search_input = text_input(
         "Type to search files, paths, or operators (e.g. ext:rs size:>1mb)...",
         &state.query,
     )
+    .id(search_input_id())
     .on_input(Message::SearchInputChanged)
     .padding(10)
-    .size(14)
+    .size(15)
     .width(Length::Fill);
 
-    let clear_btn = button(text("✕ Clear").size(13))
-        .padding([8, 12])
-        .on_press(Message::ClearSearch);
+    let mut search_row = row![search_icon, search_input]
+        .spacing(10)
+        .align_y(Alignment::Center)
+        .width(Length::Fill);
 
-    let search_bar = row![search_input, clear_btn]
-        .spacing(8)
-        .align_y(Alignment::Center);
+    // Dynamic clear button rendered only when query text is non-empty
+    if !state.query.is_empty() {
+        let clear_btn = button(text("✕").size(13))
+            .padding([8, 12])
+            .on_press(Message::ClearSearch);
+        search_row = search_row.push(clear_btn);
+    }
+
+    let search_bar = container(search_row).padding(4).width(Length::Fill);
 
     // Results status & stats bar
-    let query_summary = if state.query.is_empty() {
-        format!(
-            "Showing all top indexed files ({} items)",
-            state.results.len()
-        )
+    let matches_text = if state.query.is_empty() {
+        format!("Showing all files ({})", format_number(state.results.len()))
     } else {
         format!(
-            "Query: '{}' • {} matches found in {} ms",
+            "Query: \"{}\" • {} matches ({} ms)",
             state.query,
-            state.results.len(),
+            format_number(state.results.len()),
             state.last_search_duration_ms
         )
     };
 
+    let indexed_text = format!(
+        "Indexed: {} files in {} folders",
+        format_number(state.indexed_files_count),
+        format_number(state.indexed_folders_count)
+    );
+
     let stats_header = row![
-        text(query_summary).size(12),
+        text(matches_text).size(12),
         Space::new().width(Length::Fill),
-        text(format!(
-            "Database: {} files in {} folders",
-            state.indexed_files_count, state.indexed_folders_count
-        ))
-        .size(12),
+        text(indexed_text).size(12),
     ]
     .align_y(Alignment::Center);
 

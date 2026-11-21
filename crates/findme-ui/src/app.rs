@@ -1,9 +1,9 @@
 //! Top-level FindMeApp Elm-architecture loop
 
 use crate::message::{ColumnId, Message, ScreenId};
-use crate::state::AppState;
+use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
-use iced::widget::{column, row};
+use iced::widget::{column, operation, row};
 use iced::{Element, Length, Size, Subscription, Task, Theme};
 
 /// Configures window settings conforming to the Find-Me desktop specification
@@ -33,6 +33,13 @@ impl FindMeApp {
         }
     }
 
+    /// Boots the application and initializes primary focus on the search input
+    pub fn boot() -> (Self, Task<Message>) {
+        let app = Self::new();
+        let focus_task = operation::focus(search_input_id());
+        (app, focus_task)
+    }
+
     /// Application window title
     pub fn title(&self) -> String {
         format!("Find-Me — {}", self.state.active_screen.title())
@@ -43,14 +50,79 @@ impl FindMeApp {
         match message {
             Message::SearchInputChanged(query) => {
                 self.state.query = query;
-                self.state.is_searching = !self.state.query.is_empty();
-                Task::none()
+                self.state.search_generation = self.state.search_generation.wrapping_add(1);
+                let gen = self.state.search_generation;
+
+                if self.state.query.is_empty() {
+                    self.state.results.clear();
+                    self.state.is_searching = false;
+                    self.state.selected_row = None;
+                    Task::none()
+                } else {
+                    self.state.is_searching = true;
+                    let q = self.state.query.clone();
+                    if is_heavy_query(&q) {
+                        Task::future(async move {
+                            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                            Message::DebouncedSearch {
+                                query: q,
+                                generation: gen,
+                            }
+                        })
+                    } else {
+                        Task::done(Message::DebouncedSearch {
+                            query: q,
+                            generation: gen,
+                        })
+                    }
+                }
             }
             Message::ClearSearch => {
                 self.state.query.clear();
                 self.state.results.clear();
                 self.state.is_searching = false;
                 self.state.selected_row = None;
+                operation::focus(search_input_id())
+            }
+            Message::FocusSearchInput => operation::focus(search_input_id()),
+            Message::DebouncedSearch { query, generation } => {
+                if generation == self.state.search_generation {
+                    Task::done(Message::ExecuteSearch(query))
+                } else {
+                    Task::none()
+                }
+            }
+            Message::ExecuteSearch(_query) => {
+                self.state.is_searching = false;
+                self.state.last_search_duration_ms = 1;
+                Task::none()
+            }
+            Message::KeyboardEvent(event) => {
+                if let iced::keyboard::Event::KeyPressed { key, modifiers, .. } = event {
+                    if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Escape) {
+                        if !self.state.query.is_empty() {
+                            self.state.query.clear();
+                            self.state.results.clear();
+                            self.state.is_searching = false;
+                            self.state.selected_row = None;
+                            return operation::focus(search_input_id());
+                        } else if self.state.notification.is_some() {
+                            self.state.notification = None;
+                        }
+                    }
+
+                    let is_ctrl_f = modifiers.control()
+                        && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("f"));
+                    let is_slash = key == iced::keyboard::Key::Character("/".into())
+                        && !modifiers.control()
+                        && !modifiers.alt()
+                        && self.state.active_screen != ScreenId::Search;
+
+                    if is_ctrl_f || is_slash {
+                        self.state.active_screen = ScreenId::Search;
+                        return operation::focus(search_input_id());
+                    }
+                }
                 Task::none()
             }
             Message::SwitchScreen(screen) => {
@@ -231,9 +303,9 @@ impl FindMeApp {
         self.state.theme.as_iced_theme()
     }
 
-    /// Background event subscriptions (e.g. engine channels, window resizing)
+    /// Background event subscriptions (e.g. engine channels, keyboard shortcuts)
     pub fn subscription(&self) -> Subscription<Message> {
-        Subscription::none()
+        iced::keyboard::listen().map(Message::KeyboardEvent)
     }
 }
 

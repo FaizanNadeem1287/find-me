@@ -68,6 +68,14 @@ pub enum Message {
     SearchInputChanged(String),
     /// User clicked "Clear" or pressed Escape
     ClearSearch,
+    /// Focus the primary search input
+    FocusSearchInput,
+    /// Debounced search trigger with generation counter
+    DebouncedSearch { query: String, generation: u64 },
+    /// Execute search query immediately
+    ExecuteSearch(String),
+    /// Global keyboard event
+    KeyboardEvent(iced::keyboard::Event),
     /// User clicked sidebar navigation item
     SwitchScreen(ScreenId),
     /// User toggled sidebar expand/collapse
