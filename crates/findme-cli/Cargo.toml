@@ -1,0 +1,20 @@
+[package]
+name = "findme-cli"
+description = "Command-line harness and benchmark utility for Find-Me"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "find-me"
+path = "src/main.rs"
+
+[dependencies]
+findme-core.workspace = true
+findme-ui.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
