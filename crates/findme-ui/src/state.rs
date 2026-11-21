@@ -54,6 +54,18 @@ pub struct AppState {
     pub settings: crate::settings::AppSettings,
     /// Search query history log & starred bookmarks
     pub history: crate::history::SearchHistoryState,
+    /// Active state of right-click file context menu
+    pub context_menu: ContextMenuState,
+    /// Active file properties dialog modal (if open)
+    pub properties_modal: Option<crate::desktop::FileProperties>,
+}
+
+/// State of the right-click file context menu
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct ContextMenuState {
+    pub is_open: bool,
+    pub target_item: Option<SearchResultItem>,
+    pub position: (f32, f32),
 }
 
 /// Constant ID string for the main search input field
@@ -188,6 +200,8 @@ impl Default for AppState {
             )
             .unwrap_or_default(),
             history: crate::history::SearchHistoryState::with_default_history(),
+            context_menu: ContextMenuState::default(),
+            properties_modal: None,
         }
     }
 }
