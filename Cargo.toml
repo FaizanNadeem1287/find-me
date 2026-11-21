@@ -1,0 +1,64 @@
+[workspace]
+members = [
+    "crates/findme-core",
+    "crates/findme-ui",
+    "crates/findme-cli",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Find-Me Contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/Faizan-Nadeem/Find-Me"
+
+[workspace.dependencies]
+# Internal crates
+findme-core = { path = "crates/findme-core" }
+findme-ui = { path = "crates/findme-ui" }
+
+# Concurrency & Async
+tokio = { version = "1.41", features = ["full"] }
+rayon = "1.10"
+parking_lot = "0.12"
+
+# Filesystem & Crawling
+jwalk = "0.8"
+notify = "7.0"
+walkdir = "2.5"
+
+# Search & Matching
+nucleo-matcher = "0.3"
+regex = "1.11"
+aho-corasick = "1.1"
+memchr = "2.7"
+
+# Serialization & Cache
+rkyv = { version = "0.8", features = ["bytecheck"] }
+bincode = "1.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+memmap2 = "0.9"
+
+# System & XDG
+directories = "5.0"
+libc = "0.2"
+nix = { version = "0.29", features = ["fs", "user"] }
+open = "5.3"
+arboard = "3.4"
+
+# Errors & Logging
+thiserror = "2.0"
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# UI Framework
+iced = { version = "0.14", default-features = false, features = ["tokio", "advanced", "tiny-skia", "x11", "wayland", "linux-theme-detection"] }
+iced_test = "0.14"
+
+# Testing & Benchmarking
+tempfile = "3.14"
+proptest = "1.6"
+criterion = { version = "0.5", features = ["html_reports"] }
