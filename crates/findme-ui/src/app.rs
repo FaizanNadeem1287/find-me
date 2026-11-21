@@ -82,6 +82,7 @@ impl FindMeApp {
                 self.state.results.clear();
                 self.state.is_searching = false;
                 self.state.selected_row = None;
+                self.state.scroll_y = 0.0;
                 operation::focus(search_input_id())
             }
             Message::FocusSearchInput => operation::focus(search_input_id()),
@@ -105,9 +106,70 @@ impl FindMeApp {
                             self.state.results.clear();
                             self.state.is_searching = false;
                             self.state.selected_row = None;
+                            self.state.scroll_y = 0.0;
                             return operation::focus(search_input_id());
                         } else if self.state.notification.is_some() {
                             self.state.notification = None;
+                        }
+                    } else if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowUp)
+                    {
+                        if !self.state.results.is_empty() {
+                            let current = self.state.selected_row.unwrap_or(0);
+                            let next = current.saturating_sub(1);
+                            self.state.selected_row = Some(next);
+                            return self.scroll_to_selected_row(next);
+                        }
+                    } else if key
+                        == iced::keyboard::Key::Named(iced::keyboard::key::Named::ArrowDown)
+                    {
+                        if !self.state.results.is_empty() {
+                            let max_idx = self.state.results.len().saturating_sub(1);
+                            let next = match self.state.selected_row {
+                                None => 0,
+                                Some(curr) => (curr + 1).min(max_idx),
+                            };
+                            self.state.selected_row = Some(next);
+                            return self.scroll_to_selected_row(next);
+                        }
+                    } else if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::PageUp)
+                    {
+                        if !self.state.results.is_empty() {
+                            let current = self.state.selected_row.unwrap_or(0);
+                            let next = current.saturating_sub(15);
+                            self.state.selected_row = Some(next);
+                            return self.scroll_to_selected_row(next);
+                        }
+                    } else if key
+                        == iced::keyboard::Key::Named(iced::keyboard::key::Named::PageDown)
+                    {
+                        if !self.state.results.is_empty() {
+                            let max_idx = self.state.results.len().saturating_sub(1);
+                            let current = self.state.selected_row.unwrap_or(0);
+                            let next = (current + 15).min(max_idx);
+                            self.state.selected_row = Some(next);
+                            return self.scroll_to_selected_row(next);
+                        }
+                    } else if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Home) {
+                        if !self.state.results.is_empty() {
+                            self.state.selected_row = Some(0);
+                            return self.scroll_to_selected_row(0);
+                        }
+                    } else if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::End) {
+                        if !self.state.results.is_empty() {
+                            let last = self.state.results.len().saturating_sub(1);
+                            self.state.selected_row = Some(last);
+                            return self.scroll_to_selected_row(last);
+                        }
+                    } else if key == iced::keyboard::Key::Named(iced::keyboard::key::Named::Enter) {
+                        if let Some(idx) = self.state.selected_row {
+                            if let Some(item) = self.state.results.get(idx) {
+                                let path = item.path.clone();
+                                if modifiers.alt() {
+                                    return self.update(Message::OpenContainingFolder(path));
+                                } else {
+                                    return self.update(Message::OpenFile(path));
+                                }
+                            }
                         }
                     }
 
@@ -190,7 +252,21 @@ impl FindMeApp {
                 self.state.results = results;
                 self.state.last_search_duration_ms = search_duration_ms;
                 self.state.is_searching = false;
+                self.state.scroll_y = 0.0;
+                self.state.selected_row = if self.state.results.is_empty() {
+                    None
+                } else {
+                    Some(0)
+                };
                 self.sort_results();
+                Task::none()
+            }
+            Message::TableScrolled {
+                scroll_y,
+                viewport_height,
+            } => {
+                self.state.scroll_y = scroll_y;
+                self.state.table_viewport_height = viewport_height;
                 Task::none()
             }
             Message::IndexingProgress {
@@ -216,6 +292,37 @@ impl FindMeApp {
         }
     }
 
+    /// Automatically scrolls the virtualized table so the selected row is visible
+    fn scroll_to_selected_row(&mut self, row_idx: usize) -> Task<Message> {
+        let row_top = row_idx as f32 * crate::views::table::ROW_HEIGHT;
+        let row_bottom = row_top + crate::views::table::ROW_HEIGHT;
+        let view_top = self.state.scroll_y;
+        let view_bottom = view_top + self.state.table_viewport_height;
+
+        if row_top < view_top {
+            self.state.scroll_y = row_top;
+            operation::scroll_to(
+                crate::state::table_scrollable_id(),
+                operation::AbsoluteOffset {
+                    x: None,
+                    y: Some(row_top),
+                },
+            )
+        } else if row_bottom > view_bottom {
+            let target = (row_bottom - self.state.table_viewport_height).max(0.0);
+            self.state.scroll_y = target;
+            operation::scroll_to(
+                crate::state::table_scrollable_id(),
+                operation::AbsoluteOffset {
+                    x: None,
+                    y: Some(target),
+                },
+            )
+        } else {
+            Task::none()
+        }
+    }
+
     /// Internal helper to sort current results based on active column and direction
     fn sort_results(&mut self) {
         let asc = self.state.sort_ascending;
@@ -223,45 +330,55 @@ impl FindMeApp {
             ColumnId::Name => {
                 self.state.results.sort_by(|a, b| {
                     if asc {
-                        a.name.cmp(&b.name)
+                        a.name.cmp(&b.name).then_with(|| a.path.cmp(&b.path))
                     } else {
-                        b.name.cmp(&a.name)
+                        b.name.cmp(&a.name).then_with(|| b.path.cmp(&a.path))
                     }
                 });
             }
             ColumnId::Path => {
                 self.state.results.sort_by(|a, b| {
                     if asc {
-                        a.path.cmp(&b.path)
+                        a.path.cmp(&b.path).then_with(|| a.name.cmp(&b.name))
                     } else {
-                        b.path.cmp(&a.path)
+                        b.path.cmp(&a.path).then_with(|| b.name.cmp(&a.name))
                     }
                 });
             }
             ColumnId::Type => {
                 self.state.results.sort_by(|a, b| {
+                    let type_a = crate::views::table::item_type_str(a);
+                    let type_b = crate::views::table::item_type_str(b);
                     if asc {
-                        a.is_dir.cmp(&b.is_dir)
+                        type_a.cmp(type_b).then_with(|| a.name.cmp(&b.name))
                     } else {
-                        b.is_dir.cmp(&a.is_dir)
+                        type_b.cmp(type_a).then_with(|| b.name.cmp(&a.name))
                     }
                 });
             }
             ColumnId::Size => {
                 self.state.results.sort_by(|a, b| {
                     if asc {
-                        a.size_bytes.cmp(&b.size_bytes)
+                        a.size_bytes
+                            .cmp(&b.size_bytes)
+                            .then_with(|| a.name.cmp(&b.name))
                     } else {
-                        b.size_bytes.cmp(&a.size_bytes)
+                        b.size_bytes
+                            .cmp(&a.size_bytes)
+                            .then_with(|| b.name.cmp(&a.name))
                     }
                 });
             }
             ColumnId::Modified => {
                 self.state.results.sort_by(|a, b| {
                     if asc {
-                        a.mtime_secs.cmp(&b.mtime_secs)
+                        a.mtime_secs
+                            .cmp(&b.mtime_secs)
+                            .then_with(|| a.name.cmp(&b.name))
                     } else {
-                        b.mtime_secs.cmp(&a.mtime_secs)
+                        b.mtime_secs
+                            .cmp(&a.mtime_secs)
+                            .then_with(|| b.name.cmp(&a.name))
                     }
                 });
             }
