@@ -14,6 +14,42 @@ pub enum ScreenId {
     About,
 }
 
+impl ScreenId {
+    /// Returns the user-facing display title for the screen
+    pub fn title(&self) -> &'static str {
+        match self {
+            ScreenId::Search => "Search",
+            ScreenId::AdvancedSearch => "Advanced Search",
+            ScreenId::IndexManagement => "Index Management",
+            ScreenId::SearchHistory => "Search History",
+            ScreenId::Settings => "Settings",
+            ScreenId::About => "About",
+        }
+    }
+
+    /// Returns the icon symbol for the screen
+    pub fn icon(&self) -> &'static str {
+        match self {
+            ScreenId::Search => "🔍",
+            ScreenId::AdvancedSearch => "⚡",
+            ScreenId::IndexManagement => "📁",
+            ScreenId::SearchHistory => "🕒",
+            ScreenId::Settings => "⚙️",
+            ScreenId::About => "ℹ️",
+        }
+    }
+
+    /// All available navigation screens in order
+    pub const ALL: [ScreenId; 6] = [
+        ScreenId::Search,
+        ScreenId::AdvancedSearch,
+        ScreenId::IndexManagement,
+        ScreenId::SearchHistory,
+        ScreenId::Settings,
+        ScreenId::About,
+    ];
+}
+
 /// Column identifier for sorting the search results table
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ColumnId {
@@ -34,6 +70,16 @@ pub enum Message {
     ClearSearch,
     /// User clicked sidebar navigation item
     SwitchScreen(ScreenId),
+    /// User toggled sidebar expand/collapse
+    ToggleSidebar,
+    /// Window was resized
+    WindowResized { width: f32, height: f32 },
+    /// Set a status toast / notification banner
+    ShowNotification(String),
+    /// Dismiss the active notification banner
+    DismissNotification,
+    /// Run a search query (e.g. from history or advanced search)
+    RunQuery(String),
     /// User clicked column header to sort
     SortByColumn(ColumnId),
     /// User selected a row in the results table

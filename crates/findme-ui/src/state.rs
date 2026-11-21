@@ -9,6 +9,14 @@ use findme_core::SearchResultItem;
 pub struct AppState {
     /// Active screen view
     pub active_screen: ScreenId,
+    /// Whether sidebar is expanded (true = 220px, false = 68px compact)
+    pub sidebar_expanded: bool,
+    /// Current window width in pixels
+    pub window_width: f32,
+    /// Current window height in pixels
+    pub window_height: f32,
+    /// Active notification toast / banner text
+    pub notification: Option<String>,
     /// Current search query in input box
     pub query: String,
     /// Live search results
@@ -35,6 +43,10 @@ impl Default for AppState {
     fn default() -> Self {
         Self {
             active_screen: ScreenId::Search,
+            sidebar_expanded: true,
+            window_width: 1200.0,
+            window_height: 800.0,
+            notification: None,
             query: String::new(),
             results: Vec::new(),
             selected_row: None,
