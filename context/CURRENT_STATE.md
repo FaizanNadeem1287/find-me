@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 03:32 PKT
+*Last Updated*: 2026-11-22 03:58 PKT
 
 ---
 
@@ -16,7 +16,8 @@ Phase | Description | Status | Test Coverage
 **Phase 5** | Search Input & Virtualized 60 FPS Results Table | **100% COMPLETE** | 151 passing tests (Tasks 5.1 & 5.2 completed)
 **Phase 6** | Advanced Search Form, Index Management & Preferences | **100% COMPLETE** | 179 passing tests (Tasks 6.1, 6.2 & 6.3 completed)
 **Phase 7** | Async Tokio Engine Integration & Live Streaming | **100% COMPLETE** | 190 passing tests (Task 7.1 completed)
-**Phase 8** | Linux Desktop Integration & Power Navigation | **READY TO START** | Ready for Task 8.1
+**Phase 8** | Linux Desktop Integration & Power Navigation | **100% COMPLETE** | 209 passing tests (Tasks 8.1 & 8.2 completed)
+**Phase 9** | Packaging, Release Engineering & Production QA | **READY TO START** | Ready for Task 9.1
 
 ---
 
@@ -24,9 +25,9 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 8: Linux Desktop Integration & Power Navigation** | Documented in `PHASES.md`
-**Next Task ID** | **[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard** (`6j4626cvg5QJcqpQ`) | In `To Do` section
-**Active Git Branch** | `main` | Clean working tree; 16 feature branches preserved permanently
+**Active Phase** | **Phase 9: Packaging, Release Engineering & Production QA** | Documented in `PHASES.md`
+**Next Task ID** | **[TASK-9.1] Release: Debian Packaging (cargo-deb), AppStream & Desktop Integration** (`6j4626XmGvvwxP8x`) | In `To Do` section
+**Active Git Branch** | `main` | Clean working tree; 18 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
@@ -51,3 +52,5 @@ Branch | Commit | Description
 `feature/p6-index-mgmt` | `eb4fbaa` | Index management, custom folder exclusions & stats monitoring
 `feature/p6-remaining-screens` | `2ded8ac` | Search history, application settings & preferences, and about screens
 `feature/p7-engine-integration` | `0c31e9e` | Async Tokio engine bridge, live event streaming, search offloading & arena wiring
+`feature/p8-desktop-integration` | `d3f2fd4` | DBus FileManager1 file highlighting, cross-protocol clipboard & POSIX properties modal
+`feature/p8-keyboard-nav` | `57aa03e` | Comprehensive keyboard-first navigation (Ctrl+1..6, Ctrl+B, Ctrl+T, Ctrl+R, Alt+1..5, Ctrl+Shift+C/N/U)
