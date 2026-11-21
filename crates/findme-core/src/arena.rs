@@ -126,10 +126,23 @@ impl FileArena {
         self.pool.get(record.name_offset, record.name_len)
     }
 
+    /// Returns the file name bytes of the record at the given index
+    #[inline(always)]
+    pub fn get_name_bytes(&self, index: usize) -> Option<&[u8]> {
+        let record = self.records.get(index)?;
+        self.pool.get_bytes(record.name_offset, record.name_len)
+    }
+
     /// Returns the file name for a given record
     #[inline(always)]
     pub fn get_record_name(&self, record: &FileRecord) -> Option<&str> {
         self.pool.get(record.name_offset, record.name_len)
+    }
+
+    /// Returns the file name bytes for a given record
+    #[inline(always)]
+    pub fn get_record_name_bytes(&self, record: &FileRecord) -> Option<&[u8]> {
+        self.pool.get_bytes(record.name_offset, record.name_len)
     }
 
     /// Rebuilds the fast path lookup index from current records
