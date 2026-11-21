@@ -1,9 +1,23 @@
 //! Top-level FindMeApp Elm-architecture loop
 
-use crate::message::{ColumnId, Message};
+use crate::message::{ColumnId, Message, ScreenId};
 use crate::state::AppState;
-use iced::widget::{column, container, text};
-use iced::{Element, Length, Task, Theme};
+use crate::views;
+use iced::widget::{column, row};
+use iced::{Element, Length, Size, Subscription, Task, Theme};
+
+/// Configures window settings conforming to the Find-Me desktop specification
+///
+/// Sets minimum dimensions of 800x600 and a comfortable default launch size of 1200x800.
+pub fn window_settings() -> iced::window::Settings {
+    iced::window::Settings {
+        size: Size::new(1200.0, 800.0),
+        min_size: Some(Size::new(800.0, 600.0)),
+        resizable: true,
+        decorations: true,
+        ..Default::default()
+    }
+}
 
 /// Main application controller
 #[derive(Debug, Default)]
@@ -12,10 +26,16 @@ pub struct FindMeApp {
 }
 
 impl FindMeApp {
+    /// Creates a new default instance of FindMeApp
     pub fn new() -> Self {
         Self {
             state: AppState::default(),
         }
+    }
+
+    /// Application window title
+    pub fn title(&self) -> String {
+        format!("Find-Me — {}", self.state.active_screen.title())
     }
 
     /// Handles messages and performs state transitions
@@ -35,6 +55,29 @@ impl FindMeApp {
             }
             Message::SwitchScreen(screen) => {
                 self.state.active_screen = screen;
+                Task::none()
+            }
+            Message::ToggleSidebar => {
+                self.state.sidebar_expanded = !self.state.sidebar_expanded;
+                Task::none()
+            }
+            Message::WindowResized { width, height } => {
+                self.state.window_width = width;
+                self.state.window_height = height;
+                Task::none()
+            }
+            Message::ShowNotification(msg) => {
+                self.state.notification = Some(msg);
+                Task::none()
+            }
+            Message::DismissNotification => {
+                self.state.notification = None;
+                Task::none()
+            }
+            Message::RunQuery(query) => {
+                self.state.query = query;
+                self.state.active_screen = ScreenId::Search;
+                self.state.is_searching = true;
                 Task::none()
             }
             Message::SortByColumn(col) => {
@@ -145,32 +188,33 @@ impl FindMeApp {
         }
     }
 
-    /// Renders the UI widget tree
+    /// Renders the responsive desktop shell with sidebar navigation and active workspace screen
     pub fn view(&self) -> Element<'_, Message> {
-        let content = column![
-            text(format!(
-                "Find-Me - Active Screen: {:?}",
-                self.state.active_screen
-            ))
-            .size(18),
-            text(format!(
-                "Indexed Files: {} | Folders: {}",
-                self.state.indexed_files_count, self.state.indexed_folders_count
-            ))
-            .size(13),
-            text(format!(
-                "Query: '{}' | Matches: {}",
-                self.state.query,
-                self.state.results.len()
-            ))
-            .size(14),
-        ]
-        .spacing(12);
+        let sidebar = views::sidebar::view(&self.state);
 
-        container(content)
+        let screen_content: Element<'_, Message> = match self.state.active_screen {
+            ScreenId::Search => views::search::view(&self.state),
+            ScreenId::AdvancedSearch => views::advanced::view(&self.state),
+            ScreenId::IndexManagement => views::index_mgmt::view(&self.state),
+            ScreenId::SearchHistory => views::history::view(&self.state),
+            ScreenId::Settings => views::settings::view(&self.state),
+            ScreenId::About => views::about::view(&self.state),
+        };
+
+        let workspace_content = if let Some(ref notif) = self.state.notification {
+            let banner = views::notification_banner(notif);
+            column![banner, screen_content]
+                .width(Length::Fill)
+                .height(Length::Fill)
+        } else {
+            column![screen_content]
+                .width(Length::Fill)
+                .height(Length::Fill)
+        };
+
+        row![sidebar, workspace_content]
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(16)
             .into()
     }
 
@@ -181,6 +225,11 @@ impl FindMeApp {
         } else {
             Theme::Light
         }
+    }
+
+    /// Background event subscriptions (e.g. engine channels, window resizing)
+    pub fn subscription(&self) -> Subscription<Message> {
+        Subscription::none()
     }
 }
 
@@ -210,6 +259,7 @@ mod tests {
 
         let _ = app.update(Message::SwitchScreen(ScreenId::Settings));
         assert_eq!(app.state.active_screen, ScreenId::Settings);
+        assert_eq!(app.title(), "Find-Me — Settings");
     }
 
     #[test]
@@ -219,5 +269,36 @@ mod tests {
 
         let _ = app.update(Message::ToggleTheme);
         assert!(!app.state.theme.is_dark());
+    }
+
+    #[test]
+    fn test_sidebar_toggle() {
+        let mut app = FindMeApp::new();
+        assert!(app.state.sidebar_expanded);
+
+        let _ = app.update(Message::ToggleSidebar);
+        assert!(!app.state.sidebar_expanded);
+
+        let _ = app.update(Message::ToggleSidebar);
+        assert!(app.state.sidebar_expanded);
+    }
+
+    #[test]
+    fn test_window_resized_and_notification() {
+        let mut app = FindMeApp::new();
+        assert_eq!(app.state.window_width, 1200.0);
+
+        let _ = app.update(Message::WindowResized {
+            width: 1400.0,
+            height: 900.0,
+        });
+        assert_eq!(app.state.window_width, 1400.0);
+        assert_eq!(app.state.window_height, 900.0);
+
+        let _ = app.update(Message::ShowNotification("Test notification".into()));
+        assert_eq!(app.state.notification.as_deref(), Some("Test notification"));
+
+        let _ = app.update(Message::DismissNotification);
+        assert_eq!(app.state.notification, None);
     }
 }

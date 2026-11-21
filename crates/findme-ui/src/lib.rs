@@ -7,8 +7,9 @@ pub mod app;
 pub mod message;
 pub mod state;
 pub mod theme;
+pub mod views;
 
-pub use app::FindMeApp;
+pub use app::{window_settings, FindMeApp};
 pub use message::{ColumnId, Message, ScreenId};
 pub use state::AppState;
 pub use theme::AppTheme;
