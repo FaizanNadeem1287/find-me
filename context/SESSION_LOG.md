@@ -127,3 +127,35 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Next Task**: `[TASK-1.2] Core: Parallel Directory Crawler (jwalk / Rayon)` on branch `feature/p1-parallel-crawler`.
+
+
+---
+
+## Session 5: 2026-11-21 (Task 1.1 Comprehensive QA & Edge Case Fuzzing)
+
+### Objectives Addressed:
+1. Developed exhaustive edge case integration test suite in `crates/findme-core/tests/arena_edge_cases.rs` (17 distinct tests):
+   - Memory layout offset validation (`dir_id` at 0, `name_offset` at 4, `name_len` at 8, `flags` at 10, `_reserved` at 12, `size_bytes` at 16, `mtime_secs` at 24).
+   - Extreme file sizes (0 B, 1 B, 1024 B, 4 GB boundary, 10 TB, `u64::MAX`).
+   - Extreme timestamps (epoch 0, Year 2000, Year 2038 boundary, Year 3000+, `u64::MAX`).
+   - Formatted size & mtime string edge cases.
+   - StringPool empty strings, single-char, POSIX `NAME_MAX` (255 B), `u16::MAX` boundary, and rejection of `>65535` B.
+   - Safe rejection of invalid UTF-8 split character slices (half-emoji).
+   - Complex Unicode (spaces, tabs, newlines, quotes, shell chars, dots, Arabic, Hebrew, Greek, math symbols, ZWJ family emojis).
+   - Root-level files (`/vmlinuz`, `/initrd.img`).
+   - Deeply nested directories (128 hierarchy levels).
+   - Directory cycle detection guard (corrupted parent pointer loops safely return `None`).
+   - Out-of-bounds indices and corrupt record references (100% panic-free).
+2. Developed property-based fuzz tests in `crates/findme-core/tests/proptest_arena.rs` using `proptest`:
+   - Property 1: `prop_string_pool_roundtrip` (arbitrary UTF-8 strings roundtrip identically).
+   - Property 2: `prop_arena_path_reconstruction` (arbitrary segmented paths roundtrip identically).
+   - Property 3: `prop_file_flags_algebra` (algebraic commutativity, idempotency, absorption, and involution across arbitrary bit patterns).
+3. Verified all 41 tests pass across workspace (18 unit + 17 integration + 3 property + 3 UI).
+4. Executed `verify_task.sh` pre-merge gate with 0 warnings.
+5. Merged `feature/p1-qa-testing` into `main` with `--no-ff` (`f37d377`) and retained branch permanently.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`87a371f` | `feature/p1-qa-testing` | `test(p1): add comprehensive edge case and property-based fuzz tests for memory arena`
+`f37d377` (merge) | `main` | `test(p1): complete edge case and property-based test suites for Task 1.1`
