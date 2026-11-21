@@ -1067,6 +1067,7 @@ dependencies = [
  "anyhow",
  "findme-core",
  "findme-ui",
+ "iced",
  "tokio",
  "tracing",
  "tracing-subscriber",
