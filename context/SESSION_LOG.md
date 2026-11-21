@@ -461,4 +461,48 @@ Hash | Branch | Commit Message & Description
 
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
-- **Next Task**: `[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators` (`6j4626XH6CwVVVGQ`) on branch `feature/p5-search-input`.
+- **Completed Task**: `[TASK-4.2] UI: Cohesive Linux Dark & Light Theming with System Theme Sync` (`6j4626W6435GR4rx`).
+
+---
+
+## Session 13: 2026-11-22 (Completion of Phase 5 / Task 5.1 - Main Search Input, Debouncing & Status Indicators)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 5.1: `[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators` (`6j4626XH6CwVVVGQ`).
+2. Authored detailed implementation plan artifact: `task-5-1-implementation-plan.md`.
+3. Created feature branch `feature/p5-search-input` from `main` and moved Todoist task to `In Progress`.
+4. Extended `AppState` in `crates/findme-ui/src/state.rs` with `search_generation: u64`, `SEARCH_INPUT_ID`, `search_input_id()`, `is_heavy_query()`, and `format_number()`.
+5. Extended `Message` in `crates/findme-ui/src/message.rs` with `FocusSearchInput`, `DebouncedSearch { query, generation }`, `ExecuteSearch(query)`, and `KeyboardEvent(iced::keyboard::Event)`.
+6. Implemented `FindMeApp::boot()` returning initial focus command on `search_input_id()`.
+7. Implemented adaptive debouncing in `FindMeApp::update`:
+   - 0ms instant execution for plain/short queries.
+   - 50ms async Tokio timer task for heavy queries (`regex:`, wildcards `*?`, metadata operators `size:`, `dm:`, `attrib:`, boolean operators, or >3 terms).
+   - Monotonic generation checking automatically discarding outdated keystroke evaluations.
+8. Enhanced `crates/findme-ui/src/views/search.rs`:
+   - Prominent search input with `🔍` icon indicator and `text_input` bound to `search_input_id()`.
+   - Dynamic `✕` clear button rendered only when query is non-empty.
+   - Live status indicator bar with digit-grouped file/folder counts (`format_number`), latency metrics, match counts, and status indicators.
+9. Implemented global keyboard listener subscription in `FindMeApp::subscription`:
+   - `Escape`: Instantly clears search query and refocuses search input (or dismisses banner notifications).
+   - `Ctrl + F`: Routes to Search screen from any view and focuses input.
+   - `/`: Quick navigation and focus shortcut when on other views.
+10. Built comprehensive test suite in `crates/findme-ui/tests/search_input_tests.rs` (9 integration tests).
+11. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 quality gates (formatting, zero clippy warnings with `-D warnings`, 144 passing tests across workspace).
+12. Committed to `feature/p5-search-input` (`0ea70dc`) and merged into `main` via non-fast-forward merge (`git merge --no-ff`).
+13. Preserved `feature/p5-search-input` branch permanently in Git.
+14. Updated Todoist card `6j4626XH6CwVVVGQ`: posted implementation audit comment (`6j46v3GpmqXMmhHQ`) and marked task `Completed`.
+15. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`0ea70dc` | `feature/p5-search-input` | `feat(ui): main search input, debouncing & real-time status indicators (Task 5.1)`
+`d39cfbc` (merge) | `main` | `feat(p5): main search input, debouncing & real-time status indicators (Task 5.1)`
+
+### Todoist State Updates:
+- Task: `[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators` (`6j4626XH6CwVVVGQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- Posted implementation & QA audit comment on task `6j4626XH6CwVVVGQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting` (`6j4626WxWR8QpqCQ`) on branch `feature/p5-virtual-table`.

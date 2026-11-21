@@ -13,7 +13,7 @@ Phase | Description | Status | Test Coverage
 **Phase 2** | Query AST Parser & Nucleo Fuzzy Matcher | **100% COMPLETE** | 98 passing tests
 **Phase 3** | Inotify Real-Time Watcher & Index Persistence | **100% COMPLETE** | 124 passing tests
 **Phase 4** | Desktop UI - Iced Shell, Sidebar Navigation & Theming | **100% COMPLETE** | 135 passing tests (Tasks 4.1 & 4.2 completed)
-**Phase 5** | Search Input & Virtualized 60 FPS Results Table | **IN PROGRESS** | Ready for Task 5.1
+**Phase 5** | Search Input & Virtualized 60 FPS Results Table | **IN PROGRESS** | 144 passing tests (Task 5.1 completed)
 
 ---
 
@@ -22,8 +22,8 @@ Phase | Description | Status | Test Coverage
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 5: Search Input & Virtualized 60 FPS Results Table** | Documented in `PHASES.md`
-**Next Task ID** | **[TASK-5.1] UI: Main Search Input, Debouncing & Real-Time Status Indicators** (`6j4626XH6CwVVVGQ`) | In `In Progress` section
-**Active Git Branch** | `feature/p5-search-input` | Clean working tree; 10 feature branches preserved permanently
+**Next Task ID** | **[TASK-5.2] UI: Virtualized 60 FPS Tabular Results View & Column Sorting** (`6j4626WxWR8QpqCQ`) | In `To Do` section
+**Active Git Branch** | `main` | Clean working tree; 11 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
@@ -42,3 +42,4 @@ Branch | Commit | Description
 `feature/p3-index-persistence` | `7f1d111` | Zero-copy binary index persistence, SIMD CRC32, cold load <35ms for 1M records
 `feature/p4-ui-shell` | `940c3d1` | Primary Iced window shell, Elm architecture loop, responsive sidebar & 6 screen views
 `feature/p4-ui-theming` | `60c37d4` | Cohesive Linux dark/light theming, OS detection & WCAG AA verification
+`feature/p5-search-input` | `0ea70dc` | Main search input bar, adaptive debouncing, keyboard nav & status indicators
