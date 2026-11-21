@@ -275,3 +275,49 @@ Hash | Branch | Commit Message & Description
 - **Active Branch**: `main` (clean working tree).
 - **Milestone Reached**: **Phase 2: Core Engine - Query Parser, Nucleo-Matcher & Filtering is 100% COMPLETE!**
 - **Next Task**: `[TASK-3.1] Watcher: Real-Time Inotify Filesystem Event Monitor & Sync` on branch `feature/p3-fs-watcher`.
+
+---
+
+## Session 9: 2026-11-21 (Completion of Phase 3 / Task 3.1)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 3.1: `[TASK-3.1] Watcher: Real-Time Inotify Filesystem Event Monitor & Sync` (`6j4626RM98gGVxwQ`).
+2. Authored detailed implementation plan artifact: `task-3-1-implementation-plan.md`.
+3. Created feature branch `feature/p3-fs-watcher` from `main` and moved Todoist task to `In Progress`.
+4. Extended `FileFlags` in `crates/findme-core/src/record.rs` with `pub const IS_DELETED: Self = Self(1 << 5)` tombstone bitflag.
+5. Filtered out deleted records in `eval_predicate` in `crates/findme-core/src/matcher.rs`.
+6. Added fast path lookup map `lookup: HashMap<(u32, u64), usize>` to `FileArena` in `crates/findme-core/src/arena.rs` and implemented `find_record_by_path`, `remove_file`, `update_file_metadata`, and `rename_file`.
+7. Implemented `crates/findme-core/src/watcher.rs`:
+   - Wrapping `notify::RecommendedWatcher` targeting Linux `inotify`.
+   - Event debouncing loop with 150ms aggregation window to batch rapid disk events.
+   - Lifecycle event handling: `Create`, `Modify`, `Remove`, and `Rename` (pairing `RenameMode::Both` and `RenameMode::From` -> `RenameMode::To`).
+   - `IN_Q_OVERFLOW` queue overflow resilience initiating safe incremental rescans using `Crawler`.
+   - Non-blocking reader concurrency via `Arc<parking_lot::RwLock<FileArena>>`.
+8. Authored 7 integration tests in `crates/findme-core/tests/watcher_edge_cases.rs`:
+   - Live file creation within 200ms.
+   - Live file deletion within 200ms.
+   - Live file rename without duplicate records.
+   - Rapid burst modifications debouncing.
+   - Dynamic watch/unwatch path modification.
+   - Manual event synthesis.
+   - Incremental overflow recovery rescan.
+9. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing 5/5 quality gates (105 total workspace passing tests).
+10. Committed to `feature/p3-fs-watcher` (`197a309`) and merged into `main` via non-fast-forward merge (`git merge --no-ff`).
+11. Preserved `feature/p3-fs-watcher` branch permanently in Git.
+12. Updated Todoist card `6j4626RM98gGVxwQ` with `[x]` for all acceptance criteria, posted audit comment (`6j46QJV4MWqGgcGQ`), and marked task `Completed`.
+13. Updated persistent context files (`CURRENT_STATE.md`, `SESSION_LOG.md`).
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`197a309` | `feature/p3-fs-watcher` | `feat(p3): implement real-time inotify filesystem event monitor and sync (Task 3.1)`
+(merge) | `main` | `feat(p3): complete real-time inotify filesystem event monitor and sync (Task 3.1)`
+
+### Todoist State Updates:
+- Task: `[TASK-3.1] Watcher: Real-Time Inotify Filesystem Event Monitor & Sync` (`6j4626RM98gGVxwQ`) moved to `Completed` (`6j45x63Fqh349Gxx`).
+- All acceptance criteria updated to `[x]`.
+- Posted implementation & QA audit comment on task `6j4626RM98gGVxwQ`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Next Task**: `[TASK-3.2] Storage: Zero-Copy Binary Index Persistence & Instant Startup` on branch `feature/p3-index-persistence`.
