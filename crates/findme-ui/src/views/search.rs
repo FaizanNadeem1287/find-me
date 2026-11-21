@@ -37,20 +37,23 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     // Results status & stats bar
     let matches_text = if state.query.is_empty() {
-        format!("Showing all files ({})", format_number(state.results.len()))
+        format!(
+            "Showing all files ({})",
+            format_number(state.results.len() as u64)
+        )
     } else {
         format!(
             "Query: \"{}\" • {} matches ({} ms)",
             state.query,
-            format_number(state.results.len()),
+            format_number(state.results.len() as u64),
             state.last_search_duration_ms
         )
     };
 
     let indexed_text = format!(
         "Indexed: {} files in {} folders",
-        format_number(state.indexed_files_count),
-        format_number(state.indexed_folders_count)
+        format_number(state.indexed_files_count as u64),
+        format_number(state.indexed_folders_count as u64)
     );
 
     let stats_header = row![

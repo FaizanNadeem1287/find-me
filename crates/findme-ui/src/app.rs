@@ -1,6 +1,6 @@
 //! Top-level FindMeApp Elm-architecture loop
 
-use crate::message::{AdvancedSearchMessage, ColumnId, Message, ScreenId};
+use crate::message::{AdvancedSearchMessage, ColumnId, IndexManagementMessage, Message, ScreenId};
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
 use iced::widget::{column, operation, row};
@@ -364,6 +364,113 @@ impl FindMeApp {
                     AdvancedSearchMessage::SubmitSearch => {
                         let synthesized = self.state.advanced_filters.synthesize_query();
                         return self.update(Message::RunQuery(synthesized));
+                    }
+                }
+                Task::none()
+            }
+            Message::IndexManagement(idx_msg) => {
+                match idx_msg {
+                    IndexManagementMessage::UpdateNewRootInput(input) => {
+                        self.state.index_mgmt.new_root_input = input;
+                    }
+                    IndexManagementMessage::AddRootFromInput => {
+                        let trimmed = self.state.index_mgmt.new_root_input.trim();
+                        if !trimmed.is_empty() {
+                            let path = std::path::PathBuf::from(trimmed);
+                            if self.state.index_mgmt.add_root(path) {
+                                self.state.index_mgmt.new_root_input.clear();
+                                self.state.notification =
+                                    Some("Added indexed root directory".to_string());
+                            } else {
+                                self.state.notification =
+                                    Some("Directory already in indexed list".to_string());
+                            }
+                        }
+                    }
+                    IndexManagementMessage::AddRoot(path) => {
+                        self.state.index_mgmt.add_root(path);
+                    }
+                    IndexManagementMessage::RemoveRoot(path) => {
+                        if self.state.index_mgmt.remove_root(&path) {
+                            self.state.notification =
+                                Some("Removed indexed directory root".to_string());
+                        }
+                    }
+                    IndexManagementMessage::UpdateNewExclusionInput(input) => {
+                        self.state.index_mgmt.new_exclusion_input = input;
+                    }
+                    IndexManagementMessage::AddExclusionFromInput => {
+                        let trimmed = self.state.index_mgmt.new_exclusion_input.trim().to_string();
+                        if !trimmed.is_empty() {
+                            if self.state.index_mgmt.add_exclusion(trimmed) {
+                                self.state.index_mgmt.new_exclusion_input.clear();
+                                self.state.notification = Some("Added exclusion rule".to_string());
+                            } else {
+                                self.state.notification =
+                                    Some("Exclusion pattern already exists".to_string());
+                            }
+                        }
+                    }
+                    IndexManagementMessage::AddExclusion(pat) => {
+                        self.state.index_mgmt.add_exclusion(pat);
+                    }
+                    IndexManagementMessage::RemoveExclusion(pat) => {
+                        if self.state.index_mgmt.remove_exclusion(&pat) {
+                            self.state.notification = Some("Removed exclusion pattern".to_string());
+                        }
+                    }
+                    IndexManagementMessage::AddDefaultExclusions => {
+                        self.state.index_mgmt.add_default_exclusions();
+                        self.state.notification = Some("Default exclusion rules added".to_string());
+                    }
+                    IndexManagementMessage::TriggerRebuildIndex => {
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Scanning {
+                                current_path: "Initializing crawl...".to_string(),
+                                files_found: 0,
+                                percent: 0.0,
+                            };
+                        self.state.notification =
+                            Some("Starting full index rebuild...".to_string());
+                    }
+                    IndexManagementMessage::TriggerRefreshIndex => {
+                        self.state.notification =
+                            Some("Incremental refresh completed (inotify synced)".to_string());
+                    }
+                    IndexManagementMessage::ClearIndex => {
+                        self.state.index_mgmt.stats.total_files = 0;
+                        self.state.index_mgmt.stats.total_folders = 0;
+                        self.state.index_mgmt.stats.memory_bytes = 0;
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Idle;
+                        for root in &mut self.state.index_mgmt.roots {
+                            root.file_count = 0;
+                            root.folder_count = 0;
+                        }
+                        self.state.indexed_files_count = 0;
+                        self.state.indexed_folders_count = 0;
+                        self.state.notification = Some("Index database cleared".to_string());
+                    }
+                    IndexManagementMessage::UpdateProgress {
+                        current_path,
+                        files_found,
+                        percent,
+                    } => {
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Scanning {
+                                current_path,
+                                files_found,
+                                percent,
+                            };
+                    }
+                    IndexManagementMessage::RebuildFinished(stats) => {
+                        self.state.indexed_files_count = stats.total_files as usize;
+                        self.state.indexed_folders_count = stats.total_folders as usize;
+                        self.state.index_mgmt.stats = stats;
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Idle;
+                        self.state.notification =
+                            Some("Index rebuild completed successfully".to_string());
                     }
                 }
                 Task::none()

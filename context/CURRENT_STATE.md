@@ -14,7 +14,7 @@ Phase | Description | Status | Test Coverage
 **Phase 3** | Inotify Real-Time Watcher & Index Persistence | **100% COMPLETE** | 124 passing tests
 **Phase 4** | Desktop UI - Iced Shell, Sidebar Navigation & Theming | **100% COMPLETE** | 135 passing tests (Tasks 4.1 & 4.2 completed)
 **Phase 5** | Search Input & Virtualized 60 FPS Results Table | **100% COMPLETE** | 151 passing tests (Tasks 5.1 & 5.2 completed)
-**Phase 6** | Advanced Search Form, Index Management & Preferences | **IN PROGRESS** | Ready for Task 6.1
+**Phase 6** | Advanced Search Form, Index Management & Preferences | **IN PROGRESS** | 163 passing tests (Task 6.1 completed, Task 6.2 in progress)
 
 ---
 
@@ -23,8 +23,8 @@ Phase | Description | Status | Test Coverage
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 6: Advanced Search Form, Index Management & Preferences** | Documented in `PHASES.md`
-**Next Task ID** | **[TASK-6.1] UI: Advanced Search Form & Filter Builder** (`6j4626WQfF4HggVx`) | In `To Do` section
-**Active Git Branch** | `main` | Clean working tree; 12 feature branches preserved permanently
+**Active Task ID** | **[TASK-6.2] UI: Index Management & Custom Folder Exclusion Screen** (`6j4626cC2qCCP5wQ`) | In `In Progress` section
+**Active Git Branch** | `feature/p6-index-mgmt` | Branched from `main`; 13 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
@@ -45,3 +45,4 @@ Branch | Commit | Description
 `feature/p4-ui-theming` | `60c37d4` | Cohesive Linux dark/light theming, OS detection & WCAG AA verification
 `feature/p5-search-input` | `0ea70dc` | Main search input bar, adaptive debouncing, keyboard nav & status indicators
 `feature/p5-virtual-table` | `702974f` | Virtualized 60 FPS results table, 5-column sorting & keyboard navigation
+`feature/p6-advanced-screen` | `fe77754` | Advanced search visual form builder, multi-criteria query synthesizer

@@ -48,6 +48,8 @@ pub struct AppState {
     pub table_viewport_height: f32,
     /// Active state of visual query builder in Advanced Search screen
     pub advanced_filters: AdvancedFilterState,
+    /// State of index management and custom exclusion rules
+    pub index_mgmt: crate::index_mgmt::IndexManagementState,
 }
 
 /// Constant ID string for the main search input field
@@ -135,7 +137,7 @@ pub fn is_heavy_query(query: &str) -> bool {
 }
 
 /// Formats integer with comma separators for clean UI presentation (e.g. 1,234,567)
-pub fn format_number(n: usize) -> String {
+pub fn format_number(n: u64) -> String {
     let s = n.to_string();
     let bytes = s.as_bytes();
     let len = bytes.len();
@@ -176,6 +178,7 @@ impl Default for AppState {
             scroll_y: 0.0,
             table_viewport_height: 600.0,
             advanced_filters: AdvancedFilterState::default(),
+            index_mgmt: crate::index_mgmt::IndexManagementState::default(),
         }
     }
 }
