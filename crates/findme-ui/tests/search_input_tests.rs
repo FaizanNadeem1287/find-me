@@ -95,6 +95,12 @@ fn test_adaptive_debouncing_generation_invalidation() {
         generation: 3,
     });
     let _ = app.update(Message::ExecuteSearch("rust".into()));
+    assert!(app.state.is_searching);
+    let _ = app.update(Message::ResultsReceived {
+        results: vec![],
+        search_duration_ms: 1,
+        total_matches: 0,
+    });
     assert!(!app.state.is_searching);
     assert_eq!(app.state.last_search_duration_ms, 1);
 }

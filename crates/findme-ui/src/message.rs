@@ -122,6 +122,8 @@ pub enum Message {
     History(HistoryMessage),
     /// Interaction inside the Settings screen
     Settings(SettingsMessage),
+    /// Background engine event
+    Engine(crate::engine::EngineEvent),
 }
 
 /// Messages emitted by controls inside the Search History screen

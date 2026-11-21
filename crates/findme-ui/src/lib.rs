@@ -5,6 +5,7 @@
 
 pub mod advanced;
 pub mod app;
+pub mod engine;
 pub mod history;
 pub mod index_mgmt;
 pub mod message;
@@ -15,6 +16,7 @@ pub mod views;
 
 pub use advanced::{AdvancedFilterState, DatePreset, PresetFilter, SizeUnit};
 pub use app::{window_settings, FindMeApp};
+pub use engine::{engine_subscription, EngineBridge, EngineEvent};
 pub use history::{HistoryEntry, SearchHistoryState};
 pub use index_mgmt::{
     ExcludedPattern, IndexManagementState, IndexStats, IndexedRoot, IndexingState, RootStatus,
