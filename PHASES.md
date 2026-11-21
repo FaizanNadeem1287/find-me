@@ -30,6 +30,18 @@ Each phase contains granular, sequential tasks. Each task specifies its branch n
 
 ---
 
+## Todoist Task Board Management Workflow
+
+Project tasks are synchronized in real-time with the Todoist project **[Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx)** (`id: 6j45wf6xPVCM2RJx`):
+
+1. **`To Do` (`6j45x63GH3R3vWCQ`)**: Contains all scheduled phase tasks awaiting development. Each task documents its feature branch name, input/output requirements, and acceptance criteria.
+2. **`In Progress` (`6j45x632fhrVMmvQ`)**: When a task begins and its feature branch (`git checkout -b feature/...`) is created, the task is moved into `In Progress`. Exactly one task should be active at any given time.
+3. **`Paused` (`6j45x634PcW9V5wQ`)**: If work on a task is temporarily halted (e.g. awaiting user input, external package installations, or design clarifications), move the task to `Paused` with notes explaining the block.
+4. **`Completed` (`6j45x63Fqh349Gxx`)**: When a task passes the automated QA gate (`verify_task.sh`), completes architectural review, and merges into `main` via `git merge --no-ff`, move it to `Completed`.
+5. **`Future Ideas` (`6j45xVg6MVfrmpWQ`)**: Any enhancement ideas, additional packaging targets (Flatpak, AppImage, AUR), or post-v1 features suggested during development are tracked here.
+
+---
+
 ## Phase Overview
 
 ```

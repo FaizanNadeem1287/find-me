@@ -21,7 +21,7 @@ For every task specified in [PHASES.md](../../../PHASES.md), the agent follows t
 [ Step 1: Ingest Spec & Criteria ]
                |
                v
-[ Step 2: Create Feature Branch ] ---------> (feature/<task-id>-<name>)
+[ Step 2: Create Feature Branch ] ---------> (feature/<task-id>-<name> & Move to "In Progress" in Todoist)
                |
                v
 [ Step 3: Write Test Fixture (TDD) ] -------> (Failing unit / headless test)
@@ -39,7 +39,7 @@ For every task specified in [PHASES.md](../../../PHASES.md), the agent follows t
 [ Step 7: Architecture Review ] ------------> (Zero-workaround compliance)
                |
                v
-[ Step 8: Merge & Retain Branch ] ----------> (git merge --no-ff, keep branch)
+[ Step 8: Merge, Retain & Complete ] -------> (git merge --no-ff, keep branch & Move to "Completed" in Todoist)
 ```
 
 ---
@@ -50,11 +50,13 @@ For every task specified in [PHASES.md](../../../PHASES.md), the agent follows t
 - Read the active task definition in [PHASES.md](../../../PHASES.md).
 - Identify dependencies, input/output schemas, and acceptance criteria.
 
-### Step 2: Create Feature Branch
+### Step 2: Create Feature Branch & Sync Todoist
 ```bash
 git checkout main
 git checkout -b feature/<task-id>-<task-name>
 ```
+- In the Todoist project **[Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx)**, move the corresponding task from `To Do` to `In Progress`.
+- If blocked at any point by external factors or awaiting feedback, move the task to `Paused`.
 
 ### Step 3: Write Tests First (TDD)
 - **Engine Tasks**: Write unit tests in `src/` or integration tests in `tests/` using `tempfile`.
@@ -89,12 +91,13 @@ Verify compliance with the [Zero-Workaround Checklist](./references/zero_workaro
 - Are long-running operations off the UI thread?
 - Is memory consumption within budget (<45MB / 1M files)?
 
-### Step 8: Merge into `main` & Retain Branch Permanently
+### Step 8: Merge into `main`, Retain Branch & Complete in Todoist
 ```bash
 git checkout main
 git merge --no-ff feature/<task-id>-<task-name> -m "feat(<task-id>): <task description>"
 # CRITICAL: DO NOT DELETE THE FEATURE BRANCH!
 ```
+- In Todoist, move the completed task from `In Progress` into the `Completed` section.
 
 ---
 
