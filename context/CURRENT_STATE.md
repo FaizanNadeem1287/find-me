@@ -1,38 +1,38 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 00:00 PKT
+*Last Updated*: 2026-11-22 00:08 PKT
 
 ---
 
-## 1. Active Task & Branch Status
+## 1. Project Phase & Milestone Summary
+
+Phase | Description | Status | Test Coverage
+:--- | :--- | :--- | :---
+**Phase 0** | Workspace Scaffolding & Iced Desktop Init | **100% COMPLETE** | 7 passing tests
+**Phase 1** | Compact Arena, String Pool & Parallel Crawler | **100% COMPLETE** | 51 passing tests
+**Phase 2** | Query AST Parser & Nucleo Fuzzy Matcher | **100% COMPLETE** | 98 passing tests
+**Phase 3** | Inotify Real-Time Watcher & Index Persistence | **UP NEXT** | Pending
+
+---
+
+## 2. Active Task Status
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 2: Core Engine - Query Parser, Nucleo-Matcher & Filtering** | Documented in `PHASES.md`
-**Active Task ID** | **[TASK-2.2] Search: High-Performance Nucleo Fuzzy Matcher & SIMD Filter Pipeline** (`6j4626RCfjpvcxqx`) | Moved to `In Progress`
-**Active Git Branch** | `feature/p2-search-matcher` | Branched from `main`; will be retained permanently
-**Todoist Card** | `[TASK-2.2] Search: High-Performance Nucleo Fuzzy Matcher & SIMD Filter Pipeline` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
+**Active Phase** | **Phase 3: Core Engine - Real-Time Inotify Watcher & Index Persistence** | Documented in `PHASES.md`
+**Next Task ID** | **[TASK-3.1] Watcher: Real-Time Inotify Filesystem Event Monitor & Sync** (`6j4626RM98gGVxwQ`) | In `To Do` section
+**Active Git Branch** | `main` | Clean working tree; 6 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
 
-## 2. Active Implementation Objectives in Task 2.2
+## 3. Retained Feature Branches (Permanent History)
 
-- [ ] Build `SearchEngine` struct pairing fast predicate filtering with `nucleo-matcher` fuzzy scoring.
-- [ ] Implement Stage 1 SIMD / integer predicate filter (file flags, size bounds, mtime bounds, extension ID).
-- [ ] Implement Stage 2 name matching: exact/prefix substring (`memchr`) + fuzzy (`nucleo-matcher::Matcher`).
-- [ ] Implement score ordering: exact match (score 2000+) > prefix match (score 1000+) > fuzzy match (nucleo score).
-- [ ] Implement multi-column sorting: Name, Size, Modified Date, Path (ascending/descending).
-- [ ] Execute parallel search across Rayon thread pool with early termination or top-N result cap (e.g. 10,000 items).
-- [ ] Implement comprehensive unit and edge-case integration test suite in `crates/findme-core/tests/matcher_edge_cases.rs`.
-- [ ] Benchmark query execution verifying <5ms for substring and <15ms for fuzzy over 1,000,000 records.
-- [ ] Run pre-merge quality gate `verify_task.sh` (cargo fmt, clippy -D warnings, tests).
-- [ ] Merge into `main` with `--no-ff`, retain branch permanently, and post Todoist audit comment.
-
----
-
-## 3. Immediate Next Steps
-
-- Research `nucleo-matcher` API and design two-stage evaluation pipeline.
-- Create `task-2-2-implementation-plan.md` artifact.
-- Implement `crates/findme-core/src/matcher.rs` / `search.rs`.
+Branch | Commit | Description
+:--- | :--- | :---
+`feature/p0-workspace-init` | `1b91288` | Phase 0 Cargo workspace and Iced UI scaffolding
+`feature/p1-memory-arena` | `e6a556c` | 32-byte `FileRecord`, `StringPool`, `DirectoryTable`, `FileArena`
+`feature/p1-qa-testing` | `87a371f` | Exhaustive edge-cases & proptest fuzzing for memory arena
+`feature/p1-parallel-crawler` | `dd590e7` | `jwalk` + Rayon multithreaded filesystem crawler with cycle detection
+`feature/p2-query-parser` | `ac6cb1b` | Everything search syntax tokenizer and recursive-descent AST parser
+`feature/p2-search-matcher` | `f9ce1e7` | High-performance `nucleo-matcher` fuzzy engine & SIMD filter pipeline
