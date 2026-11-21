@@ -63,7 +63,19 @@ All skills reside in [.agents/skills/](./.agents/skills/) and are automatically 
 
 ---
 
-## 4. Quick Development Commands
+## 4. Persistent Context Management Protocol (`context/`)
+
+Whenever an agent starts a session or finishes a task, it must maintain the [context/](./context/) directory:
+- **[context/CURRENT_STATE.md](./context/CURRENT_STATE.md)**: Must always reflect the active task, active branch, blockers, and next steps.
+- **[context/SESSION_LOG.md](./context/SESSION_LOG.md)**: Chronological session audit log. Must be updated with commits, deliverables, and handoff notes.
+- **[context/ARCHITECTURE_CONTEXT.md](./context/ARCHITECTURE_CONTEXT.md)**: Core architectural constraints, crate boundaries, and performance budgets.
+
+**At Start of Every Session**: Read `context/CURRENT_STATE.md` and the latest entry of `context/SESSION_LOG.md` to restore full state.
+**At End of Every Task**: Update `context/CURRENT_STATE.md` and append to `context/SESSION_LOG.md`.
+
+---
+
+## 5. Quick Development Commands
 
 ```bash
 # Start a task
