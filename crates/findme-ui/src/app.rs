@@ -1,5 +1,6 @@
 //! Top-level FindMeApp Elm-architecture loop
 
+use crate::engine::{engine_subscription, EngineBridge, EngineEvent};
 use crate::message::{
     AdvancedSearchMessage, ColumnId, HistoryMessage, IndexManagementMessage, Message, ScreenId,
     SettingsMessage,
@@ -8,6 +9,7 @@ use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
 use iced::widget::{column, operation, row};
 use iced::{Element, Length, Size, Subscription, Task, Theme};
+use std::sync::Arc;
 
 /// Configures window settings conforming to the Find-Me desktop specification
 ///
@@ -23,17 +25,49 @@ pub fn window_settings() -> iced::window::Settings {
 }
 
 /// Main application controller
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FindMeApp {
     pub state: AppState,
+    pub engine: Arc<EngineBridge>,
+}
+
+impl Default for FindMeApp {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FindMeApp {
-    /// Creates a new default instance of FindMeApp
+    /// Creates a new default instance of FindMeApp with engine bridge
     pub fn new() -> Self {
-        Self {
-            state: AppState::default(),
-        }
+        Self::with_engine(Arc::new(EngineBridge::new()))
+    }
+
+    /// Creates a FindMeApp instance with an existing engine bridge
+    pub fn with_engine(engine: Arc<EngineBridge>) -> Self {
+        let (initial_files, initial_folders, memory_bytes) = {
+            let arena = engine.arena();
+            let lock = arena.read();
+            (
+                lock.len(),
+                lock.dirs().len(),
+                lock.memory_usage_bytes() as u64,
+            )
+        };
+
+        let mut index_mgmt = crate::index_mgmt::IndexManagementState::default();
+        index_mgmt.stats.total_files = initial_files as u64;
+        index_mgmt.stats.total_folders = initial_folders as u64;
+        index_mgmt.stats.memory_bytes = memory_bytes;
+
+        let state = AppState {
+            indexed_files_count: initial_files,
+            indexed_folders_count: initial_folders,
+            index_mgmt,
+            ..Default::default()
+        };
+
+        Self { state, engine }
     }
 
     /// Boots the application and initializes primary focus on the search input
@@ -96,10 +130,21 @@ impl FindMeApp {
                     Task::none()
                 }
             }
-            Message::ExecuteSearch(_query) => {
-                self.state.is_searching = false;
-                self.state.last_search_duration_ms = 1;
-                Task::none()
+            Message::ExecuteSearch(query) => {
+                self.state.is_searching = true;
+                let engine = Arc::clone(&self.engine);
+                let max_results = self.state.settings.max_results;
+                let sort_col = self.state.sort_column;
+                let sort_asc = self.state.sort_ascending;
+                Task::future(async move {
+                    let (results, duration_ms, total_matches) =
+                        engine.search(&query, max_results, sort_col, sort_asc).await;
+                    Message::ResultsReceived {
+                        results,
+                        search_duration_ms: duration_ms,
+                        total_matches,
+                    }
+                })
             }
             Message::KeyboardEvent(event) => {
                 if let iced::keyboard::Event::KeyPressed { key, modifiers, .. } = event {
@@ -212,10 +257,10 @@ impl FindMeApp {
                 Task::none()
             }
             Message::RunQuery(query) => {
-                self.state.query = query;
+                self.state.query = query.clone();
                 self.state.active_screen = ScreenId::Search;
                 self.state.is_searching = true;
-                Task::none()
+                self.update(Message::ExecuteSearch(query))
             }
             Message::SortByColumn(col) => {
                 if self.state.sort_column == col {
@@ -445,12 +490,39 @@ impl FindMeApp {
                             };
                         self.state.notification =
                             Some("Starting full index rebuild...".to_string());
+                        let roots: Vec<std::path::PathBuf> = self
+                            .state
+                            .index_mgmt
+                            .roots
+                            .iter()
+                            .map(|r| r.path.clone())
+                            .collect();
+                        let exclusions: Vec<std::path::PathBuf> = self
+                            .state
+                            .index_mgmt
+                            .exclusions
+                            .iter()
+                            .filter(|e| e.pattern.starts_with('/'))
+                            .map(|e| std::path::PathBuf::from(&e.pattern))
+                            .collect();
+                        let excluded_names: Vec<String> = self
+                            .state
+                            .index_mgmt
+                            .exclusions
+                            .iter()
+                            .filter(|e| !e.pattern.starts_with('/'))
+                            .map(|e| e.pattern.clone())
+                            .collect();
+                        self.engine.rebuild_index(roots, exclusions, excluded_names);
                     }
                     IndexManagementMessage::TriggerRefreshIndex => {
                         self.state.notification =
                             Some("Incremental refresh completed (inotify synced)".to_string());
+                        let q = self.state.query.clone();
+                        return self.update(Message::ExecuteSearch(q));
                     }
                     IndexManagementMessage::ClearIndex => {
+                        self.engine.clear_index();
                         self.state.index_mgmt.stats.total_files = 0;
                         self.state.index_mgmt.stats.total_folders = 0;
                         self.state.index_mgmt.stats.memory_bytes = 0;
@@ -462,6 +534,7 @@ impl FindMeApp {
                         }
                         self.state.indexed_files_count = 0;
                         self.state.indexed_folders_count = 0;
+                        self.state.results.clear();
                         self.state.notification = Some("Index database cleared".to_string());
                     }
                     IndexManagementMessage::UpdateProgress {
@@ -556,6 +629,71 @@ impl FindMeApp {
                                     Some(format!("Error saving preferences: {e}"));
                             }
                         }
+                    }
+                }
+                Task::none()
+            }
+            Message::Engine(engine_event) => {
+                match engine_event {
+                    EngineEvent::Started => {
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Scanning {
+                                current_path: "Crawling filesystem roots...".to_string(),
+                                files_found: 0,
+                                percent: 0.0,
+                            };
+                    }
+                    EngineEvent::Progress {
+                        files_found,
+                        dirs_scanned,
+                        current_path,
+                        percent,
+                    } => {
+                        self.state.indexed_files_count = files_found as usize;
+                        self.state.indexed_folders_count = dirs_scanned as usize;
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Scanning {
+                                current_path,
+                                files_found,
+                                percent,
+                            };
+                    }
+                    EngineEvent::IndexReady {
+                        total_files,
+                        total_folders,
+                        memory_bytes,
+                        duration_ms,
+                    } => {
+                        self.state.indexed_files_count = total_files as usize;
+                        self.state.indexed_folders_count = total_folders as usize;
+                        self.state.index_mgmt.stats.total_files = total_files;
+                        self.state.index_mgmt.stats.total_folders = total_folders;
+                        self.state.index_mgmt.stats.memory_bytes = memory_bytes;
+                        self.state.index_mgmt.stats.last_scan_secs =
+                            Some((duration_ms / 1000).max(1));
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Idle;
+                        self.state.notification = Some(format!(
+                            "Index ready: {} files in {} folders ({:.2} MB in {} ms)",
+                            crate::state::format_number(total_files),
+                            crate::state::format_number(total_folders),
+                            (memory_bytes as f64) / (1024.0 * 1024.0),
+                            duration_ms
+                        ));
+                        let q = self.state.query.clone();
+                        return self.update(Message::ExecuteSearch(q));
+                    }
+                    EngineEvent::FsChange { path, kind } => {
+                        tracing::debug!("Filesystem change detected: {:?} ({})", path, kind);
+                        if self.state.active_screen == ScreenId::Search {
+                            let q = self.state.query.clone();
+                            return self.update(Message::ExecuteSearch(q));
+                        }
+                    }
+                    EngineEvent::Error(err_msg) => {
+                        self.state.index_mgmt.indexing_state =
+                            crate::index_mgmt::IndexingState::Idle;
+                        self.state.notification = Some(format!("Engine error: {err_msg}"));
                     }
                 }
                 Task::none()
@@ -693,7 +831,10 @@ impl FindMeApp {
 
     /// Background event subscriptions (e.g. engine channels, keyboard shortcuts)
     pub fn subscription(&self) -> Subscription<Message> {
-        iced::keyboard::listen().map(Message::KeyboardEvent)
+        Subscription::batch([
+            iced::keyboard::listen().map(Message::KeyboardEvent),
+            engine_subscription().map(Message::Engine),
+        ])
     }
 }
 

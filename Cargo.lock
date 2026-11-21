@@ -1111,6 +1111,7 @@ dependencies = [
  "iced",
  "iced_test",
  "open",
+ "parking_lot",
  "serde",
  "serde_json",
  "tempfile",
