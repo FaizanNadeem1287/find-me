@@ -83,6 +83,18 @@ impl StringPool {
         self.buffer.shrink_to_fit();
     }
 
+    /// Returns a byte slice view of the underlying string buffer
+    #[inline(always)]
+    pub fn as_bytes(&self) -> &[u8] {
+        &self.buffer
+    }
+
+    /// Creates a string pool directly from an owned byte vector
+    #[inline(always)]
+    pub fn from_bytes(buffer: Vec<u8>) -> Self {
+        Self { buffer }
+    }
+
     /// Clears all strings from the pool
     pub fn clear(&mut self) {
         self.buffer.clear();

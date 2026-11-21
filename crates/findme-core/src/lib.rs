@@ -12,6 +12,7 @@ pub mod matcher;
 pub mod pool;
 pub mod query;
 pub mod record;
+pub mod storage;
 pub mod watcher;
 
 pub use arena::FileArena;
@@ -27,6 +28,7 @@ pub use query::{
     Lexer, QueryAst, QueryNode, QueryParser, SearchPredicate, Token, KNOWN_OPERATORS,
 };
 pub use record::{reconstruct_path, FileFlags, FileRecord, SearchResultItem};
+pub use storage::{IndexStorage, StorageHeader, HEADER_SIZE, SCHEMA_VERSION, STORAGE_MAGIC};
 pub use watcher::{FsWatcher, FsWatcherConfig};
 
 /// Engine version information
