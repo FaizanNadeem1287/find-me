@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 01:17 PKT
+*Last Updated*: 2026-11-22 03:32 PKT
 
 ---
 
@@ -15,7 +15,8 @@ Phase | Description | Status | Test Coverage
 **Phase 4** | Desktop UI - Iced Shell, Sidebar Navigation & Theming | **100% COMPLETE** | 135 passing tests (Tasks 4.1 & 4.2 completed)
 **Phase 5** | Search Input & Virtualized 60 FPS Results Table | **100% COMPLETE** | 151 passing tests (Tasks 5.1 & 5.2 completed)
 **Phase 6** | Advanced Search Form, Index Management & Preferences | **100% COMPLETE** | 179 passing tests (Tasks 6.1, 6.2 & 6.3 completed)
-**Phase 7** | Async Tokio Engine Integration & Live Streaming | **READY TO START** | Ready for Task 7.1
+**Phase 7** | Async Tokio Engine Integration & Live Streaming | **100% COMPLETE** | 190 passing tests (Task 7.1 completed)
+**Phase 8** | Linux Desktop Integration & Power Navigation | **READY TO START** | Ready for Task 8.1
 
 ---
 
@@ -23,9 +24,9 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 7: Async Tokio Communication Bridge & Live Engine Streaming** | Documented in `PHASES.md`
-**Next Task ID** | **[TASK-7.1] Integration: Async Tokio Communication Bridge & Live Engine Streaming** (`6j4626cpqvW7qXPQ`) | In `To Do` section
-**Active Git Branch** | `main` | Clean working tree; 15 feature branches preserved permanently
+**Active Phase** | **Phase 8: Linux Desktop Integration & Power Navigation** | Documented in `PHASES.md`
+**Next Task ID** | **[TASK-8.1] Desktop: File Context Menu, DBus FileManager1 Highlighting & Clipboard** (`6j4626cvg5QJcqpQ`) | In `To Do` section
+**Active Git Branch** | `main` | Clean working tree; 16 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
@@ -49,3 +50,4 @@ Branch | Commit | Description
 `feature/p6-advanced-screen` | `fe77754` | Advanced search visual form builder, multi-criteria query synthesizer
 `feature/p6-index-mgmt` | `eb4fbaa` | Index management, custom folder exclusions & stats monitoring
 `feature/p6-remaining-screens` | `2ded8ac` | Search history, application settings & preferences, and about screens
+`feature/p7-engine-integration` | `0c31e9e` | Async Tokio engine bridge, live event streaming, search offloading & arena wiring
