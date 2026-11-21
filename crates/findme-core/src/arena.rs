@@ -98,6 +98,19 @@ impl FileArena {
         self.reconstruct_path(record)
     }
 
+    /// Returns the file name of the record at the given index
+    #[inline(always)]
+    pub fn get_name(&self, index: usize) -> Option<&str> {
+        let record = self.records.get(index)?;
+        self.pool.get(record.name_offset, record.name_len)
+    }
+
+    /// Returns the file name for a given record
+    #[inline(always)]
+    pub fn get_record_name(&self, record: &FileRecord) -> Option<&str> {
+        self.pool.get(record.name_offset, record.name_len)
+    }
+
     /// Read-only slice of all file records in the arena
     #[inline(always)]
     pub fn records(&self) -> &[FileRecord] {

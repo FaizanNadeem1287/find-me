@@ -8,6 +8,7 @@ pub mod arena;
 pub mod crawler;
 pub mod directory;
 pub mod error;
+pub mod matcher;
 pub mod pool;
 pub mod query;
 pub mod record;
@@ -18,6 +19,7 @@ pub use crawler::{
 };
 pub use directory::{DirectoryEntry, DirectoryTable, ROOT_DIR_ID};
 pub use error::{EngineError, Result};
+pub use matcher::{MatchResult, SearchConfig, SearchEngine, SortColumn, SortDirection};
 pub use pool::StringPool;
 pub use query::{
     parse_attrib_filter, parse_date_filter, parse_iso_date, parse_size_bytes, parse_size_filter,

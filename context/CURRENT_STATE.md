@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-21 23:51 PKT
+*Last Updated*: 2026-11-22 00:00 PKT
 
 ---
 
@@ -9,28 +9,30 @@
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 2: Core Engine - Query Parser, Nucleo-Matcher & Filtering** | Documented in `PHASES.md`
-**Active Task ID** | **[TASK-2.1] Query: Everything Search Syntax Tokenizer & AST Parser** (`6j4626PQcQCQCh6x`) | Moved to `In Progress`
-**Active Git Branch** | `feature/p2-query-parser` | Branched from `main`; will be retained permanently
-**Todoist Card** | `[TASK-2.1] Query: Everything Search Syntax Tokenizer & AST Parser` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
+**Active Task ID** | **[TASK-2.2] Search: High-Performance Nucleo Fuzzy Matcher & SIMD Filter Pipeline** (`6j4626RCfjpvcxqx`) | Moved to `In Progress`
+**Active Git Branch** | `feature/p2-search-matcher` | Branched from `main`; will be retained permanently
+**Todoist Card** | `[TASK-2.2] Search: High-Performance Nucleo Fuzzy Matcher & SIMD Filter Pipeline` | Section: **In Progress** (`6j45x632fhrVMmvQ`)
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | 5 active sections, 23 total tasks
 
 ---
 
-## 2. Active Implementation Objectives in Task 2.1
+## 2. Active Implementation Objectives in Task 2.2
 
-- [ ] Implement AST nodes in `crates/findme-core/src/query/ast.rs` (`QueryNode`, `SearchPredicate`, `QueryAst`).
-- [ ] Implement unit and date conversions in `crates/findme-core/src/query/units.rs` (size binary units, ISO/relative dates).
-- [ ] Implement zero-allocation lexer in `crates/findme-core/src/query/lexer.rs`.
-- [ ] Implement fault-tolerant Pratt / recursive-descent parser in `crates/findme-core/src/query/parser.rs`.
-- [ ] Export query API in `crates/findme-core/src/query/mod.rs` and `crates/findme-core/src/lib.rs`.
-- [ ] Implement 50+ query variations unit test suite.
-- [ ] Implement proptest property-based fuzz tests verifying 0 panics on arbitrary string queries.
-- [ ] Benchmark query parsing latency confirming $<50\,\mu\text{s}$.
-- [ ] Run pre-merge quality gate `verify_task.sh` (formatting, clippy -D warnings, tests).
+- [ ] Build `SearchEngine` struct pairing fast predicate filtering with `nucleo-matcher` fuzzy scoring.
+- [ ] Implement Stage 1 SIMD / integer predicate filter (file flags, size bounds, mtime bounds, extension ID).
+- [ ] Implement Stage 2 name matching: exact/prefix substring (`memchr`) + fuzzy (`nucleo-matcher::Matcher`).
+- [ ] Implement score ordering: exact match (score 2000+) > prefix match (score 1000+) > fuzzy match (nucleo score).
+- [ ] Implement multi-column sorting: Name, Size, Modified Date, Path (ascending/descending).
+- [ ] Execute parallel search across Rayon thread pool with early termination or top-N result cap (e.g. 10,000 items).
+- [ ] Implement comprehensive unit and edge-case integration test suite in `crates/findme-core/tests/matcher_edge_cases.rs`.
+- [ ] Benchmark query execution verifying <5ms for substring and <15ms for fuzzy over 1,000,000 records.
+- [ ] Run pre-merge quality gate `verify_task.sh` (cargo fmt, clippy -D warnings, tests).
 - [ ] Merge into `main` with `--no-ff`, retain branch permanently, and post Todoist audit comment.
 
 ---
 
 ## 3. Immediate Next Steps
 
-- Implement `crates/findme-core/src/query/` submodules.
+- Research `nucleo-matcher` API and design two-stage evaluation pipeline.
+- Create `task-2-2-implementation-plan.md` artifact.
+- Implement `crates/findme-core/src/matcher.rs` / `search.rs`.
