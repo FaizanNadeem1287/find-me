@@ -5,18 +5,25 @@
 
 pub mod advanced;
 pub mod app;
+pub mod history;
 pub mod index_mgmt;
 pub mod message;
+pub mod settings;
 pub mod state;
 pub mod theme;
 pub mod views;
 
 pub use advanced::{AdvancedFilterState, DatePreset, PresetFilter, SizeUnit};
 pub use app::{window_settings, FindMeApp};
+pub use history::{HistoryEntry, SearchHistoryState};
 pub use index_mgmt::{
     ExcludedPattern, IndexManagementState, IndexStats, IndexedRoot, IndexingState, RootStatus,
 };
-pub use message::{AdvancedSearchMessage, ColumnId, IndexManagementMessage, Message, ScreenId};
+pub use message::{
+    AdvancedSearchMessage, ColumnId, HistoryMessage, IndexManagementMessage, Message, ScreenId,
+    SettingsMessage,
+};
+pub use settings::AppSettings;
 pub use state::{
     compute_virtual_range, format_number, is_heavy_query, search_input_id, table_scrollable_id,
     AppState, SEARCH_INPUT_ID, TABLE_SCROLLABLE_ID,

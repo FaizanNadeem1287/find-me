@@ -50,6 +50,10 @@ pub struct AppState {
     pub advanced_filters: AdvancedFilterState,
     /// State of index management and custom exclusion rules
     pub index_mgmt: crate::index_mgmt::IndexManagementState,
+    /// Persistent user settings & preferences
+    pub settings: crate::settings::AppSettings,
+    /// Search query history log & starred bookmarks
+    pub history: crate::history::SearchHistoryState,
 }
 
 /// Constant ID string for the main search input field
@@ -179,6 +183,11 @@ impl Default for AppState {
             table_viewport_height: 600.0,
             advanced_filters: AdvancedFilterState::default(),
             index_mgmt: crate::index_mgmt::IndexManagementState::default(),
+            settings: crate::settings::AppSettings::load_from_path(
+                &crate::settings::AppSettings::config_path(),
+            )
+            .unwrap_or_default(),
+            history: crate::history::SearchHistoryState::with_default_history(),
         }
     }
 }

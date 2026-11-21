@@ -118,6 +118,35 @@ pub enum Message {
     AdvancedSearch(AdvancedSearchMessage),
     /// Interaction inside the Index Management screen
     IndexManagement(IndexManagementMessage),
+    /// Interaction inside the Search History screen
+    History(HistoryMessage),
+    /// Interaction inside the Settings screen
+    Settings(SettingsMessage),
+}
+
+/// Messages emitted by controls inside the Search History screen
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HistoryMessage {
+    ExecuteQuery(String),
+    ToggleBookmark(u64),
+    RemoveEntry(u64),
+    ClearHistory,
+    ToggleFilterBookmarked(bool),
+    UpdateSearchFilter(String),
+}
+
+/// Messages emitted by controls inside the Settings screen
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SettingsMessage {
+    ToggleAutostart(bool),
+    ToggleCloseToTray(bool),
+    ToggleDefaultRegex(bool),
+    ToggleDefaultCase(bool),
+    SetMaxResults(usize),
+    ToggleExcludeHidden(bool),
+    ToggleExcludeSystem(bool),
+    ResetToDefaults,
+    SaveSettings,
 }
 
 /// Messages emitted by controls inside the Index Management screen
