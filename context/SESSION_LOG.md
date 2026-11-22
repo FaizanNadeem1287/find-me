@@ -1614,3 +1614,28 @@ Hash | Branch | Commit Message & Description
 5. Git & Todoist:
    - Committed on `feature/fix-monitored-root-counts` (`fad87c0`) and merged into `main` via `--no-ff` (`9b19ea4`). Permanently retained feature branch (38 total branches).
    - Added implementation audit comment `6j4FmfWmmQggw8wQ` to Todoist task `[BUGFIX] Live Arena File & Folder Counting for Monitored Directory Roots & Sub-Root Deduplication` (`6j4FgW34WMVvwvRx`) and marked complete.
+
+---
+
+## Session 39: 2026-11-22 (Phase 14: Multimodal Extractors - Audio & Vision, Task 14.2)
+
+### Objectives Addressed:
+1. Implemented Task 14.2: `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` (`6j4FWC25mhVvGfMx`).
+2. Implemented `crates/findme-semantic/src/extractors/audio.rs`:
+   - Zero-dependency, pure-Rust header parsing and metadata decoding for WAV (PCM/IEEE float RIFF), MP3 (ID3v1 trailer, ID3v2 text frames TIT2/TPE1/TALB/COMM, MPEG-1 Layer III frame sync and bitrate/samplerate estimation), OGG Vorbis/Opus (OggS page header, Vorbis comments TITLE/ARTIST/ALBUM, granule position duration estimation), and FLAC (STREAMINFO, sample rate, total samples, VORBIS_COMMENT).
+   - Generates 30-second time-sliced chunks (`[00:00 - 00:30]`, `[00:30 - 01:00]`) with human-readable timestamp markers ready for audio jump links.
+3. Implemented `crates/findme-semantic/src/extractors/image.rs`:
+   - High-throughput metadata extraction for PNG, JPEG, WEBP, BMP, GIF, and SVG vector graphics.
+   - Computes image dimensions, aspect ratio (16:9, 4:3, 1:1, etc.), orientation (Landscape, Portrait, Square), and color format.
+   - Computes a 64-bit difference perceptual hash (`dHash`) by downsampling to a 9x8 grayscale thumbnail and horizontal gradient comparison. Enables visual similarity matching and duplicate detection across scaled/recompressed images.
+4. Extended `DocumentMetadata` in `crates/findme-semantic/src/models.rs`:
+   - Added `duration_secs`, `sample_rate`, `channels`, `audio_codec`, `image_width`, `image_height`, `color_type`, `aspect_ratio`, and `perceptual_hash`.
+5. Integrated router in `crates/findme-semantic/src/extractors/mod.rs` dispatching `DocumentType::Audio` and `DocumentType::Image`.
+6. Authored 8 integration tests in `crates/findme-semantic/tests/multimodal_tests.rs`:
+   - Validated duration formatting, aspect ratio and orientation calculation, WAV audio parsing, MP3 with ID3v2 tag decoding, PNG image extraction and 64-bit dHash fingerprinting, dHash invariance under image downscaling, SVG vector extraction, and multimodal format routing.
+   - Workspace test suite reached **315 passing tests** (100% pass rate).
+7. Resolved disk space bottleneck by running `cargo clean` to reclaim 18.5 GiB of space in `/mnt/vol63`.
+8. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh` passing all 5/5 gates with zero Clippy warnings.
+9. Committed to `feature/p14-multimodal-extractors` (`f99418a`) and merged into `main` via non-fast-forward merge (`--no-ff`).
+10. Preserved `feature/p14-multimodal-extractors` branch permanently (40 total branches retained).
+11. Updated Todoist task `6j4FWC25mhVvGfMx` with implementation audit comment `6j4G3ggg58mWq2Vx` and marked complete. Moved Task 14.3 (`6j4FW9xfQXj9X6MQ`) to `In Progress`.
