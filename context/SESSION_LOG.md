@@ -1352,3 +1352,33 @@ Hash | Branch | Commit Message & Description
 8. Committed to `feature/p12-sidebar-revamp` and merged into `main` via non-fast-forward merge (`--no-ff`).
 9. Retained `feature/p12-sidebar-revamp` branch permanently in Git.
 10. Synchronized Todoist: marked task `6j49wM7FR64HF9hx` `Completed`.
+
+---
+
+## Session 32: 2026-11-22 (Completion of Task 12.3: Quick-Access Folder Showcase Hero Cards & Breadcrumbs Header)
+
+### Objectives Addressed:
+1. Created Task 12.3: `[TASK-12.3] UI: Quick-Access Folder Showcase Hero Cards & Modern Breadcrumbs Header` (`6j49wMC9Mm8cp3jx`) in Todoist.
+2. Authored detailed implementation plan artifact: `task-12-3-implementation-plan.md`.
+3. Created feature branch `feature/p12-folder-hero-cards` from `main` and moved Todoist task to `In Progress`.
+4. Revamped main workspace view in `crates/findme-ui/src/views/search.rs`:
+   - Top breadcrumb path (`Index Roots › General Knowledge › All Files` or active folder).
+   - Prominent pill search input with responsive clear button.
+   - Quick-access "Folders" showcase hero grid (3 cards):
+     - **Onboarding Card (Purple)**: Layered 3D folder visual, avatars (`M`, `A`), `"Updated 2h"` badge, title `"Onboarding"`, subtitle `"15 files • 3 subfolders"`.
+     - **Design System Card (Blue)**: Vibrant blue folder visual, avatars (`D`, `S`), `"v2.1"` badge, title `"Design System"`, subtitle `"22 files • fonts & colors"`.
+     - **Documents Card (Amber)**: Warm amber folder visual, avatars (`K`, `M`, `A`), `"Recent"` badge, title `"Documents"`, subtitle `"10 files • 3 editors"`.
+   - Card click interaction: 1-click filtering by directory subtree (`path:"..."`), active border highlighting, and toggle-off on re-click.
+   - "Files" section header with search duration, match count badge, and indexing metrics.
+   - Fixed parallel test theme isolation in `sidebar_tests.rs`.
+5. Added integration tests in `crates/findme-ui/tests/search_input_tests.rs` and `crates/findme-ui/tests/sidebar_tests.rs`:
+   - `test_folder_showcase_hero_cards_rendering_and_interaction`: verifies hero card rendering and toggle interactions.
+6. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **270 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+7. Committed to `feature/p12-folder-hero-cards` and merged into `main` via non-fast-forward merge (`--no-ff`).
+8. Retained `feature/p12-folder-hero-cards` branch permanently in Git (30 total branches preserved).
+9. Synchronized Todoist: marked task `6j49wMC9Mm8cp3jx` `Completed`.

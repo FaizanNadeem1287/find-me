@@ -19,18 +19,18 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // 1. Workspace Monogram Header
     // -------------------------------------------------------------------------
     let brand_section: Element<'_, Message> = if state.sidebar_expanded {
-        // Monogram circular badge "FM"
+        // Monogram circular badge "FM" in vibrant indigo accent
         let monogram = container(text("FM").size(11).color(Color::WHITE))
-            .width(Length::Fixed(30.0))
-            .height(Length::Fixed(30.0))
+            .width(Length::Fixed(32.0))
+            .height(Length::Fixed(32.0))
             .align_x(Alignment::Center)
             .align_y(Alignment::Center)
             .style(|_theme| container::Style {
-                background: Some(Background::Color(Color::from_rgb(0.08, 0.10, 0.15))),
+                background: Some(Background::Color(colors::ACCENT_PURPLE)),
                 border: Border {
                     color: Color::TRANSPARENT,
                     width: 0.0,
-                    radius: 15.0.into(),
+                    radius: 10.0.into(),
                 },
                 shadow: Shadow {
                     color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
@@ -69,16 +69,16 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .into()
     } else {
         let monogram = container(text("FM").size(11).color(Color::WHITE))
-            .width(Length::Fixed(32.0))
-            .height(Length::Fixed(32.0))
+            .width(Length::Fixed(34.0))
+            .height(Length::Fixed(34.0))
             .align_x(Alignment::Center)
             .align_y(Alignment::Center)
             .style(|_theme| container::Style {
-                background: Some(Background::Color(Color::from_rgb(0.08, 0.10, 0.15))),
+                background: Some(Background::Color(colors::ACCENT_PURPLE)),
                 border: Border {
                     color: Color::TRANSPARENT,
                     width: 0.0,
-                    radius: 16.0.into(),
+                    radius: 10.0.into(),
                 },
                 shadow: Shadow {
                     color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
@@ -229,6 +229,62 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .spacing(10)
                     .align_y(Alignment::Center)
                 }
+                ScreenId::SearchHistory => {
+                    let history_count = state.history.entries.len();
+                    let count_badge = if history_count > 0 {
+                        Some(
+                            container(
+                                text(history_count.to_string())
+                                    .size(10)
+                                    .color(state.theme.muted_color()),
+                            )
+                            .padding([1, 6])
+                            .style(pill_badge_style(
+                                state.theme.hover_color(),
+                                state.theme.muted_color(),
+                            )),
+                        )
+                    } else {
+                        None
+                    };
+
+                    let mut r = row![
+                        text(screen.icon()).size(14),
+                        text(screen.title()).size(13).color(if is_active {
+                            if is_dark {
+                                colors::DARK_TEXT
+                            } else {
+                                colors::LIGHT_ACCENT
+                            }
+                        } else {
+                            state.theme.text_color()
+                        }),
+                        Space::new().width(Length::Fill),
+                    ]
+                    .spacing(10)
+                    .align_y(Alignment::Center);
+
+                    if let Some(badge) = count_badge {
+                        r = r.push(badge);
+                    }
+                    r
+                }
+                ScreenId::AdvancedSearch => row![
+                    text(screen.icon()).size(14),
+                    text(screen.title()).size(13).color(if is_active {
+                        if is_dark {
+                            colors::DARK_TEXT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        }
+                    } else {
+                        state.theme.text_color()
+                    }),
+                    Space::new().width(Length::Fill),
+                    container(text("⚡").size(10).color(colors::ACCENT_AMBER)).padding([1, 4]),
+                ]
+                .spacing(10)
+                .align_y(Alignment::Center),
                 _ => row![
                     text(screen.icon()).size(14),
                     text(screen.title()).size(13).color(if is_active {
@@ -311,45 +367,75 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
         let mut tree_col = column![tree_header, root_btn].spacing(3);
 
+        if let Some(ref active_filter) = state.active_folder_filter {
+            let clear_btn = button(
+                row![
+                    text("✕").size(10).color(colors::ACCENT_AMBER),
+                    text(format!("Filter: {active_filter}"))
+                        .size(10)
+                        .color(state.theme.muted_color()),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
+            )
+            .padding([2, 6])
+            .style(sidebar_item_style(&state.theme, false))
+            .on_press(Message::SelectFolderFilter(None));
+
+            tree_col = tree_col.push(clear_btn);
+        }
+
         if root_expanded {
-            // Child categories with vibrant color badges
+            // Child categories with colored folder icons (Purple, Blue, Amber, Slate) and file count pills
             let subfolders = [
-                ("Onboarding", "🟣", colors::ACCENT_PURPLE, "Documents", "15"),
-                ("Design System", "🔵", colors::ACCENT_BLUE, "Projects", "22"),
-                ("Downloads", "🟠", colors::ACCENT_AMBER, "Downloads", "10"),
-                (
-                    "Media Assets",
-                    "🟢",
-                    colors::ACCENT_EMERALD,
-                    "Pictures",
-                    "8",
-                ),
+                ("Documents", colors::ACCENT_AMBER, "Documents", "15"),
+                ("Projects", colors::ACCENT_BLUE, "Projects", "22"),
+                ("Downloads", colors::ACCENT_SLATE, "Downloads", "10"),
+                ("Media Assets", colors::ACCENT_PURPLE, "Pictures", "8"),
             ];
 
             let mut sub_col = column![].spacing(2);
 
-            for (title, dot_icon, dot_color, path_filter, count_str) in subfolders {
+            for (title, accent_color, path_filter, count_str) in subfolders {
                 let is_selected = state.active_folder_filter.as_deref() == Some(path_filter);
 
+                let color_indicator = container(Space::new())
+                    .width(Length::Fixed(8.0))
+                    .height(Length::Fixed(8.0))
+                    .style(move |_theme| container::Style {
+                        background: Some(Background::Color(accent_color)),
+                        border: Border {
+                            color: Color::TRANSPARENT,
+                            width: 0.0,
+                            radius: 4.0.into(),
+                        },
+                        ..Default::default()
+                    });
+
                 let badge = container(text(count_str).size(10).color(state.theme.muted_color()))
-                    .padding([1, 5])
+                    .padding([1, 6])
                     .style(pill_badge_style(
                         state.theme.hover_color(),
                         state.theme.muted_color(),
                     ));
 
                 let item_row = row![
-                    Space::new().width(Length::Fixed(12.0)),
-                    text(dot_icon).size(10).color(dot_color),
+                    Space::new().width(Length::Fixed(10.0)),
+                    color_indicator,
+                    text("📁").size(12),
                     text(title).size(12).color(if is_selected {
-                        colors::ACCENT_BLUE
+                        if is_dark {
+                            colors::DARK_TEXT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        }
                     } else {
                         state.theme.text_color()
                     }),
                     Space::new().width(Length::Fill),
                     badge,
                 ]
-                .spacing(8)
+                .spacing(6)
                 .align_y(Alignment::Center);
 
                 let item_btn = button(item_row)
