@@ -1,0 +1,24 @@
+[package]
+name = "findme-semantic"
+description = "Deep content extraction, offline semantic vector embeddings, and hybrid search for Find-Me"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+findme-core.workspace = true
+pdf-extract.workspace = true
+calamine.workspace = true
+quick-xml.workspace = true
+zip.workspace = true
+csv.workspace = true
+memchr.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
