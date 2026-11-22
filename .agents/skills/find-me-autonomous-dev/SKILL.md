@@ -15,7 +15,7 @@ This skill defines the autonomous execution loop for developing **Find-Me**. It 
 
 ## The Autonomous Task Execution Cycle
 
-For every task specified in [PHASES.md](../../../PHASES.md), the agent follows this 8-step autonomous cycle:
+For every task specified in [PHASES.md](../../../PHASES.md), the agent follows this 9-step autonomous cycle:
 
 ```
 [ Step 1: Ingest Spec & Criteria ]
@@ -39,7 +39,10 @@ For every task specified in [PHASES.md](../../../PHASES.md), the agent follows t
 [ Step 7: Architecture Review ] ------------> (Zero-workaround compliance)
                |
                v
-[ Step 8: Merge, Retain & Complete ] -------> (git merge --no-ff, keep branch & Move to "Completed" in Todoist)
+[ Step 8: Push Branch & Create PR ] --------> (git push origin & gh pr create against main)
+               |
+               v
+[ Step 9: User PR Review & Merge ] ---------> (STOP/WAIT for user review; upon approval: git merge --no-ff, retain branch, sync Todoist)
 ```
 
 ---
@@ -53,6 +56,7 @@ For every task specified in [PHASES.md](../../../PHASES.md), the agent follows t
 ### Step 2: Create Feature Branch & Sync Todoist
 ```bash
 git checkout main
+git pull origin main
 git checkout -b feature/<task-id>-<task-name>
 ```
 - In the Todoist project **[Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx)**, move the corresponding task from `To Do` to `In Progress`.
@@ -91,13 +95,35 @@ Verify compliance with the [Zero-Workaround Checklist](./references/zero_workaro
 - Are long-running operations off the UI thread?
 - Is memory consumption within budget (<45MB / 1M files)?
 
-### Step 8: Merge into `main`, Retain Branch & Complete in Todoist
+### Step 8: Push Feature Branch to GitHub & Create Pull Request (PR)
+Once the task passes the QA verification gate and self-audit:
+```bash
+# 1. Commit implementation on feature branch
+git add <affected-files>
+git commit -m "feat(<task-id>): <task description>"
+
+# 2. Push feature branch to GitHub remote
+git push -u origin feature/<task-id>-<task-name>
+
+# 3. Create Pull Request against main
+gh pr create --base main --head feature/<task-id>-<task-name> \
+  --title "feat(<task-id>): <task description>" \
+  --body "### Summary
+- Implementation deliverables...
+- Tests & QA verification passed via verify_task.sh"
+```
+- **STOP & WAIT FOR USER PR REVIEW**: Present the Pull Request link to the user. **DO NOT merge directly into main**. Wait for the user to review the PR and provide feedback or approval.
+
+### Step 9: User PR Approval, Non-Fast-Forward Merge & Complete in Todoist
+Only after the user reviews the PR and gives explicit confirmation:
 ```bash
 git checkout main
-git merge --no-ff feature/<task-id>-<task-name> -m "feat(<task-id>): <task description>"
+git pull origin main
+git merge --no-ff feature/<task-id>-<task-name> -m "merge: feat(<task-id>): <task description>"
+git push origin main
 # CRITICAL: DO NOT DELETE THE FEATURE BRANCH!
 ```
-- **Post Audit Comment in Todoist**: Call `add-comments` on the Todoist task with a detailed implementation summary (branch name, merge commit hash, deliverables, and verification pass status).
+- **Post Audit Comment in Todoist**: Call `add-comments` on the Todoist task with a detailed implementation summary (branch name, PR link, merge commit hash, deliverables, and verification pass status).
 - **Move to Completed**: Move the task from `In Progress` into `Completed` (`sectionId: "6j45x63Fqh349Gxx"`).
 
 ---

@@ -1799,3 +1799,26 @@ Hash | Branch | Commit Message & Description
 3. **Git Workflow Compliance**:
    - Developed on dedicated branch `feature/readme-future-works-and-roadmap` (`d56b8e2`).
    - Merged into `main` with non-fast-forward merge (`--no-ff`), permanently retained branch (53 total branches), and pushed to `origin/main`.
+
+---
+
+## Session 47: 2026-11-22 (Engineering Workflow Upgrade: GitHub Push & Mandatory PR Review Gate)
+
+### Objectives Addressed:
+1. **Mandatory GitHub Push & Pull Request Policy**:
+   - Updated core engineering directives across all project documentation and skills:
+     - After completing implementation and passing the pre-merge QA verification gate (`verify_task.sh`), the feature branch must be pushed to GitHub (`git push -u origin feature/<task-id>-<task-name>`).
+     - A Pull Request must be opened against `main` (`gh pr create` or GitHub compare URL).
+     - **Mandatory Review Gate**: The agent must **STOP and WAIT** for the user to review the PR before merging.
+     - **Zero Direct Merges**: Nothing may be merged directly into `main` without explicit user review and confirmation.
+     - Once approved, merge using `--no-ff` and permanently retain the branch.
+2. **Updated Instruction & Governance Files**:
+   - `AGENTS.md`: Updated Directive 3 and Quick Development Commands with the PR review gate.
+   - `.agents/skills/find-me-git-workflow/SKILL.md`: Updated Core Directives, standard branch lifecycle diagram, and step-by-step commands.
+   - `.agents/skills/find-me-autonomous-dev/SKILL.md`: Expanded autonomous execution cycle to 9 steps, inserting Step 8 (Push & PR) and Step 9 (User PR Review & Merge).
+   - `.agents/skills/todoist-task-workflow/SKILL.md`: Updated Procedure 3 to require PR link and review approval before task completion.
+   - `docs/DEVELOPER_GUIDE.md`: Updated Section 2 and Section 4 with GitHub PR instructions.
+   - `context/ARCHITECTURE_CONTEXT.md`: Recorded PR review gate as architectural governance invariant.
+3. **Git & Branch Traceability**:
+   - Developed on feature branch `feature/update-github-pr-review-workflow`.
+   - Pushed feature branch to GitHub remote: `git push -u origin feature/update-github-pr-review-workflow`.

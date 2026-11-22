@@ -13,11 +13,13 @@ This reference records the core technical decisions, module boundaries, performa
    - Runs 100% in unprivileged user space. No `sudo`, no `setuid`, no `CAP_SYS_RAWIO`.
 3. **No UI Freezes**:
    - Traversal and heavy filtering run on Tokio/Rayon worker pools; the UI thread maintains 60 FPS under all workloads.
-4. **Permanent Branch History**:
-   - `main` is protected (no direct code commits).
+4. **Permanent Branch History & Mandatory PR Review Gate**:
+   - `main` is protected (no direct code commits, no direct unreviewed merges).
    - Every task has an isolated feature branch (`feature/<task-id>-<task-name>`).
-   - Merges are always non-fast-forward (`--no-ff`).
-   - **Feature branches are NEVER deleted**.
+   - Feature branches are pushed to GitHub (`origin`) and submitted as a Pull Request against `main`.
+   - Work is reviewed via PR before merging.
+   - Merges into `main` are always non-fast-forward (`--no-ff`).
+   - **Feature branches are NEVER deleted** (permanent retention).
 
 ---
 
