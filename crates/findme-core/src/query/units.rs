@@ -226,6 +226,14 @@ pub fn parse_attrib_filter(s: &str) -> (FileFlags, FileFlags) {
                 }
                 negate = false;
             }
+            'n' | 'N' => {
+                if negate {
+                    forbidden |= FileFlags::IS_NETWORK;
+                } else {
+                    required |= FileFlags::IS_NETWORK;
+                }
+                negate = false;
+            }
             _ => {}
         }
     }
