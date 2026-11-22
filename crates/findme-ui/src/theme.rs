@@ -480,75 +480,84 @@ pub fn contrast_ratio(c1: Color, c2: Color) -> f32 {
 // -----------------------------------------------------------------------------
 
 /// Modern elevated card container style (12px rounded corners, soft border, elevation shadow)
-pub fn card_style(theme: &AppTheme) -> container::Style {
-    if theme.is_dark() {
-        container::Style {
-            background: Some(Background::Color(colors::DARK_SURFACE)),
-            border: Border {
-                color: colors::DARK_BORDER,
-                width: 1.0,
-                radius: 12.0.into(),
-            },
-            shadow: Shadow {
-                color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
-                offset: Vector::new(0.0, 4.0),
-                blur_radius: 16.0,
-            },
-            text_color: Some(colors::DARK_TEXT),
-            ..Default::default()
-        }
-    } else {
-        container::Style {
-            background: Some(Background::Color(colors::LIGHT_SURFACE)),
-            border: Border {
-                color: colors::LIGHT_BORDER,
-                width: 1.0,
-                radius: 12.0.into(),
-            },
-            shadow: Shadow {
-                color: Color::from_rgba(0.0, 0.0, 0.0, 0.04),
-                offset: Vector::new(0.0, 4.0),
-                blur_radius: 16.0,
-            },
-            text_color: Some(colors::LIGHT_TEXT),
-            ..Default::default()
+pub fn card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style {
+    let is_dark = theme.is_dark();
+    move |_theme| {
+        if is_dark {
+            container::Style {
+                background: Some(Background::Color(colors::DARK_SURFACE)),
+                border: Border {
+                    color: colors::DARK_BORDER,
+                    width: 1.0,
+                    radius: 12.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
+                    offset: Vector::new(0.0, 4.0),
+                    blur_radius: 16.0,
+                },
+                text_color: Some(colors::DARK_TEXT),
+                ..Default::default()
+            }
+        } else {
+            container::Style {
+                background: Some(Background::Color(colors::LIGHT_SURFACE)),
+                border: Border {
+                    color: colors::LIGHT_BORDER,
+                    width: 1.0,
+                    radius: 12.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.04),
+                    offset: Vector::new(0.0, 4.0),
+                    blur_radius: 16.0,
+                },
+                text_color: Some(colors::LIGHT_TEXT),
+                ..Default::default()
+            }
         }
     }
 }
 
 /// Hero Folder Showcase Card container style (16px rounded corners, subtle colored background tint)
-pub fn hero_card_style(theme: &AppTheme, tint_color: Color) -> container::Style {
-    if theme.is_dark() {
-        container::Style {
-            background: Some(Background::Color(colors::DARK_SURFACE)),
-            border: Border {
-                color: tint_color.scale_alpha(0.3),
-                width: 1.0,
-                radius: 16.0.into(),
-            },
-            shadow: Shadow {
-                color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
-                offset: Vector::new(0.0, 4.0),
-                blur_radius: 16.0,
-            },
-            text_color: Some(colors::DARK_TEXT),
-            ..Default::default()
-        }
-    } else {
-        container::Style {
-            background: Some(Background::Color(tint_color)),
-            border: Border {
-                color: colors::LIGHT_BORDER,
-                width: 1.0,
-                radius: 16.0.into(),
-            },
-            shadow: Shadow {
-                color: Color::from_rgba(0.0, 0.0, 0.0, 0.05),
-                offset: Vector::new(0.0, 4.0),
-                blur_radius: 16.0,
-            },
-            text_color: Some(colors::LIGHT_TEXT),
-            ..Default::default()
+pub fn hero_card_style(
+    theme: &AppTheme,
+    tint_color: Color,
+) -> impl Fn(&iced::Theme) -> container::Style {
+    let is_dark = theme.is_dark();
+    move |_theme| {
+        if is_dark {
+            container::Style {
+                background: Some(Background::Color(colors::DARK_SURFACE)),
+                border: Border {
+                    color: tint_color.scale_alpha(0.3),
+                    width: 1.0,
+                    radius: 16.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
+                    offset: Vector::new(0.0, 4.0),
+                    blur_radius: 16.0,
+                },
+                text_color: Some(colors::DARK_TEXT),
+                ..Default::default()
+            }
+        } else {
+            container::Style {
+                background: Some(Background::Color(tint_color)),
+                border: Border {
+                    color: colors::LIGHT_BORDER,
+                    width: 1.0,
+                    radius: 16.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.05),
+                    offset: Vector::new(0.0, 4.0),
+                    blur_radius: 16.0,
+                },
+                text_color: Some(colors::LIGHT_TEXT),
+                ..Default::default()
+            }
         }
     }
 }
@@ -674,8 +683,11 @@ pub fn search_input_style(
 }
 
 /// Circular avatar or pill badge container style
-pub fn pill_badge_style(bg_color: Color, text_color: Color) -> container::Style {
-    container::Style {
+pub fn pill_badge_style(
+    bg_color: Color,
+    text_color: Color,
+) -> impl Fn(&iced::Theme) -> container::Style {
+    move |_theme| container::Style {
         background: Some(Background::Color(bg_color)),
         border: Border {
             color: Color::TRANSPARENT,

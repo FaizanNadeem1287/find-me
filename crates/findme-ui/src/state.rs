@@ -58,6 +58,10 @@ pub struct AppState {
     pub context_menu: ContextMenuState,
     /// Active file properties dialog modal (if open)
     pub properties_modal: Option<crate::desktop::FileProperties>,
+    /// Set of expanded folder paths in the sidebar directory tree
+    pub expanded_folders: std::collections::HashSet<String>,
+    /// Active directory or folder filter applied from sidebar/hero cards
+    pub active_folder_filter: Option<String>,
 }
 
 /// State of the right-click file context menu
@@ -202,6 +206,12 @@ impl Default for AppState {
             history: crate::history::SearchHistoryState::with_default_history(),
             context_menu: ContextMenuState::default(),
             properties_modal: None,
+            expanded_folders: {
+                let mut set = std::collections::HashSet::new();
+                set.insert("General Knowledge".to_string());
+                set
+            },
+            active_folder_filter: None,
         }
     }
 }
