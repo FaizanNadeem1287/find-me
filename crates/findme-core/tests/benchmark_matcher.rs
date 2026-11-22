@@ -68,7 +68,7 @@ fn test_query_evaluation_latency_million_records() {
     assert!(!sub_results.is_empty());
 
     // 2. Fuzzy Query Benchmark (Must evaluate in <15ms in release mode, <100ms in debug)
-    let fuzzy_query = "mtchr";
+    let fuzzy_query = "fuzzy:mtchr";
     let ast_fuzzy = QueryParser::parse(fuzzy_query);
 
     // Warm-up

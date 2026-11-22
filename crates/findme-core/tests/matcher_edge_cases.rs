@@ -97,7 +97,7 @@ fn populate_test_arena() -> FileArena {
 #[test]
 fn test_strict_score_ordering_hierarchy() {
     let arena = populate_test_arena();
-    let ast = QueryParser::parse("main");
+    let ast = QueryParser::parse("fuzzy:main");
     let config = SearchConfig {
         max_results: 10,
         sort_column: SortColumn::Score,
@@ -160,8 +160,16 @@ fn test_strict_score_ordering_hierarchy() {
 fn test_quoted_search_disables_fuzzy() {
     let arena = populate_test_arena();
 
-    // Unquoted "main" matches fuzzy "my_app_internal_node.rs"
-    let ast_fuzzy = QueryParser::parse("main");
+    // Plain unquoted "main" matches exact, prefix, substring, but NOT distant fuzzy acronyms
+    let ast_plain = QueryParser::parse("main");
+    let res_plain = SearchEngine::search(&arena, &ast_plain, &SearchConfig::default());
+    assert!(!res_plain.iter().any(|r| r.record_idx == 3));
+    assert!(res_plain.iter().any(|r| r.record_idx == 0)); // main.rs
+    assert!(res_plain.iter().any(|r| r.record_idx == 1)); // main_window.rs
+    assert!(res_plain.iter().any(|r| r.record_idx == 2)); // domain.rs
+
+    // Explicit "fuzzy:main" matches distant fuzzy "my_app_internal_node.rs"
+    let ast_fuzzy = QueryParser::parse("fuzzy:main");
     let res_fuzzy = SearchEngine::search(&arena, &ast_fuzzy, &SearchConfig::default());
     assert!(res_fuzzy.iter().any(|r| r.record_idx == 3));
 
@@ -173,6 +181,66 @@ fn test_quoted_search_disables_fuzzy() {
     assert!(res_quoted.iter().any(|r| r.record_idx == 0));
     assert!(res_quoted.iter().any(|r| r.record_idx == 1));
     assert!(res_quoted.iter().any(|r| r.record_idx == 2));
+}
+
+#[test]
+fn test_user_inquiry_plan_md_precision_matching() {
+    let mut arena = FileArena::new();
+
+    // Add files that mimic the user's observed issue:
+    // Searching "PLAN.md" should only match files containing "plan.md" as a substring.
+    let idx_target1 = arena
+        .add_file(Path::new("/workspace/PLAN.md"), FileFlags::NONE, 1024, 1000)
+        .unwrap() as usize;
+    let idx_target2 = arena
+        .add_file(
+            Path::new("/workspace/2026-10-23-planning-phase-plan.md"),
+            FileFlags::NONE,
+            2048,
+            1000,
+        )
+        .unwrap() as usize;
+    let idx_unrelated1 = arena
+        .add_file(
+            Path::new("/workspace/IMPLEMENTATION.md"),
+            FileFlags::NONE,
+            4096,
+            1000,
+        )
+        .unwrap() as usize;
+    let idx_unrelated2 = arena
+        .add_file(
+            Path::new("/workspace/PixelBand.module.css"),
+            FileFlags::NONE,
+            512,
+            1000,
+        )
+        .unwrap() as usize;
+
+    let query_ast = QueryParser::parse("PLAN.md");
+    let results = SearchEngine::search(&arena, &query_ast, &SearchConfig::default());
+
+    let match_ids: Vec<usize> = results.iter().map(|r| r.record_idx).collect();
+    assert!(match_ids.contains(&idx_target1), "Must match exact PLAN.md");
+    assert!(
+        match_ids.contains(&idx_target2),
+        "Must match filename containing plan.md"
+    );
+    assert!(
+        !match_ids.contains(&idx_unrelated1),
+        "Must NOT match IMPLEMENTATION.md under default unquoted search"
+    );
+    assert!(
+        !match_ids.contains(&idx_unrelated2),
+        "Must NOT match PixelBand.module.css under default unquoted search"
+    );
+
+    // With explicit fuzzy: operator, it matches acronyms/fuzzy
+    let fuzzy_ast = QueryParser::parse("fuzzy:PLAN.md");
+    let fuzzy_results = SearchEngine::search(&arena, &fuzzy_ast, &SearchConfig::default());
+    let fuzzy_ids: Vec<usize> = fuzzy_results.iter().map(|r| r.record_idx).collect();
+    assert!(fuzzy_ids.contains(&idx_target1));
+    assert!(fuzzy_ids.contains(&idx_unrelated1));
 }
 
 #[test]

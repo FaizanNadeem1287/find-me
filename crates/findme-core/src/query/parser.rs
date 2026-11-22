@@ -226,6 +226,16 @@ impl<'a> QueryParser<'a> {
                     }
                 }
             }
+            "fuzzy" => {
+                if value.trim().is_empty() {
+                    SearchPredicate::Text {
+                        term: format!("fuzzy:{}", value),
+                        quoted: false,
+                    }
+                } else {
+                    SearchPredicate::Fuzzy(value.to_string())
+                }
+            }
             _ => SearchPredicate::Text {
                 term: format!("{}:{}", prefix, value),
                 quoted: false,
