@@ -8,6 +8,38 @@ use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
+/// Matches a simple wildcard glob against a target string (e.g. `*.pyc`, `*~`, `test-*`, `*cache*`)
+pub fn glob_matches(pattern: &str, target: &str) -> bool {
+    let p = pattern.trim();
+    if p.is_empty() {
+        return false;
+    }
+    if p == "*" {
+        return true;
+    }
+    if p.starts_with('*') && p.ends_with('*') && p.len() > 2 {
+        let needle = &p[1..p.len() - 1];
+        return target.contains(needle);
+    }
+    if let Some(suffix) = p.strip_prefix('*') {
+        return target.ends_with(suffix);
+    }
+    if let Some(prefix) = p.strip_suffix('*') {
+        return target.starts_with(prefix);
+    }
+    p.eq_ignore_ascii_case(target)
+}
+
+/// Expands leading `~` into user's home directory
+pub fn expand_tilde(p: &Path) -> PathBuf {
+    if let Ok(stripped) = p.strip_prefix("~") {
+        if let Ok(home) = std::env::var("HOME") {
+            return PathBuf::from(home).join(stripped);
+        }
+    }
+    p.to_path_buf()
+}
+
 /// Configuration options for the filesystem crawler
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CrawlerConfig {
@@ -17,6 +49,10 @@ pub struct CrawlerConfig {
     pub excluded_paths: Vec<PathBuf>,
     /// Directory names to exclude everywhere (e.g. ".git", "node_modules", "target")
     pub excluded_names: Vec<String>,
+    /// Explicit file extensions to exclude everywhere (e.g. "pyc", "tmp", "cache")
+    pub excluded_extensions: Vec<String>,
+    /// Wildcard glob patterns to exclude everywhere (e.g. "*~", ".*.swp")
+    pub excluded_globs: Vec<String>,
     /// Whether to follow directory symlinks (default: false)
     pub follow_symlinks: bool,
     /// Maximum directory traversal depth (default: usize::MAX)
@@ -42,7 +78,18 @@ impl Default for CrawlerConfig {
                 ".hg".into(),
                 "node_modules".into(),
                 "target".into(),
+                "__pycache__".into(),
+                ".venv".into(),
+                ".cargo".into(),
             ],
+            excluded_extensions: vec![
+                "pyc".into(),
+                "pyo".into(),
+                "tmp".into(),
+                "swp".into(),
+                "bak".into(),
+            ],
+            excluded_globs: Vec::new(),
             follow_symlinks: false,
             max_depth: usize::MAX,
             skip_hidden: false,
@@ -82,6 +129,28 @@ impl CrawlerConfig {
     /// Adds a folder name to skip wherever encountered
     pub fn add_excluded_name<S: Into<String>>(mut self, name: S) -> Self {
         self.excluded_names.push(name.into());
+        self
+    }
+
+    /// Adds an explicit file extension to exclude everywhere (e.g. "pyc", "tmp")
+    pub fn add_excluded_extension<S: Into<String>>(mut self, ext: S) -> Self {
+        let cleaned = ext
+            .into()
+            .trim()
+            .trim_start_matches('.')
+            .to_ascii_lowercase();
+        if !cleaned.is_empty() && !self.excluded_extensions.contains(&cleaned) {
+            self.excluded_extensions.push(cleaned);
+        }
+        self
+    }
+
+    /// Adds a wildcard glob pattern to exclude everywhere (e.g. "*~", ".*.swp")
+    pub fn add_excluded_glob<S: Into<String>>(mut self, glob: S) -> Self {
+        let pattern = glob.into().trim().to_string();
+        if !pattern.is_empty() && !self.excluded_globs.contains(&pattern) {
+            self.excluded_globs.push(pattern);
+        }
         self
     }
 
@@ -149,16 +218,56 @@ impl CrawlerConfig {
             }
         }
 
+        // 1. Explicit path prefix matching with ~ expansion
         for excl in &self.excluded_paths {
-            if path.starts_with(excl) {
+            let resolved = expand_tilde(excl);
+            if path.starts_with(&resolved) {
                 return true;
             }
         }
 
+        // 2. Ancestor component matching (checks all folder names in the entire path)
+        for component in path.components() {
+            if let std::path::Component::Normal(os_str) = component {
+                let comp_str = os_str.to_string_lossy();
+                for excl_name in &self.excluded_names {
+                    if comp_str.eq_ignore_ascii_case(excl_name) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // 3. File extension matching
+        if let Some(ext) = path.extension() {
+            let ext_str = ext.to_string_lossy().to_ascii_lowercase();
+            for excl_ext in &self.excluded_extensions {
+                if ext_str == *excl_ext {
+                    return true;
+                }
+            }
+            // Compatibility: support "*.ext" or ".ext" inside excluded_names
+            for excl_name in &self.excluded_names {
+                let cleaned = excl_name.trim_start_matches('*').trim_start_matches('.');
+                if !cleaned.is_empty()
+                    && (excl_name.starts_with('*') || excl_name.starts_with('.'))
+                    && ext_str == cleaned.to_ascii_lowercase()
+                {
+                    return true;
+                }
+            }
+        }
+
+        // 4. Wildcard glob matching on filename
         if let Some(file_name) = path.file_name() {
             let name_str = file_name.to_string_lossy();
+            for glob in &self.excluded_globs {
+                if glob_matches(glob, &name_str) {
+                    return true;
+                }
+            }
             for excl_name in &self.excluded_names {
-                if name_str == *excl_name {
+                if excl_name.contains('*') && glob_matches(excl_name, &name_str) {
                     return true;
                 }
             }
@@ -459,5 +568,40 @@ mod tests {
         assert!(config.is_excluded_path(Path::new("/home/user/repo/.git")));
         assert!(config.is_excluded_path(Path::new("/home/user/app/node_modules")));
         assert!(config.is_excluded_path(Path::new("/home/user/rust/target")));
+        // Ancestor folder matching
+        assert!(
+            config.is_excluded_path(Path::new("/home/user/app/node_modules/lodash/package.json"))
+        );
+        assert!(config.is_excluded_path(Path::new("/home/user/repo/.git/objects/pack/pack.idx")));
+    }
+
+    #[test]
+    fn test_extension_and_glob_exclusions() {
+        let config = CrawlerConfig::new()
+            .add_excluded_extension("pyc")
+            .add_excluded_extension(".tmp")
+            .add_excluded_glob("*~")
+            .add_excluded_glob("*.bak");
+
+        assert!(config.is_excluded_path(Path::new("/home/user/src/main.pyc")));
+        assert!(config.is_excluded_path(Path::new("/home/user/src/main.PYC")));
+        assert!(config.is_excluded_path(Path::new("/home/user/data/temp.tmp")));
+        assert!(config.is_excluded_path(Path::new("/home/user/doc/draft.txt~")));
+        assert!(config.is_excluded_path(Path::new("/home/user/doc/file.bak")));
+
+        // Non-excluded extensions
+        assert!(!config.is_excluded_path(Path::new("/home/user/src/main.py")));
+        assert!(!config.is_excluded_path(Path::new("/home/user/doc/draft.txt")));
+    }
+
+    #[test]
+    fn test_glob_matches() {
+        assert!(glob_matches("*.pyc", "app.pyc"));
+        assert!(glob_matches("*.pyc", "app.cpython-310.pyc"));
+        assert!(!glob_matches("*.pyc", "app.py"));
+        assert!(glob_matches("*~", "backup.txt~"));
+        assert!(glob_matches("test-*", "test-runner"));
+        assert!(!glob_matches("test-*", "production-runner"));
+        assert!(glob_matches("*cache*", "mycachefolder"));
     }
 }
