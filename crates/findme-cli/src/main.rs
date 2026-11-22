@@ -4,71 +4,37 @@
 //! menus, command line, or desktop managers. Supports GUI launch and CLI utilities.
 
 use anyhow::Result;
+use findme_cli::{
+    execute_cli_search, execute_cli_stats, has_display_server, parse_cli_args, print_help,
+    print_version,
+};
+use findme_core::IndexStorage;
 use findme_ui::{window_settings, FindMeApp};
 use std::env;
 use tracing::info;
-
-fn print_help() {
-    println!(
-        r#"Find-Me v{} — Instant Linux Desktop File Search Utility
-
-USAGE:
-    find-me [OPTIONS] [QUERY]
-
-OPTIONS:
-    -h, --help           Print help information
-    -v, --version        Print version information
-    --gui                Explicitly launch graphical desktop search interface (default)
-    --rebuild-index      Perform background filesystem index crawl in CLI mode
-    --new-window         Open new application search window
-
-SHORTCUTS:
-    Ctrl + F / /         Focus search input bar
-    Ctrl + 1 .. 6        Switch navigation screens
-    Ctrl + B             Toggle sidebar expansion
-    Ctrl + T             Toggle dark / light visual theme
-    F5 / Ctrl + R        Refresh active query
-    Alt + 1 .. 5         Change table sorting column
-    Enter                Open selected file with default desktop app
-    Alt + Enter          Open file properties modal dialog
-    Ctrl + Shift + C     Copy full POSIX path to clipboard
-    Shift + F10          Open right-click context menu
-    Escape               Context-sensitive dismiss hierarchy
-
-FreeDesktop Integration:
-    Desktop Launcher:    /usr/share/applications/find-me.desktop
-    Scalable Icon:       /usr/share/icons/hicolor/scalable/apps/find-me.svg
-    AppStream Metadata:  /usr/share/metainfo/io.github.faizan_nadeem.find_me.metainfo.xml"#,
-        findme_core::VERSION
-    );
-}
-
-fn print_version() {
-    println!("find-me {}", findme_core::VERSION);
-}
-
-fn has_display_server() -> bool {
-    env::var("DISPLAY").is_ok() || env::var("WAYLAND_DISPLAY").is_ok()
-}
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let args: Vec<String> = env::args().collect();
+    let opts = parse_cli_args(&args);
 
-    if args.iter().any(|a| a == "-h" || a == "--help") {
+    if opts.show_help {
         print_help();
         return Ok(());
     }
 
-    if args.iter().any(|a| a == "-v" || a == "--version") {
+    if opts.show_version {
         print_version();
         return Ok(());
     }
 
-    if args.iter().any(|a| a == "--rebuild-index") {
+    let cache_path = IndexStorage::default_cache_path();
+
+    if opts.rebuild_index {
         println!("Rebuilding Find-Me index from filesystem roots...");
         let arena = findme_ui::engine::EngineBridge::default_sample_arena();
+        let _ = IndexStorage::save_to_file(&arena, &cache_path);
         println!(
             "Indexed {} files in {} directories into compact arena.",
             arena.len(),
@@ -77,8 +43,26 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if opts.show_stats {
+        execute_cli_stats(&cache_path);
+        return Ok(());
+    }
+
+    // CLI mode triggered when --cli, --json, query provided in headless environment,
+    // or when query is given and display is explicitly not requested.
+    let display_available = has_display_server();
+    let is_headless = !display_available;
+    let run_as_cli = opts.is_cli_mode
+        || opts.is_json
+        || (is_headless && opts.query.is_some())
+        || (opts.query.is_some() && !opts.is_gui_mode && is_headless);
+
+    if run_as_cli {
+        return execute_cli_search(&opts, &cache_path);
+    }
+
     // Default: Launch graphical Iced application
-    if !has_display_server() {
+    if !display_available {
         eprintln!(
             "Find-Me: No graphical display detected ($DISPLAY or $WAYLAND_DISPLAY is not set)."
         );
@@ -88,13 +72,18 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    let initial_query = opts.query;
     info!("Launching Find-Me graphical user interface");
-    iced::application(FindMeApp::boot, FindMeApp::update, FindMeApp::view)
-        .window(window_settings())
-        .theme(FindMeApp::theme)
-        .subscription(FindMeApp::subscription)
-        .title(FindMeApp::title)
-        .run()?;
+    iced::application(
+        move || FindMeApp::boot_with_query(initial_query.clone()),
+        FindMeApp::update,
+        FindMeApp::view,
+    )
+    .window(window_settings())
+    .theme(FindMeApp::theme)
+    .subscription(FindMeApp::subscription)
+    .title(FindMeApp::title)
+    .run()?;
 
     Ok(())
 }
