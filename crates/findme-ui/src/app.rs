@@ -516,6 +516,18 @@ impl FindMeApp {
                 self.state.properties_modal = None;
                 Task::none()
             }
+            Message::ExportResults(format, path) => {
+                match findme_core::export_to_file(format, &self.state.results, &path) {
+                    Ok(count) => {
+                        self.state.notification =
+                            Some(format!("Exported {} results to {}", count, path.display()));
+                    }
+                    Err(e) => {
+                        self.state.notification = Some(format!("Export failed: {}", e));
+                    }
+                }
+                Task::none()
+            }
             Message::ResultsReceived {
                 results,
                 search_duration_ms,

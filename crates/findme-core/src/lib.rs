@@ -8,6 +8,7 @@ pub mod arena;
 pub mod crawler;
 pub mod directory;
 pub mod error;
+pub mod export;
 pub mod matcher;
 pub mod network_fs;
 pub mod pool;
@@ -22,6 +23,10 @@ pub use crawler::{
 };
 pub use directory::{DirectoryEntry, DirectoryTable, ROOT_DIR_ID};
 pub use error::{EngineError, Result};
+pub use export::{
+    export_to_file, export_to_writer, unix_secs_to_windows_filetime, windows_filetime_to_unix_secs,
+    ExportFormat,
+};
 pub use matcher::{MatchResult, SearchConfig, SearchEngine, SortColumn, SortDirection};
 pub use network_fs::{
     detect_network_filesystem, is_network_path, parse_mountinfo_network_shares, NetworkFsType,
