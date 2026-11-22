@@ -23,6 +23,11 @@ pub enum SearchPredicate {
         required: FileFlags,
         forbidden: FileFlags,
     },
+    /// Full-text file content search inside plain text files
+    Content {
+        pattern: String,
+        case_sensitive: bool,
+    },
 }
 
 impl PartialEq for SearchPredicate {
@@ -71,6 +76,16 @@ impl PartialEq for SearchPredicate {
                     forbidden: forb2,
                 },
             ) => req1 == req2 && forb1 == forb2,
+            (
+                Self::Content {
+                    pattern: p1,
+                    case_sensitive: c1,
+                },
+                Self::Content {
+                    pattern: p2,
+                    case_sensitive: c2,
+                },
+            ) => p1 == p2 && c1 == c2,
             _ => false,
         }
     }
