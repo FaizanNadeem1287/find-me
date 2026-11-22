@@ -146,7 +146,10 @@ impl FindMeApp {
                 self.state.scroll_y = 0.0;
                 operation::focus(search_input_id())
             }
-            Message::FocusSearchInput => operation::focus(search_input_id()),
+            Message::FocusSearchInput => {
+                self.state.active_screen = ScreenId::Search;
+                operation::focus(search_input_id())
+            }
             Message::DebouncedSearch { query, generation } => {
                 if generation == self.state.search_generation {
                     Task::done(Message::ExecuteSearch(query))

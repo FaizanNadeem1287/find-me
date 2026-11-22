@@ -2,7 +2,8 @@
 //! Search input bar, autofocus, adaptive debouncing, keyboard shortcuts, and real-time status indicators.
 
 use findme_ui::{
-    format_number, is_heavy_query, search_input_id, FindMeApp, Message, ScreenId, SEARCH_INPUT_ID,
+    format_number, is_heavy_query, search_input_id, AppTheme, FindMeApp, Message, ScreenId,
+    SEARCH_INPUT_ID,
 };
 use iced::keyboard::{self, key, Key, Modifiers};
 
@@ -231,6 +232,43 @@ fn test_search_view_rendering_with_and_without_query() {
     // 5. Clear query
     let _ = app.update(Message::ClearSearch);
     assert_eq!(app.state.query, "");
+    {
+        let _ = app.view();
+    }
+}
+
+#[test]
+fn test_folder_showcase_hero_cards_rendering_and_interaction() {
+    let mut app = FindMeApp::new();
+
+    // Verify initial breadcrumbs and empty filter
+    assert_eq!(app.state.active_folder_filter, None);
+    {
+        let _ = app.view();
+    }
+
+    // Activate "Projects" filter (Design System hero card)
+    let _ = app.update(Message::SelectFolderFilter(Some("Projects".to_string())));
+    assert_eq!(app.state.active_folder_filter.as_deref(), Some("Projects"));
+    assert_eq!(app.state.query, "path:\"Projects\"");
+    {
+        let _ = app.view();
+    }
+
+    // Toggle off filter
+    let _ = app.update(Message::SelectFolderFilter(None));
+    assert_eq!(app.state.active_folder_filter, None);
+    assert_eq!(app.state.query, "");
+    {
+        let _ = app.view();
+    }
+
+    // Test theming rendering for hero cards
+    app.state.theme = AppTheme::Dark;
+    {
+        let _ = app.view();
+    }
+    app.state.theme = AppTheme::Light;
     {
         let _ = app.view();
     }
