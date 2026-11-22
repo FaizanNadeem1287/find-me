@@ -224,7 +224,7 @@ pub struct IndexManagementState {
 impl Default for IndexManagementState {
     fn default() -> Self {
         let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string());
-        let roots = vec![IndexedRoot::new(home_dir, 142_850, 18_420)];
+        let roots = vec![IndexedRoot::new(home_dir, 0, 0)];
 
         let mut state = Self {
             stats: IndexStats::default(),

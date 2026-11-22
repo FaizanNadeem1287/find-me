@@ -389,11 +389,27 @@ impl Crawler {
             }
         }
 
+        // Deduplicate roots: if a root is a subfolder of another root in the list,
+        // it is already traversed by the parent root's walk, avoiding duplicate arena records.
+        let mut effective_roots = Vec::new();
         for root in &self.config.root_paths {
             if self.config.is_excluded_path(root) {
                 continue;
             }
+            let clean_root = PathBuf::from(root.to_string_lossy().trim_end_matches('/'));
+            let is_covered = self.config.root_paths.iter().any(|other| {
+                if other == root || self.config.is_excluded_path(other) {
+                    return false;
+                }
+                let clean_other = PathBuf::from(other.to_string_lossy().trim_end_matches('/'));
+                clean_root.starts_with(&clean_other)
+            });
+            if !is_covered && !effective_roots.contains(&clean_root) {
+                effective_roots.push(clean_root);
+            }
+        }
 
+        for root in &effective_roots {
             let mut walk = jwalk::WalkDir::new(root)
                 .skip_hidden(self.config.skip_hidden)
                 .follow_links(self.config.follow_symlinks)

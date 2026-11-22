@@ -525,3 +525,58 @@ fn test_app_task_14_3_messages_and_rendering() {
         Some("Copied .gitignore rules to clipboard".to_string())
     );
 }
+
+#[test]
+fn test_live_root_counting_downloads_and_subdirectories() {
+    use findme_core::arena::FileArena;
+    use findme_core::record::FileFlags;
+    use findme_ui::app::FindMeApp;
+    use findme_ui::engine::EngineBridge;
+    use findme_ui::message::{IndexManagementMessage, Message};
+    use std::path::{Path, PathBuf};
+    use std::sync::Arc;
+
+    let mut arena = FileArena::new();
+    let _ = arena.add_file(
+        Path::new("/home/user/document.txt"),
+        FileFlags::NONE,
+        100,
+        10,
+    );
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/cv.pdf"),
+        FileFlags::NONE,
+        200,
+        10,
+    );
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/archive.zip"),
+        FileFlags::NONE,
+        300,
+        10,
+    );
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/sub/image.png"),
+        FileFlags::NONE,
+        400,
+        10,
+    );
+
+    let engine = Arc::new(EngineBridge::with_arena(arena));
+    let mut app = FindMeApp::with_engine(engine);
+
+    let _ = app.update(Message::IndexManagement(IndexManagementMessage::AddRoot(
+        PathBuf::from("/home/user/Downloads"),
+    )));
+
+    let dl_root = app
+        .state
+        .index_mgmt
+        .roots
+        .iter()
+        .find(|r| r.path == Path::new("/home/user/Downloads"))
+        .expect("Downloads root present");
+
+    assert_eq!(dl_root.file_count, 3);
+    assert_eq!(dl_root.folder_count, 1);
+}
