@@ -1,8 +1,24 @@
-# Find-Me Desktop UI Implementation Specification
+# Find-Me Desktop UI & Offline Semantic Search Engine
 
-## Project
+Find-Me is an ultra-fast, lightweight, high-performance, offline-first Linux file search application inspired by *Everything* for Windows, written in 100% pure Rust with an Iced GUI.
 
-Find-Me is a lightweight, high-performance, offline-first Linux file search application inspired by Everything for Windows.
+---
+
+## 📚 Official Documentation
+
+Comprehensive documentation is available in the [`docs/`](./docs/) directory:
+
+* 🚀 [**Getting Started**](./docs/GETTING_STARTED.md): System requirements, installation, and first search.
+* 🏛️ [**Architecture & Internals**](./docs/ARCHITECTURE.md): Compact 32-byte arena, parallel crawler, inotify engine, binary persistence.
+* 🔍 [**Search Syntax & Operators**](./docs/SEARCH_SYNTAX.md): Everything operators, wildcards, boolean logic, size filters, date math.
+* 🧠 [**Semantic Search & AI Pipeline**](./docs/SEMANTIC_SEARCH_AND_AI.md): Document extractors, 384-dim embeddings, HNSW vector store, BM25, and Hybrid RRF.
+* ⌨️ [**Keyboard Navigation & Shortcuts**](./docs/KEYBOARD_SHORTCUTS.md): Global shortcuts, screen switching, row navigation, clipboard actions.
+* 💻 [**CLI & Headless Automation**](./docs/CLI_AND_HEADLESS.md): Headless querying, JSON streaming, CSV/TXT/EFU exporters.
+* 📦 [**Packaging & Distribution**](./docs/PACKAGING_AND_DISTRIBUTION.md): Debian packages, AppImage, Flatpak, Arch Linux AUR, FreeDesktop XDG.
+* 🛠️ [**Developer & Contributor Guide**](./docs/DEVELOPER_GUIDE.md): Toolchain setup, testing pyramid, Criterion benchmarks, git branch rules.
+* ❓ [**Troubleshooting & FAQ**](./docs/TROUBLESHOOTING_AND_FAQ.md): Inotify limits, permission issues, index rebuilds, and power throttling.
+
+---
 
 ## Technology Constraints
 
