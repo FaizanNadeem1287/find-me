@@ -228,6 +228,54 @@ impl FileArena {
         }
     }
 
+    /// Prunes all records matching the exclusion predicate in-memory, updating lookup and tombstoning records.
+    ///
+    /// Evaluates `is_excluded(name, full_path, is_dir)`. Returns the count of purged files.
+    pub fn purge_matching<F>(&mut self, mut is_excluded: F) -> usize
+    where
+        F: FnMut(&str, &Path, bool) -> bool,
+    {
+        let mut purged_count = 0;
+        let len = self.records.len();
+
+        for i in 0..len {
+            if self.records[i].flags.is_deleted() {
+                continue;
+            }
+
+            let name = match self.get_name(i) {
+                Some(n) => n.to_string(),
+                None => continue,
+            };
+
+            let path = match self.reconstruct_path_by_index(i) {
+                Some(p) => p,
+                None => continue,
+            };
+
+            let is_dir = self.records[i].flags.is_dir();
+
+            if is_excluded(&name, &path, is_dir) {
+                self.records[i].flags.insert(FileFlags::IS_DELETED);
+                purged_count += 1;
+            }
+        }
+
+        if purged_count > 0 {
+            self.rebuild_lookup();
+        }
+
+        purged_count
+    }
+
+    /// Returns the count of non-deleted, active records
+    pub fn active_len(&self) -> usize {
+        self.records
+            .iter()
+            .filter(|r| !r.flags.is_deleted())
+            .count()
+    }
+
     /// Updates existing file metadata (size, mtime, flags)
     pub fn update_file_metadata(
         &mut self,
@@ -448,5 +496,58 @@ mod tests {
             "Memory budget exceeded: got {:.2} bytes/record, expected < 45.0 bytes",
             avg_bytes
         );
+    }
+
+    #[test]
+    fn test_purge_matching_and_active_len() {
+        let mut arena = FileArena::new();
+        arena
+            .add_file(
+                Path::new("/home/user/app/main.py"),
+                FileFlags::NONE,
+                100,
+                1000,
+            )
+            .expect("add main.py");
+        arena
+            .add_file(
+                Path::new("/home/user/app/cache.pyc"),
+                FileFlags::NONE,
+                200,
+                1000,
+            )
+            .expect("add cache.pyc");
+        arena
+            .add_file(
+                Path::new("/home/user/app/node_modules/pkg.js"),
+                FileFlags::NONE,
+                300,
+                1000,
+            )
+            .expect("add node_modules/pkg.js");
+
+        assert_eq!(arena.len(), 3);
+        assert_eq!(arena.active_len(), 3);
+
+        // Purge *.pyc and node_modules
+        let purged = arena.purge_matching(|name, path, _is_dir| {
+            name.ends_with(".pyc") || path.to_string_lossy().contains("node_modules")
+        });
+
+        assert_eq!(purged, 2);
+        assert_eq!(arena.len(), 3); // Total records remains 3 (tombstoned)
+        assert_eq!(arena.active_len(), 1); // Only main.py is active
+
+        // Lookup for main.py works
+        assert!(arena
+            .find_record_by_path(Path::new("/home/user/app/main.py"))
+            .is_some());
+        // Lookup for purged files returns None
+        assert!(arena
+            .find_record_by_path(Path::new("/home/user/app/cache.pyc"))
+            .is_none());
+        assert!(arena
+            .find_record_by_path(Path::new("/home/user/app/node_modules/pkg.js"))
+            .is_none());
     }
 }
