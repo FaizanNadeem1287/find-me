@@ -31,11 +31,11 @@ Phase | Description | Status | Test Coverage
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | Sub-task 14.1 delivered and verified
-**Last Completed Task** | `[TASK-14.1] Content Extractors: PDF, CSV, Excel, PPTX, Word, Text & Code` | Todoist Task `6j4FW9w2hf2pvfFQ` (Completed & Audited)
+**Last Completed Task** | `[BUGFIX] Live Arena File & Folder Counting for Monitored Directory Roots & Sub-Root Deduplication` | Todoist Task `6j4FgW34WMVvwvRx` (Completed & Audited)
 **Next Active Task** | `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` | Todoist Task `6j4FWC25mhVvGfMx` (In To Do queue)
-**Active Git Branch** | `main` | Clean working tree; 37 feature branches preserved permanently
-**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Task 14.1 marked complete; Task 14.2 ready
-**Target Branch History**| 37 feature branches permanently retained | `feature/p14-doc-code-extractors` merged and preserved
+**Active Git Branch** | `main` | Clean working tree; 38 feature branches preserved permanently
+**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Bugfix verified & completed; Task 14.2 ready
+**Target Branch History**| 38 feature branches permanently retained | `feature/fix-monitored-root-counts` merged and preserved
 
 ---
 
@@ -79,3 +79,4 @@ Branch | Commit | Description
 `feature/p13-zero-flicker-opt` | `55ac40d` | Zero-flicker rendering optimization, CPU shadow elimination, opaque container compositing
 `feature/p13-svg-vector-icons` | `8a61515` | Modern resolution-independent SVG vector icon engine (34 icons) and 100% Unicode emoji elimination
 `feature/p14-doc-code-extractors` | `fdb3055` | Pure Rust content extractors for PDF, CSV, Excel, PPTX, Word DOCX, TXT, and Code
+`feature/fix-monitored-root-counts` | `fad87c0` | Compute live file and folder counts for monitored roots and deduplicate crawler paths
