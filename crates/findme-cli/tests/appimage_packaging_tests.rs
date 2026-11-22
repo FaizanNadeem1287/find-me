@@ -24,7 +24,13 @@ fn find_repo_root() -> PathBuf {
     current
 }
 
+static BUILD_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 fn ensure_appimage_built() {
+    let _guard = match BUILD_LOCK.lock() {
+        Ok(g) => g,
+        Err(poisoned) => poisoned.into_inner(),
+    };
     let root = find_repo_root();
     let appimage_path = root.join("target/appimage/find-me-0.1.0-x86_64.AppImage");
     let appdir_path = root.join("target/appimage/AppDir");

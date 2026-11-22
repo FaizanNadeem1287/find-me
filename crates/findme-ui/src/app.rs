@@ -72,8 +72,32 @@ impl FindMeApp {
 
     /// Boots the application and initializes primary focus on the search input
     pub fn boot() -> (Self, Task<Message>) {
-        let app = Self::new();
+        Self::boot_with_query(None)
+    }
+
+    /// Boots the application with an optional initial search query
+    pub fn boot_with_query(initial_query: Option<String>) -> (Self, Task<Message>) {
+        Self::boot_with_engine_and_query(Arc::new(EngineBridge::new()), initial_query)
+    }
+
+    /// Boots the application with an existing engine bridge and optional initial search query
+    pub fn boot_with_engine_and_query(
+        engine: Arc<EngineBridge>,
+        initial_query: Option<String>,
+    ) -> (Self, Task<Message>) {
+        let mut app = Self::with_engine(engine);
         let focus_task = operation::focus(search_input_id());
+
+        if let Some(query) = initial_query {
+            let trimmed = query.trim();
+            if !trimmed.is_empty() {
+                app.state.query = trimmed.to_string();
+                app.state.is_searching = true;
+                let search_task = Task::done(Message::ExecuteSearch(trimmed.to_string()));
+                return (app, Task::batch(vec![focus_task, search_task]));
+            }
+        }
+
         (app, focus_task)
     }
 
