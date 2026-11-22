@@ -1,9 +1,10 @@
 //! Comprehensive test suite for Dark/Light theming, system theme sync, and WCAG AA contrast verification
 
 use findme_ui::{
-    card_style, colors, contrast_ratio, custom_dark_theme, custom_light_theme, detect_system_theme,
-    hero_card_style, pill_badge_style, search_input_style, sidebar_item_style, table_row_btn_style,
-    AppTheme, FindMeApp, Message, ThemePreference,
+    card_style, chip_btn_style, colors, contrast_ratio, custom_dark_theme, custom_light_theme,
+    danger_btn_style, detect_system_theme, hero_card_style, kbd_badge_style, pill_badge_style,
+    primary_btn_style, search_input_style, secondary_btn_style, sidebar_item_style,
+    subtle_card_style, table_row_btn_style, AppTheme, FindMeApp, Message, ThemePreference,
 };
 use tempfile::tempdir;
 
@@ -230,5 +231,36 @@ fn test_modern_styling_helpers_instantiation() {
             iced::widget::button::Status::Hovered,
         );
         assert!(row_style.background.is_some());
+
+        // Subtle card style
+        let subtle = subtle_card_style(&theme)(&dummy_iced_theme);
+        assert!(subtle.background.is_some());
+
+        // Primary button style
+        let primary_btn =
+            primary_btn_style(&theme)(&dummy_iced_theme, iced::widget::button::Status::Active);
+        assert!(primary_btn.background.is_some());
+
+        // Secondary button style
+        let sec_btn =
+            secondary_btn_style(&theme)(&dummy_iced_theme, iced::widget::button::Status::Active);
+        assert!(sec_btn.background.is_some());
+
+        // Danger button style
+        let d_btn =
+            danger_btn_style(&theme)(&dummy_iced_theme, iced::widget::button::Status::Hovered);
+        assert!(d_btn.background.is_some());
+
+        // Chip button style
+        let chip_active =
+            chip_btn_style(&theme, true)(&dummy_iced_theme, iced::widget::button::Status::Active);
+        assert!(chip_active.background.is_some());
+        let chip_inactive =
+            chip_btn_style(&theme, false)(&dummy_iced_theme, iced::widget::button::Status::Active);
+        assert_eq!(chip_inactive.border.width, 1.0);
+
+        // Kbd badge style
+        let kbd = kbd_badge_style(&theme)(&dummy_iced_theme);
+        assert!(kbd.background.is_some());
     }
 }

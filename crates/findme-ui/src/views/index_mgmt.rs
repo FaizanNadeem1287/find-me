@@ -3,6 +3,7 @@
 use crate::index_mgmt::IndexingState;
 use crate::message::{IndexManagementMessage, Message};
 use crate::state::AppState;
+use crate::theme::{self, colors};
 use iced::widget::{button, column, container, row, scrollable, text, text_input, Space};
 use iced::{Alignment, Element, Length};
 
@@ -21,17 +22,20 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     let action_bar = row![
         button(text("⚡ Rebuild Index").size(12))
-            .padding([5, 12])
+            .padding([6, 14])
+            .style(theme::primary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::TriggerRebuildIndex
             )),
         button(text("🔄 Refresh Index").size(12))
-            .padding([5, 12])
+            .padding([6, 14])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::TriggerRefreshIndex
             )),
         button(text("🗑️ Clear Index").size(12))
-            .padding([5, 12])
+            .padding([6, 14])
+            .style(theme::danger_btn_style(&state.theme))
             .on_press(Message::IndexManagement(IndexManagementMessage::ClearIndex)),
     ]
     .spacing(8);
@@ -41,7 +45,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .spacing(12)
             .align_y(Alignment::Center),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 2. Active Rebuilding Progress Banner (visible if scanning)
@@ -67,62 +72,84 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 ]
                 .spacing(6),
             )
-            .padding(12)
+            .padding(14)
+            .style(theme::hero_card_style(
+                &state.theme,
+                if state.theme.is_dark() {
+                    colors::DARK_SURFACE
+                } else {
+                    colors::TINT_BLUE
+                },
+            ))
             .width(Length::Fill)
             .into(),
         ),
         _ => None,
     };
 
-    // 3. Stats Overview Cards
+    // 3. Stats Overview Cards (Elevated cards with modern typography and accent metrics)
     let files_card = container(
         column![
-            text("Total Indexed Files").size(11),
-            text(stats.formatted_files()).size(18),
+            text("TOTAL FILES").size(11).color(colors::ACCENT_PURPLE),
+            text(stats.formatted_files()).size(20),
         ]
-        .spacing(2),
+        .spacing(4),
     )
-    .padding(10)
+    .padding(14)
+    .style(theme::card_style(&state.theme))
     .width(Length::FillPortion(1));
 
     let folders_card = container(
         column![
-            text("Total Folders").size(11),
-            text(stats.formatted_folders()).size(18),
+            text("TOTAL FOLDERS").size(11).color(colors::ACCENT_BLUE),
+            text(stats.formatted_folders()).size(20),
         ]
-        .spacing(2),
+        .spacing(4),
     )
-    .padding(10)
+    .padding(14)
+    .style(theme::card_style(&state.theme))
     .width(Length::FillPortion(1));
 
     let memory_card = container(
         column![
-            text("Memory / DB Size").size(11),
-            text(stats.formatted_memory()).size(18),
+            text("MEMORY / DB SIZE")
+                .size(11)
+                .color(colors::ACCENT_AMBER),
+            text(stats.formatted_memory()).size(20),
         ]
-        .spacing(2),
+        .spacing(4),
     )
-    .padding(10)
+    .padding(14)
+    .style(theme::card_style(&state.theme))
     .width(Length::FillPortion(1));
 
     let scan_card = container(
         column![
-            text("Last Full Scan").size(11),
-            text(stats.formatted_last_scan()).size(18),
+            text("LAST FULL SCAN")
+                .size(11)
+                .color(colors::ACCENT_EMERALD),
+            text(stats.formatted_last_scan()).size(16),
         ]
-        .spacing(2),
+        .spacing(4),
     )
-    .padding(10)
+    .padding(14)
+    .style(theme::card_style(&state.theme))
     .width(Length::FillPortion(1));
 
+    let watcher_accent = if stats.watcher_active {
+        colors::LIGHT_SUCCESS
+    } else {
+        colors::LIGHT_MUTED
+    };
     let watcher_card = container(
         column![
-            text("Real-time Watcher").size(11),
-            text(stats.watcher_status_label()).size(14),
+            text("REAL-TIME WATCHER").size(11).color(watcher_accent),
+            text(stats.watcher_status_label()).size(13),
         ]
-        .spacing(2),
+        .spacing(4),
     )
-    .padding(10)
+    .padding(14)
+    .style(theme::card_style(&state.theme))
     .width(Length::FillPortion(1));
 
     let stats_row = row![
@@ -132,17 +159,17 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         scan_card,
         watcher_card,
     ]
-    .spacing(10);
+    .spacing(12);
 
     // 4. Indexed Locations Section
     let roots_header = row![
-        text(format!("Indexed Root Directories ({})", mgmt.roots.len())).size(14),
+        text(format!("Indexed Root Directories ({})", mgmt.roots.len())).size(15),
         Space::new().width(Length::Fill),
         text("Monitored for live changes via Linux inotify").size(11),
     ]
     .align_y(Alignment::Center);
 
-    let mut roots_col = column![roots_header].spacing(8);
+    let mut roots_col = column![roots_header].spacing(10);
 
     for root in &mgmt.roots {
         let path_str = root.display_path();
@@ -154,20 +181,35 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
         let root_row = container(
             row![
-                text("📁").size(16),
+                text("📁").size(18),
                 column![text(path_str.clone()).size(13), text(counts_str).size(11),].spacing(2),
                 Space::new().width(Length::Fill),
-                text(format!("[{}]", root.status.as_str())).size(11),
-                button(text("🗑️ Remove").size(11)).padding([3, 8]).on_press(
-                    Message::IndexManagement(
+                container(text(format!("[{}]", root.status.as_str())).size(11))
+                    .padding([2, 6])
+                    .style(theme::pill_badge_style(
+                        if state.theme.is_dark() {
+                            colors::DARK_SELECTED
+                        } else {
+                            colors::LIGHT_SELECTED
+                        },
+                        if state.theme.is_dark() {
+                            colors::DARK_ACCENT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        },
+                    )),
+                button(text("🗑️ Remove").size(11))
+                    .padding([4, 10])
+                    .style(theme::danger_btn_style(&state.theme))
+                    .on_press(Message::IndexManagement(
                         IndexManagementMessage::RemoveRoot(root.path.clone(),)
-                    )
-                ),
+                    )),
             ]
-            .spacing(10)
+            .spacing(12)
             .align_y(Alignment::Center),
         )
-        .padding(8)
+        .padding(10)
+        .style(theme::subtle_card_style(&state.theme))
         .width(Length::Fill);
 
         roots_col = roots_col.push(root_row);
@@ -179,11 +221,13 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             &mgmt.new_root_input
         )
         .on_input(|s| Message::IndexManagement(IndexManagementMessage::UpdateNewRootInput(s)))
-        .padding(6)
+        .style(theme::search_input_style(&state.theme))
+        .padding(8)
         .size(13)
         .width(Length::Fill),
         button(text("➕ Add Folder").size(12))
-            .padding([6, 12])
+            .padding([6, 14])
+            .style(theme::primary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddRootFromInput
             )),
@@ -193,7 +237,10 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     roots_col = roots_col.push(add_root_row);
 
-    let roots_card = container(roots_col).padding(12).width(Length::Fill);
+    let roots_card = container(roots_col)
+        .padding(16)
+        .style(theme::card_style(&state.theme))
+        .width(Length::Fill);
 
     // 5. Excluded Locations & Skip Patterns Section
     let exclusions_header = row![
@@ -201,7 +248,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             "Excluded Locations & Patterns ({})",
             mgmt.exclusions.len()
         ))
-        .size(14),
+        .size(15),
         Space::new().width(Length::Fill),
         text("Skipped during crawler traversal and file indexing").size(11),
     ]
@@ -210,28 +257,33 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     let quick_add_row = row![
         text("Quick Add:").size(11),
         button(text("+ .git").size(11))
-            .padding([2, 6])
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddExclusion(".git".to_string())
             )),
         button(text("+ node_modules").size(11))
-            .padding([2, 6])
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddExclusion("node_modules".to_string())
             )),
         button(text("+ target").size(11))
-            .padding([2, 6])
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddExclusion("target".to_string())
             )),
         button(text("+ ~/.cache").size(11))
-            .padding([2, 6])
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddExclusion("~/.cache".to_string())
             )),
         Space::new().width(Length::Fill),
         button(text("↺ Restore Defaults").size(11))
-            .padding([2, 8])
+            .padding([3, 10])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddDefaultExclusions
             )),
@@ -239,19 +291,32 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .spacing(6)
     .align_y(Alignment::Center);
 
-    let mut exclusions_col = column![exclusions_header, quick_add_row].spacing(8);
+    let mut exclusions_col = column![exclusions_header, quick_add_row].spacing(10);
 
     for exclusion in &mgmt.exclusions {
         let pattern_str = exclusion.pattern.clone();
         let is_builtin = exclusion.is_builtin;
 
         let right_widget: Element<'_, Message> = if is_builtin {
-            text("🔒 System Built-in (Kernel Virtual FS)")
-                .size(11)
+            container(text("🔒 System Built-in (Kernel Virtual FS)").size(11))
+                .padding([2, 6])
+                .style(theme::pill_badge_style(
+                    if state.theme.is_dark() {
+                        colors::DARK_HOVER
+                    } else {
+                        colors::LIGHT_HOVER
+                    },
+                    if state.theme.is_dark() {
+                        colors::DARK_MUTED
+                    } else {
+                        colors::LIGHT_MUTED
+                    },
+                ))
                 .into()
         } else {
             button(text("✕ Remove").size(11))
-                .padding([2, 8])
+                .padding([3, 8])
+                .style(theme::danger_btn_style(&state.theme))
                 .on_press(Message::IndexManagement(
                     IndexManagementMessage::RemoveExclusion(pattern_str.clone()),
                 ))
@@ -268,7 +333,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .spacing(10)
             .align_y(Alignment::Center),
         )
-        .padding([6, 8])
+        .padding([8, 12])
+        .style(theme::subtle_card_style(&state.theme))
         .width(Length::Fill);
 
         exclusions_col = exclusions_col.push(item_row);
@@ -280,11 +346,13 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             &mgmt.new_exclusion_input
         )
         .on_input(|s| Message::IndexManagement(IndexManagementMessage::UpdateNewExclusionInput(s)))
-        .padding(6)
+        .style(theme::search_input_style(&state.theme))
+        .padding(8)
         .size(13)
         .width(Length::Fill),
         button(text("➕ Add Exclusion").size(12))
-            .padding([6, 12])
+            .padding([6, 14])
+            .style(theme::primary_btn_style(&state.theme))
             .on_press(Message::IndexManagement(
                 IndexManagementMessage::AddExclusionFromInput
             )),
@@ -294,9 +362,12 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     exclusions_col = exclusions_col.push(add_exclusion_row);
 
-    let exclusions_card = container(exclusions_col).padding(12).width(Length::Fill);
+    let exclusions_card = container(exclusions_col)
+        .padding(16)
+        .style(theme::card_style(&state.theme))
+        .width(Length::Fill);
 
-    let mut main_content = column![header_card,].spacing(12).padding(16);
+    let mut main_content = column![header_card,].spacing(14).padding(16);
 
     if let Some(banner) = scanning_banner {
         main_content = main_content.push(banner);

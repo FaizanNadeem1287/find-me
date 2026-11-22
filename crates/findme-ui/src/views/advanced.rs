@@ -3,6 +3,7 @@
 use crate::advanced::{DatePreset, PresetFilter, SizeUnit};
 use crate::message::{AdvancedSearchMessage, Message};
 use crate::state::AppState;
+use crate::theme;
 use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
 use iced::{Alignment, Element, Length};
 
@@ -25,27 +26,33 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         synthesized.clone()
     };
 
+    let query_preview_container = container(text(query_preview_text).size(13))
+        .padding(10)
+        .style(theme::subtle_card_style(&state.theme))
+        .width(Length::Fill);
+
     let query_card = container(
         column![
             row![
-                text("Generated Query Syntax:").size(12),
+                text("Generated Query Syntax:").size(13),
                 Space::new().width(Length::Fill),
                 button(text("↺ Reset Filters").size(12))
-                    .padding([4, 10])
+                    .padding([5, 12])
+                    .style(theme::secondary_btn_style(&state.theme))
                     .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ResetFilters)),
                 button(text("🔍 Search Now").size(12))
-                    .padding([4, 14])
+                    .padding([5, 14])
+                    .style(theme::primary_btn_style(&state.theme))
                     .on_press(Message::AdvancedSearch(AdvancedSearchMessage::SubmitSearch)),
             ]
             .spacing(8)
             .align_y(Alignment::Center),
-            container(text(query_preview_text).size(13))
-                .padding(8)
-                .width(Length::Fill),
+            query_preview_container,
         ]
-        .spacing(8),
+        .spacing(10),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 2. Keywords & Text Matching Card
@@ -58,7 +65,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .width(Length::Fixed(160.0)),
                 text_input("e.g. project budget quarterly", &filters.all_words)
                     .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAllWords(s)))
-                    .padding(6)
+                    .style(theme::search_input_style(&state.theme))
+                    .padding(8)
                     .size(13)
                     .width(Length::Fill),
             ]
@@ -70,7 +78,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .on_input(|s| Message::AdvancedSearch(
                         AdvancedSearchMessage::UpdateExactPhrase(s)
                     ))
-                    .padding(6)
+                    .style(theme::search_input_style(&state.theme))
+                    .padding(8)
                     .size(13)
                     .width(Length::Fill),
             ]
@@ -82,7 +91,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .width(Length::Fixed(160.0)),
                 text_input("e.g. invoices receipts accounts", &filters.any_words)
                     .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAnyWords(s)))
-                    .padding(6)
+                    .style(theme::search_input_style(&state.theme))
+                    .padding(8)
                     .size(13)
                     .width(Length::Fill),
             ]
@@ -96,30 +106,32 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .on_input(
                         |s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateNoneWords(s))
                     )
-                    .padding(6)
+                    .style(theme::search_input_style(&state.theme))
+                    .padding(8)
                     .size(13)
                     .width(Length::Fill),
             ]
             .spacing(8)
             .align_y(Alignment::Center),
         ]
-        .spacing(10),
+        .spacing(12),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 3. File Types & Extensions Card
     let ext_checkboxes_row1 = row![
         checkbox(filters.ext_documents)
-            .label("Documents (pdf, doc, txt, md)")
+            .label("📄 Documents (pdf, doc, txt, md)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtDocuments(b))),
         checkbox(filters.ext_code)
-            .label("Source Code (rs, c, cpp, py, js, go)")
+            .label("📝 Source Code (rs, c, cpp, py, js, go)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtCode(b))),
         checkbox(filters.ext_images)
-            .label("Images (png, jpg, svg, gif)")
+            .label("🖼️ Images (png, jpg, svg, gif)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtImages(b))),
     ]
@@ -127,15 +139,15 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     let ext_checkboxes_row2 = row![
         checkbox(filters.ext_audio)
-            .label("Audio (mp3, wav, flac, ogg)")
+            .label("🎵 Audio (mp3, wav, flac, ogg)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtAudio(b))),
         checkbox(filters.ext_video)
-            .label("Video (mp4, mkv, avi, webm)")
+            .label("🎬 Video (mp4, mkv, avi, webm)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtVideo(b))),
         checkbox(filters.ext_archives)
-            .label("Archives (zip, tar, gz, xz, 7z)")
+            .label("📦 Archives (zip, tar, gz, xz, 7z)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtArchives(b))),
     ]
@@ -147,7 +159,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .width(Length::Fixed(160.0)),
         text_input("e.g. toml, json, yaml, sql", &filters.custom_ext)
             .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateCustomExt(s)))
-            .padding(6)
+            .style(theme::search_input_style(&state.theme))
+            .padding(8)
             .size(13)
             .width(Length::Fill),
     ]
@@ -161,22 +174,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             ext_checkboxes_row2,
             custom_ext_row,
         ]
-        .spacing(10),
+        .spacing(12),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 4. File Size Bounds Card
-    let mut min_unit_buttons = row![].spacing(4);
+    let mut min_unit_buttons = row![].spacing(6);
     for unit in SizeUnit::ALL {
         let is_active = filters.size_min_unit == unit;
-        let label = if is_active {
-            format!("● {}", unit.as_str())
-        } else {
-            unit.as_str().to_string()
-        };
-        let btn = button(text(label).size(11))
-            .padding([3, 8])
+        let btn = button(text(unit.as_str()).size(11))
+            .padding([4, 10])
+            .style(theme::chip_btn_style(&state.theme, is_active))
             .on_press(Message::AdvancedSearch(
                 AdvancedSearchMessage::SelectSizeMinUnit(unit),
             ));
@@ -187,7 +197,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         text("Minimum Size:").size(12).width(Length::Fixed(160.0)),
         text_input("e.g. 10", &filters.size_min)
             .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSizeMin(s)))
-            .padding(6)
+            .style(theme::search_input_style(&state.theme))
+            .padding(8)
             .size(13)
             .width(Length::Fixed(120.0)),
         min_unit_buttons,
@@ -195,16 +206,12 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .spacing(8)
     .align_y(Alignment::Center);
 
-    let mut max_unit_buttons = row![].spacing(4);
+    let mut max_unit_buttons = row![].spacing(6);
     for unit in SizeUnit::ALL {
         let is_active = filters.size_max_unit == unit;
-        let label = if is_active {
-            format!("● {}", unit.as_str())
-        } else {
-            unit.as_str().to_string()
-        };
-        let btn = button(text(label).size(11))
-            .padding([3, 8])
+        let btn = button(text(unit.as_str()).size(11))
+            .padding([4, 10])
+            .style(theme::chip_btn_style(&state.theme, is_active))
             .on_press(Message::AdvancedSearch(
                 AdvancedSearchMessage::SelectSizeMaxUnit(unit),
             ));
@@ -215,7 +222,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         text("Maximum Size:").size(12).width(Length::Fixed(160.0)),
         text_input("e.g. 500", &filters.size_max)
             .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSizeMax(s)))
-            .padding(6)
+            .style(theme::search_input_style(&state.theme))
+            .padding(8)
             .size(13)
             .width(Length::Fixed(120.0)),
         max_unit_buttons,
@@ -229,22 +237,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             min_size_row,
             max_size_row,
         ]
-        .spacing(10),
+        .spacing(12),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 5. Modification Date Card
     let mut date_buttons = row![].spacing(6);
     for preset in DatePreset::ALL {
         let is_active = filters.date_preset == preset;
-        let label = if is_active {
-            format!("● {}", preset.title())
-        } else {
-            format!("○ {}", preset.title())
-        };
-        let btn = button(text(label).size(11))
-            .padding([4, 8])
+        let btn = button(text(preset.title()).size(11))
+            .padding([5, 12])
+            .style(theme::chip_btn_style(&state.theme, is_active))
             .on_press(Message::AdvancedSearch(
                 AdvancedSearchMessage::SelectDatePreset(preset),
             ));
@@ -252,8 +257,9 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     }
 
     let date_card =
-        container(column![text("Modification Date").size(14), date_buttons,].spacing(10))
-            .padding(12)
+        container(column![text("Modification Date").size(14), date_buttons,].spacing(12))
+            .padding(16)
+            .style(theme::card_style(&state.theme))
             .width(Length::Fill);
 
     // 6. Target Location & Exclusions Card
@@ -266,7 +272,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             &filters.search_path
         )
         .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSearchPath(s)))
-        .padding(6)
+        .style(theme::search_input_style(&state.theme))
+        .padding(8)
         .size(13)
         .width(Length::Fill),
     ]
@@ -280,7 +287,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             &filters.exclude_path
         )
         .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateExcludePath(s)))
-        .padding(6)
+        .style(theme::search_input_style(&state.theme))
+        .padding(8)
         .size(13)
         .width(Length::Fill),
     ]
@@ -293,9 +301,10 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             search_path_row,
             exclude_path_row,
         ]
-        .spacing(10),
+        .spacing(12),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 7. Search Options Card
@@ -316,29 +325,34 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .spacing(20);
 
     let options_card =
-        container(column![text("Search Options & Modes").size(14), options_row,].spacing(10))
-            .padding(12)
+        container(column![text("Search Options & Modes").size(14), options_row,].spacing(12))
+            .padding(16)
+            .style(theme::card_style(&state.theme))
             .width(Length::Fill);
 
     // 8. 1-Click Quick Template Presets
     let templates_row = row![
         button(text("⚡ Large Code (> 1 MB)").size(11))
-            .padding([4, 8])
+            .padding([5, 12])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
                 PresetFilter::LargeCode
             ))),
         button(text("⚡ Recent Docs (Past Week)").size(11))
-            .padding([4, 8])
+            .padding([5, 12])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
                 PresetFilter::RecentDocuments
             ))),
         button(text("⚡ Gigantic Files (> 1 GB)").size(11))
-            .padding([4, 8])
+            .padding([5, 12])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
                 PresetFilter::GiganticFiles
             ))),
         button(text("⚡ Archives Only").size(11))
-            .padding([4, 8])
+            .padding([5, 12])
+            .style(theme::secondary_btn_style(&state.theme))
             .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
                 PresetFilter::ArchivesOnly
             ))),
@@ -346,8 +360,9 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .spacing(8);
 
     let templates_card =
-        container(column![text("1-Click Preset Templates").size(14), templates_row,].spacing(10))
-            .padding(12)
+        container(column![text("1-Click Preset Templates").size(14), templates_row,].spacing(12))
+            .padding(16)
+            .style(theme::card_style(&state.theme))
             .width(Length::Fill);
 
     let form_content = column![
@@ -361,7 +376,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         options_card,
         templates_card,
     ]
-    .spacing(12)
+    .spacing(14)
     .padding(16);
 
     scrollable(form_content)
