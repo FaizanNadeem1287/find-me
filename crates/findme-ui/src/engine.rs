@@ -39,6 +39,13 @@ pub enum EngineEvent {
     },
     /// Inotify detected filesystem change event
     FsChange { path: PathBuf, kind: String },
+    /// Live semantic vector indexing progress batch
+    SemanticProgress(findme_semantic::IndexerProgress),
+    /// Semantic vector index rebuild completed
+    SemanticIndexReady {
+        indexed_chunks: usize,
+        total_files: usize,
+    },
     /// Background engine error occurred
     Error(String),
 }
@@ -183,6 +190,27 @@ impl EngineBridge {
     /// Resumes background semantic indexer
     pub fn resume_semantic_indexing(&self) {
         self.indexer.read().resume();
+    }
+
+    /// Starts asynchronous background semantic indexing and streams progress events
+    pub fn start_semantic_indexing(&self, paths: Vec<PathBuf>) {
+        let rx = self.indexer.write().start_background_indexing(paths);
+        let event_tx = self.event_tx.clone();
+        std::thread::spawn(move || {
+            while let Ok(progress) = rx.recv() {
+                let _ = get_event_bus().send(EngineEvent::SemanticProgress(progress.clone()));
+                let _ = event_tx.send(EngineEvent::SemanticProgress(progress.clone()));
+                if !progress.is_indexing && progress.total_processed >= progress.total_discovered {
+                    let ready_event = EngineEvent::SemanticIndexReady {
+                        indexed_chunks: progress.indexed_chunks,
+                        total_files: progress.total_processed,
+                    };
+                    let _ = get_event_bus().send(ready_event.clone());
+                    let _ = event_tx.send(ready_event);
+                    break;
+                }
+            }
+        });
     }
 
     /// Returns shared reference to the inner `FileArena`
