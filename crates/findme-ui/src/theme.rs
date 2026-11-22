@@ -172,6 +172,11 @@ pub mod colors {
         0x3f as f32 / 255.0,
         0x5e as f32 / 255.0,
     ); // #F43F5E (Rose)
+    pub const ACCENT_SLATE: Color = Color::from_rgb(
+        0x94 as f32 / 255.0,
+        0xa3 as f32 / 255.0,
+        0xb8 as f32 / 255.0,
+    ); // #94A3B8 (Slate 400)
 
     // Soft Category Background Tints (for card illustrations & badges)
     pub const TINT_PURPLE: Color = Color::from_rgb(
