@@ -116,12 +116,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         "Documents",
         "24 files • PDF & Notes",
         "Documents",
-        colors::ACCENT_AMBER,
-        if is_dark {
-            colors::DARK_SURFACE
-        } else {
-            colors::TINT_AMBER
-        },
+        state.theme.category_amber(),
+        state.theme.tint_amber(),
         &["K", "M", "A"],
         "Docs",
         state.active_folder_filter.as_deref() == Some("Documents"),
@@ -133,12 +129,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         "Code & Dev",
         "58 files • Rust & Python",
         "Projects",
-        colors::ACCENT_BLUE,
-        if is_dark {
-            colors::DARK_SURFACE
-        } else {
-            colors::TINT_BLUE
-        },
+        state.theme.category_blue(),
+        state.theme.tint_blue(),
         &["D", "S"],
         "Dev",
         state.active_folder_filter.as_deref() == Some("Projects"),
@@ -150,12 +142,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         "Downloads & Media",
         "18 files • Media & Zip",
         "Downloads",
-        colors::ACCENT_PURPLE,
-        if is_dark {
-            colors::DARK_SURFACE
-        } else {
-            colors::TINT_PURPLE
-        },
+        state.theme.category_purple(),
+        state.theme.tint_purple(),
         &["M", "A"],
         "Media",
         state.active_folder_filter.as_deref() == Some("Downloads"),
@@ -342,7 +330,7 @@ fn render_hero_card<'a>(
 
             button::Style {
                 background: Some(Background::Color(if is_dark {
-                    colors::DARK_SURFACE
+                    tint_color
                 } else {
                     colors::LIGHT_SURFACE
                 })),
@@ -352,7 +340,7 @@ fn render_hero_card<'a>(
                     radius: 14.0.into(),
                 },
                 shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.04),
+                    color: Color::from_rgba(0.0, 0.0, 0.0, if is_dark { 0.35 } else { 0.04 }),
                     offset: Vector::new(0.0, 4.0),
                     blur_radius: 12.0,
                 },

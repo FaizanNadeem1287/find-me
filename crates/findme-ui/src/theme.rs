@@ -17,32 +17,32 @@ pub mod colors {
         0xfa as f32 / 255.0,
     ); // #F8F9FA
     pub const DARK_BG: Color = Color::from_rgb(
-        0x0b as f32 / 255.0,
-        0x0f as f32 / 255.0,
-        0x19 as f32 / 255.0,
-    ); // #0B0F19
+        0x0e as f32 / 255.0,
+        0x12 as f32 / 255.0,
+        0x1b as f32 / 255.0,
+    ); // #0E121B (Ergonomic obsidian slate)
 
     // Card & Panel Surfaces
     pub const LIGHT_SURFACE: Color = Color::from_rgb(1.0, 1.0, 1.0); // #FFFFFF
     pub const DARK_SURFACE: Color = Color::from_rgb(
-        0x16 as f32 / 255.0,
-        0x1f as f32 / 255.0,
-        0x30 as f32 / 255.0,
-    ); // #161F30
+        0x15 as f32 / 255.0,
+        0x1b as f32 / 255.0,
+        0x28 as f32 / 255.0,
+    ); // #151B28 (Elevated deep slate)
 
     // Sidebar Surfaces
     pub const LIGHT_SIDEBAR: Color = Color::from_rgb(1.0, 1.0, 1.0); // #FFFFFF
     pub const DARK_SIDEBAR: Color = Color::from_rgb(
+        0x0b as f32 / 255.0,
         0x0f as f32 / 255.0,
         0x17 as f32 / 255.0,
-        0x2a as f32 / 255.0,
-    ); // #0F172A
+    ); // #0B0F17 (Grounding dark slate)
 
     // Borders & Dividers
     pub const LIGHT_BORDER: Color = Color::from_rgba(0.0, 0.0, 0.0, 0.06); // 6% black
     pub const DARK_BORDER: Color = Color::from_rgba(1.0, 1.0, 1.0, 0.08); // 8% white
     pub const LIGHT_DIVIDER: Color = Color::from_rgba(0.0, 0.0, 0.0, 0.04);
-    pub const DARK_DIVIDER: Color = Color::from_rgba(1.0, 1.0, 1.0, 0.05);
+    pub const DARK_DIVIDER: Color = Color::from_rgba(1.0, 1.0, 1.0, 0.04);
 
     // Interactive States: Hover & Selection
     pub const LIGHT_HOVER: Color = Color::from_rgb(
@@ -51,10 +51,10 @@ pub mod colors {
         0xf6 as f32 / 255.0,
     ); // #F3F4F6
     pub const DARK_HOVER: Color = Color::from_rgb(
-        0x1e as f32 / 255.0,
-        0x29 as f32 / 255.0,
-        0x3b as f32 / 255.0,
-    ); // #1E293B
+        0x1d as f32 / 255.0,
+        0x24 as f32 / 255.0,
+        0x36 as f32 / 255.0,
+    ); // #1D2436 (Smooth interactive hover)
 
     pub const LIGHT_SELECTED: Color = Color::from_rgb(
         0xee as f32 / 255.0,
@@ -62,22 +62,22 @@ pub mod colors {
         0xff as f32 / 255.0,
     ); // #EEF2FF
     pub const DARK_SELECTED: Color = Color::from_rgb(
-        0x26 as f32 / 255.0,
-        0x33 as f32 / 255.0,
-        0x52 as f32 / 255.0,
-    ); // #263352
+        0x1e as f32 / 255.0,
+        0x2d as f32 / 255.0,
+        0x4a as f32 / 255.0,
+    ); // #1E2D4A (Calm active selection)
 
-    // Typography & Text
+    // Typography & Text (Calibrated for zero eye fatigue on Linux)
     pub const LIGHT_TEXT: Color = Color::from_rgb(
         0x11 as f32 / 255.0,
         0x18 as f32 / 255.0,
         0x27 as f32 / 255.0,
     ); // #111827 (Dark Charcoal)
     pub const DARK_TEXT: Color = Color::from_rgb(
-        0xf9 as f32 / 255.0,
-        0xfa as f32 / 255.0,
-        0xfb as f32 / 255.0,
-    ); // #F9FAFB (Off-white)
+        0xe2 as f32 / 255.0,
+        0xe8 as f32 / 255.0,
+        0xf0 as f32 / 255.0,
+    ); // #E2E8F0 (Soft off-white; eliminates glaring white flare)
 
     pub const LIGHT_SUBTEXT: Color = Color::from_rgb(
         0x6b as f32 / 255.0,
@@ -101,17 +101,17 @@ pub mod colors {
         0x8b as f32 / 255.0,
     ); // #64748B
 
-    // Brand & Status Accents
+    // Brand & Status Accents (Anti-Glare Mid-Tones & Pastels)
     pub const LIGHT_ACCENT: Color = Color::from_rgb(
         0x25 as f32 / 255.0,
         0x63 as f32 / 255.0,
         0xeb as f32 / 255.0,
     ); // #2563EB (Electric Blue)
     pub const DARK_ACCENT: Color = Color::from_rgb(
-        0x3b as f32 / 255.0,
-        0x82 as f32 / 255.0,
-        0xf6 as f32 / 255.0,
-    ); // #3B82F6
+        0x60 as f32 / 255.0,
+        0xa5 as f32 / 255.0,
+        0xfa as f32 / 255.0,
+    ); // #60A5FA (Soft Sky Blue)
 
     pub const LIGHT_SUCCESS: Color = Color::from_rgb(
         0x10 as f32 / 255.0,
@@ -122,7 +122,7 @@ pub mod colors {
         0x34 as f32 / 255.0,
         0xd3 as f32 / 255.0,
         0x99 as f32 / 255.0,
-    ); // #34D399
+    ); // #34D399 (Mint Emerald)
 
     pub const LIGHT_WARNING: Color = Color::from_rgb(
         0xf5 as f32 / 255.0,
@@ -133,7 +133,7 @@ pub mod colors {
         0xfb as f32 / 255.0,
         0xbf as f32 / 255.0,
         0x24 as f32 / 255.0,
-    ); // #FBBF24
+    ); // #FBBF24 (Honey Amber)
 
     pub const LIGHT_DANGER: Color = Color::from_rgb(
         0xf4 as f32 / 255.0,
@@ -141,12 +141,12 @@ pub mod colors {
         0x5e as f32 / 255.0,
     ); // #F43F5E (Rose)
     pub const DARK_DANGER: Color = Color::from_rgb(
-        0xfb as f32 / 255.0,
+        0xf8 as f32 / 255.0,
         0x71 as f32 / 255.0,
-        0x85 as f32 / 255.0,
-    ); // #FB7185
+        0x71 as f32 / 255.0,
+    ); // #F87171 (Soft Coral Red)
 
-    // Vibrant Category & Hero Folder Colors
+    // Vibrant Category & Hero Folder Colors (Light Mode)
     pub const ACCENT_PURPLE: Color = Color::from_rgb(
         0x63 as f32 / 255.0,
         0x66 as f32 / 255.0,
@@ -178,7 +178,29 @@ pub mod colors {
         0xb8 as f32 / 255.0,
     ); // #94A3B8 (Slate 400)
 
-    // Soft Category Background Tints (for card illustrations & badges)
+    // Calibrated Category Accents for Dark Mode (Anti-Glare Pastels)
+    pub const DARK_ACCENT_PURPLE: Color = Color::from_rgb(
+        0x81 as f32 / 255.0,
+        0x8c as f32 / 255.0,
+        0xf8 as f32 / 255.0,
+    ); // #818CF8 (Soft Lavender / Indigo)
+    pub const DARK_ACCENT_BLUE: Color = Color::from_rgb(
+        0x60 as f32 / 255.0,
+        0xa5 as f32 / 255.0,
+        0xfa as f32 / 255.0,
+    ); // #60A5FA (Soft Sky Blue)
+    pub const DARK_ACCENT_AMBER: Color = Color::from_rgb(
+        0xfb as f32 / 255.0,
+        0xbf as f32 / 255.0,
+        0x24 as f32 / 255.0,
+    ); // #FBBF24 (Warm Honey Amber)
+    pub const DARK_ACCENT_EMERALD: Color = Color::from_rgb(
+        0x34 as f32 / 255.0,
+        0xd3 as f32 / 255.0,
+        0x99 as f32 / 255.0,
+    ); // #34D399 (Soft Mint Emerald)
+
+    // Soft Category Background Tints (Light Mode)
     pub const TINT_PURPLE: Color = Color::from_rgb(
         0xf5 as f32 / 255.0,
         0xf3 as f32 / 255.0,
@@ -199,6 +221,28 @@ pub mod colors {
         0xfd as f32 / 255.0,
         0xf5 as f32 / 255.0,
     ); // #ECFDF5
+
+    // Ambient Dark Category Surface Tints (Dark Mode Hero Cards)
+    pub const DARK_TINT_AMBER: Color = Color::from_rgb(
+        0x19 as f32 / 255.0,
+        0x15 as f32 / 255.0,
+        0x0e as f32 / 255.0,
+    ); // #19150E (Obsidian with 4% warm amber infusion)
+    pub const DARK_TINT_BLUE: Color = Color::from_rgb(
+        0x11 as f32 / 255.0,
+        0x16 as f32 / 255.0,
+        0x24 as f32 / 255.0,
+    ); // #111624 (Obsidian with 4% azure blue infusion)
+    pub const DARK_TINT_PURPLE: Color = Color::from_rgb(
+        0x15 as f32 / 255.0,
+        0x12 as f32 / 255.0,
+        0x26 as f32 / 255.0,
+    ); // #151226 (Obsidian with 4% lavender purple infusion)
+    pub const DARK_TINT_EMERALD: Color = Color::from_rgb(
+        0x0e as f32 / 255.0,
+        0x18 as f32 / 255.0,
+        0x14 as f32 / 255.0,
+    ); // #0E1814 (Obsidian with 4% mint emerald infusion)
 }
 
 /// Active Application Theme identifier
@@ -318,6 +362,78 @@ impl AppTheme {
             colors::DARK_SELECTED
         } else {
             colors::LIGHT_SELECTED
+        }
+    }
+
+    /// Returns category Amber accent color for active theme
+    pub fn category_amber(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_ACCENT_AMBER
+        } else {
+            colors::ACCENT_AMBER
+        }
+    }
+
+    /// Returns category Blue accent color for active theme
+    pub fn category_blue(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_ACCENT_BLUE
+        } else {
+            colors::ACCENT_BLUE
+        }
+    }
+
+    /// Returns category Purple accent color for active theme
+    pub fn category_purple(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_ACCENT_PURPLE
+        } else {
+            colors::ACCENT_PURPLE
+        }
+    }
+
+    /// Returns category Emerald accent color for active theme
+    pub fn category_emerald(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_ACCENT_EMERALD
+        } else {
+            colors::ACCENT_EMERALD
+        }
+    }
+
+    /// Returns category Amber ambient background tint for active theme
+    pub fn tint_amber(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_TINT_AMBER
+        } else {
+            colors::TINT_AMBER
+        }
+    }
+
+    /// Returns category Blue ambient background tint for active theme
+    pub fn tint_blue(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_TINT_BLUE
+        } else {
+            colors::TINT_BLUE
+        }
+    }
+
+    /// Returns category Purple ambient background tint for active theme
+    pub fn tint_purple(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_TINT_PURPLE
+        } else {
+            colors::TINT_PURPLE
+        }
+    }
+
+    /// Returns category Emerald ambient background tint for active theme
+    pub fn tint_emerald(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_TINT_EMERALD
+        } else {
+            colors::TINT_EMERALD
         }
     }
 }
@@ -533,9 +649,9 @@ pub fn hero_card_style(
     move |_theme| {
         if is_dark {
             container::Style {
-                background: Some(Background::Color(colors::DARK_SURFACE)),
+                background: Some(Background::Color(tint_color)),
                 border: Border {
-                    color: tint_color.scale_alpha(0.3),
+                    color: tint_color.scale_alpha(0.35),
                     width: 1.0,
                     radius: 16.0.into(),
                 },
