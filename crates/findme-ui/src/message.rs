@@ -129,6 +129,25 @@ pub enum Message {
         search_duration_ms: u64,
         total_matches: usize,
     },
+    /// Switch search mode between Everything, Content, Semantic, Hybrid
+    SetSearchMode(findme_semantic::SearchMode),
+    /// Toggle snippet expansion for a specific search result row
+    ToggleSnippetExpansion(usize),
+    /// Jump to specific timestamp in audio file
+    JumpAudioTimestamp { path: String, timestamp_secs: f64 },
+    /// Background engine returned semantic/hybrid search results
+    SemanticResultsReceived {
+        results: Vec<findme_semantic::SemanticHit>,
+        search_duration_ms: u64,
+    },
+    /// Set background indexer throttling mode
+    SetThrottleMode(findme_semantic::ThrottleMode),
+    /// Live semantic indexer progress update
+    SemanticProgressReceived(findme_semantic::IndexerProgress),
+    /// Trigger re-indexing of content files for semantic search
+    TriggerSemanticRebuild,
+    /// Pause or resume semantic background indexing
+    ToggleSemanticPause,
     /// Background engine sent indexing progress
     IndexingProgress {
         indexed_files: usize,

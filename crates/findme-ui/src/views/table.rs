@@ -4,10 +4,10 @@
 use crate::icons::{self, Icon};
 use crate::message::{ColumnId, Message};
 use crate::state::{compute_virtual_range, table_scrollable_id, AppState};
-use crate::theme::{colors, pill_badge_style, sidebar_item_style, table_row_btn_style};
+use crate::theme::{self, colors, pill_badge_style, sidebar_item_style, table_row_btn_style};
 use findme_core::SearchResultItem;
 use iced::widget::{button, column, container, mouse_area, row, scrollable, text, Space};
-use iced::{Alignment, Border, Element, Length};
+use iced::{Alignment, Background, Border, Color, Element, Length};
 
 /// Row height in pixels (generous row padding for modern Notion / Pinterest aesthetic)
 pub const ROW_HEIGHT: f32 = 36.0;
@@ -195,12 +195,41 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
             let size_text = item.formatted_size();
             let mtime_text = item.formatted_mtime();
 
-            let type_badge = container(text(type_label).size(10).color(state.theme.muted_color()))
-                .padding([1, 6])
-                .style(pill_badge_style(
-                    state.theme.hover_color(),
-                    state.theme.muted_color(),
-                ));
+            let semantic_hit = state
+                .semantic_results
+                .iter()
+                .find(|h| h.path.to_string_lossy() == item.path);
+
+            let type_badge = if let Some(hit) = semantic_hit {
+                let (badge_text, badge_color) = match hit.match_kind {
+                    findme_semantic::MatchKind::SemanticMatch => (
+                        format!("✨ {:.0}% Sem", hit.score * 100.0),
+                        colors::LIGHT_ACCENT,
+                    ),
+                    findme_semantic::MatchKind::ExactContent => {
+                        ("📄 Content".to_string(), colors::TINT_BLUE)
+                    }
+                    findme_semantic::MatchKind::AudioTranscript => {
+                        ("🎙️ Audio".to_string(), colors::TINT_AMBER)
+                    }
+                    findme_semantic::MatchKind::VisionMatch => {
+                        ("🖼️ Vision".to_string(), colors::TINT_PURPLE)
+                    }
+                    findme_semantic::MatchKind::HybridFusion => {
+                        ("⚡ Hybrid".to_string(), colors::LIGHT_ACCENT)
+                    }
+                };
+                container(text(badge_text).size(10).color(Color::WHITE))
+                    .padding([1, 6])
+                    .style(pill_badge_style(badge_color, Color::WHITE))
+            } else {
+                container(text(type_label).size(10).color(state.theme.muted_color()))
+                    .padding([1, 6])
+                    .style(pill_badge_style(
+                        state.theme.hover_color(),
+                        state.theme.muted_color(),
+                    ))
+            };
 
             let size_badge = container(text(size_text).size(10).color(state.theme.muted_color()))
                 .padding([1, 6])
@@ -269,7 +298,58 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
                 .align_y(Alignment::Center)
                 .width(Length::Fill);
 
-            let row_btn = button(row_cells)
+            let mut row_column = column![row_cells].spacing(4).width(Length::Fill);
+
+            if let Some(hit) = semantic_hit {
+                if state.expanded_snippets.contains(&row_idx) || is_selected {
+                    let mut snippet_row = row![
+                        text(format!("↳ {}:", hit.location))
+                            .size(11)
+                            .color(colors::LIGHT_ACCENT),
+                        text(&hit.best_snippet)
+                            .size(11)
+                            .color(state.theme.subtext_color()),
+                        Space::new().width(Length::Fill),
+                    ]
+                    .spacing(6)
+                    .align_y(Alignment::Center);
+
+                    if let Some(ts) = hit.audio_timestamp {
+                        let mins = (ts / 60.0).floor() as u64;
+                        let secs = (ts % 60.0).floor() as u64;
+                        let play_btn =
+                            button(text(format!("▶ Play from {:02}:{:02}", mins, secs)).size(10))
+                                .padding([2, 6])
+                                .style(theme::primary_btn_style(&state.theme))
+                                .on_press(Message::JumpAudioTimestamp {
+                                    path: item.path.clone(),
+                                    timestamp_secs: ts,
+                                });
+                        snippet_row = snippet_row.push(play_btn);
+                    }
+
+                    let snippet_container =
+                        container(snippet_row).padding([3, 8]).style(move |_theme| {
+                            container::Style {
+                                background: Some(Background::Color(if is_dark {
+                                    colors::DARK_SURFACE
+                                } else {
+                                    colors::LIGHT_SURFACE
+                                })),
+                                border: Border {
+                                    radius: 4.0.into(),
+                                    color: state.theme.border_color(),
+                                    width: 1.0,
+                                },
+                                ..Default::default()
+                            }
+                        });
+
+                    row_column = row_column.push(snippet_container);
+                }
+            }
+
+            let row_btn = button(row_column)
                 .padding([5, 8])
                 .width(Length::Fill)
                 .style(table_row_btn_style(&state.theme, is_selected))

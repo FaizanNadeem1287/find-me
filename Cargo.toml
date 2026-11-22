@@ -18,6 +18,7 @@ repository = "https://github.com/Faizan-Nadeem/Find-Me"
 # Internal crates
 findme-core = { path = "crates/findme-core" }
 findme-ui = { path = "crates/findme-ui" }
+findme-semantic = { path = "crates/findme-semantic" }
 
 # Document & Content Parsing
 pdf-extract = "0.12"
