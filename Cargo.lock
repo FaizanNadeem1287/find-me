@@ -1364,6 +1364,7 @@ dependencies = [
  "findme-core",
  "image",
  "memchr",
+ "parking_lot",
  "pdf-extract",
  "quick-xml 0.37.5",
  "serde",
@@ -1371,6 +1372,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tracing",
+ "walkdir",
  "zip 2.6.1",
 ]
 

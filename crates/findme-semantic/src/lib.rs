@@ -6,6 +6,7 @@ pub mod extractors;
 pub mod models;
 pub mod search;
 pub mod storage;
+pub mod worker;
 
 pub use embeddings::{TextEmbedder, VectorEmbedding, EMBEDDING_DIM};
 pub use error::SemanticError;
@@ -17,6 +18,9 @@ pub use search::{
     ParsedSearchQuery, SearchMode, SemanticHit,
 };
 pub use storage::{ChunkStore, HnswVectorIndex, StoredChunk};
+pub use worker::{
+    BackgroundIndexer, FileFingerprint, FileFingerprintCache, IndexerProgress, ThrottleMode,
+};
 
 use findme_core::arena::FileArena;
 use findme_core::record::FileRecord;
