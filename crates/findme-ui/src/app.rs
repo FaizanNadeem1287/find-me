@@ -621,6 +621,36 @@ impl FindMeApp {
                     AdvancedSearchMessage::UpdateNoneWords(w) => {
                         self.state.advanced_filters.none_words = w;
                     }
+                    AdvancedSearchMessage::SelectExtCategory(cat) => {
+                        self.state.advanced_filters.active_ext_category = cat;
+                    }
+                    AdvancedSearchMessage::ToggleExtension(ext) => {
+                        self.state.advanced_filters.toggle_extension(&ext);
+                    }
+                    AdvancedSearchMessage::SelectAllInCategory(cat) => {
+                        self.state.advanced_filters.select_all_in_category(cat);
+                    }
+                    AdvancedSearchMessage::ClearCategory(cat) => {
+                        self.state.advanced_filters.clear_category(cat);
+                    }
+                    AdvancedSearchMessage::ClearAllExtensions => {
+                        self.state.advanced_filters.clear_all_extensions();
+                    }
+                    AdvancedSearchMessage::UpdateCustomExtInput(s) => {
+                        self.state.advanced_filters.custom_ext_input = s;
+                    }
+                    AdvancedSearchMessage::AddCustomExtFromInput => {
+                        let trimmed = self
+                            .state
+                            .advanced_filters
+                            .custom_ext_input
+                            .trim()
+                            .to_string();
+                        if !trimmed.is_empty() {
+                            self.state.advanced_filters.add_custom_extension(&trimmed);
+                            self.state.advanced_filters.custom_ext_input.clear();
+                        }
+                    }
                     AdvancedSearchMessage::ToggleExtDocuments(b) => {
                         self.state.advanced_filters.ext_documents = b;
                     }
