@@ -178,16 +178,71 @@ fn test_modern_design_system_tokens() {
         "Purple accent contrast {purple_contrast:.2} must be >= 3.0:1"
     );
 
+    // Refined Dark Mode Anti-Glare Accents & Ambient Tint Contrast Checks
+    let dark_amber_contrast = contrast_ratio(colors::DARK_ACCENT_AMBER, colors::DARK_SURFACE);
+    assert!(
+        dark_amber_contrast >= 3.0,
+        "Dark Amber accent contrast {dark_amber_contrast:.2} must be >= 3.0:1"
+    );
+
+    let dark_blue_contrast = contrast_ratio(colors::DARK_ACCENT_BLUE, colors::DARK_SURFACE);
+    assert!(
+        dark_blue_contrast >= 3.0,
+        "Dark Blue accent contrast {dark_blue_contrast:.2} must be >= 3.0:1"
+    );
+
+    let dark_purple_contrast = contrast_ratio(colors::DARK_ACCENT_PURPLE, colors::DARK_SURFACE);
+    assert!(
+        dark_purple_contrast >= 3.0,
+        "Dark Purple accent contrast {dark_purple_contrast:.2} must be >= 3.0:1"
+    );
+
+    let dark_emerald_contrast = contrast_ratio(colors::DARK_ACCENT_EMERALD, colors::DARK_SURFACE);
+    assert!(
+        dark_emerald_contrast >= 3.0,
+        "Dark Emerald accent contrast {dark_emerald_contrast:.2} must be >= 3.0:1"
+    );
+
+    // Verify text contrast on dark ambient tints
+    for (tint_name, tint) in [
+        ("Amber Tint", colors::DARK_TINT_AMBER),
+        ("Blue Tint", colors::DARK_TINT_BLUE),
+        ("Purple Tint", colors::DARK_TINT_PURPLE),
+        ("Emerald Tint", colors::DARK_TINT_EMERALD),
+    ] {
+        let text_tint_contrast = contrast_ratio(colors::DARK_TEXT, tint);
+        assert!(
+            text_tint_contrast >= 4.5,
+            "Dark text on {tint_name} contrast {text_tint_contrast:.2} must be >= 4.5:1 (WCAG AA)"
+        );
+    }
+
     // Color accessors test
     let dark = AppTheme::Dark;
     assert_eq!(dark.bg_color(), colors::DARK_BG);
     assert_eq!(dark.surface_color(), colors::DARK_SURFACE);
     assert_eq!(dark.sidebar_color(), colors::DARK_SIDEBAR);
+    assert_eq!(dark.category_amber(), colors::DARK_ACCENT_AMBER);
+    assert_eq!(dark.category_blue(), colors::DARK_ACCENT_BLUE);
+    assert_eq!(dark.category_purple(), colors::DARK_ACCENT_PURPLE);
+    assert_eq!(dark.category_emerald(), colors::DARK_ACCENT_EMERALD);
+    assert_eq!(dark.tint_amber(), colors::DARK_TINT_AMBER);
+    assert_eq!(dark.tint_blue(), colors::DARK_TINT_BLUE);
+    assert_eq!(dark.tint_purple(), colors::DARK_TINT_PURPLE);
+    assert_eq!(dark.tint_emerald(), colors::DARK_TINT_EMERALD);
 
     let light = AppTheme::Light;
     assert_eq!(light.bg_color(), colors::LIGHT_BG);
     assert_eq!(light.surface_color(), colors::LIGHT_SURFACE);
     assert_eq!(light.sidebar_color(), colors::LIGHT_SIDEBAR);
+    assert_eq!(light.category_amber(), colors::ACCENT_AMBER);
+    assert_eq!(light.category_blue(), colors::ACCENT_BLUE);
+    assert_eq!(light.category_purple(), colors::ACCENT_PURPLE);
+    assert_eq!(light.category_emerald(), colors::ACCENT_EMERALD);
+    assert_eq!(light.tint_amber(), colors::TINT_AMBER);
+    assert_eq!(light.tint_blue(), colors::TINT_BLUE);
+    assert_eq!(light.tint_purple(), colors::TINT_PURPLE);
+    assert_eq!(light.tint_emerald(), colors::TINT_EMERALD);
 }
 
 #[test]
