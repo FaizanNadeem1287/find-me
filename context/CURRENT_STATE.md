@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 13:00 PKT
+*Last Updated*: 2026-11-22 13:12 PKT
 
 ---
 
@@ -20,7 +20,7 @@ Phase | Description | Status | Test Coverage
 **Phase 9** | Packaging, Release Engineering & Production QA | **100% COMPLETE** | 222 passing tests (Tasks 9.1 & 9.2 completed)
 **Phase 10** | Universal Linux Distribution (AppImage, Flatpak, AUR, Network FS) | **100% COMPLETE** | 241 passing tests (Tasks 10.1, 10.2, 10.3 & 10.4 completed)
 **Phase 11** | Advanced CLI & Automation (Headless Query, JSON, GUI Pre-Fill, Content Search, Multi-Format Exporters) | **100% COMPLETE** | 262 passing tests (Tasks 11.1, 11.2 & 11.3 completed)
-**Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders & Precision Matching) | **IN PROGRESS** | 278 passing tests (Tasks 12.1, 12.2, 12.3 & 12.4 completed)
+**Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders & Precision Matching) | **100% COMPLETE** | 291 passing tests (Tasks 12.1, 12.2, 12.3, 12.4 & 12.5 completed)
 
 ---
 
@@ -28,12 +28,12 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 12: Modern UI Revamp (Pinterest / Notion Aesthetic)** | 100% visual parity with modern card design, folder hero showcase & precision matching
-**Last Completed Task** | `[TASK-12.4] UI: Revamped Modern Files Table & Exact Substring Match Default` | Todoist Task `6j49wM8Qcp3r5MjQ`
-**Next Active Task** | `[TASK-12.5] UI: Modern Secondary Screens Overhaul (Advanced Search, Index Management, History & Settings)` | Todoist Task `6j49wM96pVJWcRVx`
-**Active Git Branch** | `main` | Clean working tree; 32 feature branches preserved permanently
-**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | All completed tasks 100% verified and synchronized
-**Target Branch History**| 32 feature branches permanently retained | `feature/p12-results-table` merged and preserved
+**Active Phase** | **Phase 12: Modern UI Revamp (Pinterest / Notion Aesthetic)** | **100% COMPLETE** — All 5 Phase 12 tasks delivered & verified
+**Last Completed Task** | `[TASK-12.5] UI: Modern Secondary Screens Overhaul (Advanced Search, Index Management, History & Settings)` | Todoist Task `6j49wM96pVJWcRVx`
+**Next Active Task** | None (Phase 12 Complete; Future backlog in Todoist `Future Ideas`) | Standing by for user instruction
+**Active Git Branch** | `main` | Clean working tree; 33 feature branches preserved permanently
+**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | All lifecycle tasks 100% completed & verified
+**Target Branch History**| 33 feature branches permanently retained | `feature/p12-secondary-screens` merged and preserved
 
 ---
 
@@ -72,3 +72,4 @@ Branch | Commit | Description
 `feature/p12-sidebar-revamp` | `b241558` | Modern collapsible sidebar with monogram, search pill, nav badges & directory tree
 `feature/p12-folder-hero-cards` | `cbe64ef` | Quick-access folder showcase hero cards & breadcrumbs header
 `feature/p12-results-table` | `e2da600` | Revamped modern files table (36px, icons, badges) & exact substring match default with fuzzy: fallback
+`feature/p12-secondary-screens` | `b9330f5` | Modern secondary screens overhaul (Advanced Search, Index Mgmt, History, Settings, About) & unified component styling
