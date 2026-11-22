@@ -20,6 +20,20 @@ pub struct CliOptions {
     pub rebuild_index: bool,
     pub show_help: bool,
     pub show_version: bool,
+    pub export_csv: Option<String>,
+    pub export_txt: Option<String>,
+    pub export_efu: Option<String>,
+    pub export_json: Option<String>,
+}
+
+impl CliOptions {
+    /// Returns true if any file export destination is configured
+    pub fn has_export(&self) -> bool {
+        self.export_csv.is_some()
+            || self.export_txt.is_some()
+            || self.export_efu.is_some()
+            || self.export_json.is_some()
+    }
 }
 
 /// Parses command line arguments into `CliOptions`
@@ -46,6 +60,30 @@ pub fn parse_cli_args(args: &[String]) -> CliOptions {
             }
             "--rebuild-index" => opts.rebuild_index = true,
             "--new-window" => opts.is_gui_mode = true,
+            "--export-csv" => {
+                if let Some(val) = iter.next() {
+                    opts.export_csv = Some(val.clone());
+                    opts.is_cli_mode = true;
+                }
+            }
+            "--export-txt" => {
+                if let Some(val) = iter.next() {
+                    opts.export_txt = Some(val.clone());
+                    opts.is_cli_mode = true;
+                }
+            }
+            "--export-efu" => {
+                if let Some(val) = iter.next() {
+                    opts.export_efu = Some(val.clone());
+                    opts.is_cli_mode = true;
+                }
+            }
+            "--export-json" => {
+                if let Some(val) = iter.next() {
+                    opts.export_json = Some(val.clone());
+                    opts.is_cli_mode = true;
+                }
+            }
             "-q" | "--query" => {
                 if let Some(val) = iter.next() {
                     opts.query = Some(val.clone());
@@ -129,16 +167,71 @@ pub fn search_arena(opts: &CliOptions, arena: &findme_core::FileArena) -> Vec<Cl
     results
 }
 
-/// Executes a headless CLI search and outputs formatted results to stdout
+/// Executes a search using `CliOptions` against the provided `FileArena` returning full `SearchResultItem` records
+pub fn search_arena_items(
+    opts: &CliOptions,
+    arena: &findme_core::FileArena,
+) -> Vec<findme_core::SearchResultItem> {
+    let query_str = opts.query.as_deref().unwrap_or("");
+    let ast = QueryParser::parse(query_str);
+
+    let config = SearchConfig {
+        max_results: opts.max_results,
+        sort_column: SortColumn::Score,
+        sort_direction: SortDirection::Descending,
+    };
+
+    let match_results = SearchEngine::search(arena, &ast, &config);
+    let mut results = Vec::with_capacity(match_results.len());
+
+    for m in &match_results {
+        if let Some(item) = SearchEngine::materialize_result(arena, m) {
+            results.push(item);
+        }
+    }
+
+    results
+}
+
+/// Executes configured batch export options for matched search items
+pub fn execute_cli_exports(
+    opts: &CliOptions,
+    items: &[findme_core::SearchResultItem],
+) -> Result<()> {
+    if let Some(ref path) = opts.export_csv {
+        let count = findme_core::export_to_file(findme_core::ExportFormat::Csv, items, path)?;
+        println!("Exported {} results to CSV: {}", count, path);
+    }
+    if let Some(ref path) = opts.export_txt {
+        let count = findme_core::export_to_file(findme_core::ExportFormat::Txt, items, path)?;
+        println!("Exported {} results to TXT: {}", count, path);
+    }
+    if let Some(ref path) = opts.export_efu {
+        let count = findme_core::export_to_file(findme_core::ExportFormat::Efu, items, path)?;
+        println!("Exported {} results to EFU: {}", count, path);
+    }
+    if let Some(ref path) = opts.export_json {
+        let count = findme_core::export_to_file(findme_core::ExportFormat::Json, items, path)?;
+        println!("Exported {} results to JSON: {}", count, path);
+    }
+    Ok(())
+}
+
+/// Executes a headless CLI search and outputs formatted results to stdout or export files
 pub fn execute_cli_search(opts: &CliOptions, cache_path: &Path) -> Result<()> {
     let arena = load_or_fallback_arena(cache_path);
-    let results = search_arena(opts, &arena);
+    let items = search_arena_items(opts, &arena);
+
+    if opts.has_export() {
+        execute_cli_exports(opts, &items)?;
+    }
 
     if opts.is_json {
+        let results = search_arena(opts, &arena);
         println!("{}", serde_json::to_string_pretty(&results)?);
-    } else {
-        for res in &results {
-            println!("{}", res.path);
+    } else if !opts.has_export() || opts.is_cli_mode {
+        for item in &items {
+            println!("{}", item.path);
         }
     }
 
@@ -187,6 +280,10 @@ OPTIONS:
     --stats                   Display index cache information and metrics
     --rebuild-index           Perform background filesystem index crawl in CLI mode
     --new-window              Open new application search window
+    --export-csv <PATH>       Export search results to an RFC 4180 CSV file
+    --export-txt <PATH>       Export search results to a plain text file (one path per line)
+    --export-efu <PATH>       Export search results to an Everything File List (.efu)
+    --export-json <PATH>      Export search results to a structured JSON array file
 
 SHORTCUTS (GUI):
     Ctrl + F / /              Focus search input bar

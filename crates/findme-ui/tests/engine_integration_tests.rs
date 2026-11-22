@@ -19,7 +19,6 @@ use findme_ui::{
 };
 use std::fs::{create_dir_all, File};
 use std::io::Write;
-use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::tempdir;
 
@@ -440,10 +439,12 @@ fn test_app_index_management_screen_actions() {
     assert_eq!(app.state.results.len(), 0);
 
     // Rebuild index action
-    app.state
-        .index_mgmt
-        .roots
-        .push(findme_ui::IndexedRoot::new(PathBuf::from("/tmp"), 0, 0));
+    let temp_empty = tempdir().unwrap();
+    app.state.index_mgmt.roots = vec![findme_ui::IndexedRoot::new(
+        temp_empty.path().to_path_buf(),
+        0,
+        0,
+    )];
     let _ = app.update(Message::IndexManagement(
         IndexManagementMessage::TriggerRebuildIndex,
     ));
