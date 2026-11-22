@@ -25,6 +25,10 @@ pub struct CrawlerConfig {
     pub skip_hidden: bool,
     /// Automatically skip virtual Linux kernel filesystems (default: true)
     pub skip_virtual_filesystems: bool,
+    /// Explicitly identified network share roots
+    pub network_shares: Vec<PathBuf>,
+    /// Whether to detect and mark files residing on network shares (default: true)
+    pub mark_network_shares: bool,
 }
 
 impl Default for CrawlerConfig {
@@ -43,6 +47,8 @@ impl Default for CrawlerConfig {
             max_depth: usize::MAX,
             skip_hidden: false,
             skip_virtual_filesystems: true,
+            network_shares: Vec::new(),
+            mark_network_shares: true,
         }
     }
 }
@@ -100,6 +106,18 @@ impl CrawlerConfig {
     /// Sets whether to skip virtual Linux kernel mounts
     pub fn skip_virtual_filesystems(mut self, skip: bool) -> Self {
         self.skip_virtual_filesystems = skip;
+        self
+    }
+
+    /// Adds an explicit network share root path
+    pub fn add_network_share<P: Into<PathBuf>>(mut self, path: P) -> Self {
+        self.network_shares.push(path.into());
+        self
+    }
+
+    /// Sets whether to detect and mark network files
+    pub fn mark_network_shares(mut self, mark: bool) -> Self {
+        self.mark_network_shares = mark;
         self
     }
 
@@ -252,6 +270,16 @@ impl Crawler {
         let mut errors_encountered = 0u64;
         let mut cycle_detector = CycleDetector::new();
 
+        // Pre-resolve network mounts once so we avoid querying /proc/mounts per file
+        let mut network_mounts = self.config.network_shares.clone();
+        if self.config.mark_network_shares {
+            for (mount, _) in crate::network_fs::get_active_network_mounts() {
+                if !network_mounts.contains(&mount) {
+                    network_mounts.push(mount);
+                }
+            }
+        }
+
         for root in &self.config.root_paths {
             if self.config.is_excluded_path(root) {
                 continue;
@@ -317,7 +345,13 @@ impl Crawler {
                             .and_then(|n| n.to_str())
                             .is_some_and(|s| s.starts_with('.') && s != "." && s != "..");
 
-                        let flags = extract_flags(&metadata, is_hidden);
+                        let mut flags = extract_flags(&metadata, is_hidden);
+                        if self.config.mark_network_shares
+                            && network_mounts.iter().any(|ns| path.starts_with(ns))
+                        {
+                            flags |= FileFlags::IS_NETWORK;
+                        }
+
                         let size_bytes = if metadata.is_dir() { 0 } else { metadata.len() };
                         let mtime_secs = metadata
                             .modified()
