@@ -213,6 +213,19 @@ impl<'a> QueryParser<'a> {
                     },
                 }
             }
+            "content" | "utf8" => {
+                if value.trim().is_empty() {
+                    SearchPredicate::Text {
+                        term: format!("{}:{}", prefix, value),
+                        quoted: false,
+                    }
+                } else {
+                    SearchPredicate::Content {
+                        pattern: value.to_string(),
+                        case_sensitive: false,
+                    }
+                }
+            }
             _ => SearchPredicate::Text {
                 term: format!("{}:{}", prefix, value),
                 quoted: false,
