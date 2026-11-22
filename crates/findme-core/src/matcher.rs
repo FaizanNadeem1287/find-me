@@ -260,6 +260,12 @@ pub enum CompiledPredicate {
         quoted: bool,
         atom: Atom,
     },
+    Content {
+        pattern: String,
+        pattern_bytes: Vec<u8>,
+        pattern_lower: Vec<u8>,
+        case_sensitive: bool,
+    },
 }
 
 impl CompiledPredicate {
@@ -302,6 +308,19 @@ impl CompiledPredicate {
                     term_bytes: term.as_bytes().to_vec(),
                     quoted: *quoted,
                     atom,
+                }
+            }
+            SearchPredicate::Content {
+                pattern,
+                case_sensitive,
+            } => {
+                let pattern_bytes = pattern.as_bytes().to_vec();
+                let pattern_lower = pattern.to_ascii_lowercase().as_bytes().to_vec();
+                Self::Content {
+                    pattern: pattern.clone(),
+                    pattern_bytes,
+                    pattern_lower,
+                    case_sensitive: *case_sensitive,
                 }
             }
         }
@@ -349,6 +368,7 @@ impl CompiledNode {
                 CompiledPredicate::Text { quoted: true, .. } => 3,
                 CompiledPredicate::Text { quoted: false, .. } => 4,
                 CompiledPredicate::Regex(_) => 5,
+                CompiledPredicate::Content { .. } => 10,
             },
             Self::Not(inner) => inner.cost().saturating_add(1),
             Self::And(children) => children.iter().map(Self::cost).min().unwrap_or(0),
@@ -486,6 +506,24 @@ fn eval_compiled_predicate(
             eval_compiled_text_term_bytes(
                 name_bytes, term, term_bytes, *quoted, atom, matcher, char_buf,
             )
+        }
+        CompiledPredicate::Content {
+            pattern_bytes,
+            case_sensitive,
+            ..
+        } => {
+            if record.flags.is_dir() {
+                return None;
+            }
+            if record.size_bytes == 0 || record.size_bytes > 20 * 1024 * 1024 {
+                return None;
+            }
+            let file_path = arena.reconstruct_path(record)?;
+            if scan_file_for_content(&file_path, pattern_bytes, *case_sensitive) {
+                Some(1000)
+            } else {
+                None
+            }
         }
     }
 }
@@ -634,4 +672,86 @@ pub fn starts_with_case_insensitive(haystack: &str, prefix: &str) -> bool {
 #[inline]
 pub fn contains_case_insensitive(haystack: &str, needle: &str) -> bool {
     contains_case_insensitive_bytes(haystack.as_bytes(), needle.as_bytes())
+}
+
+/// Scans a file on disk for a content pattern using 64KB chunked buffered reading
+/// with binary null-byte heuristic filtering and boundary overlap preservation.
+pub fn scan_file_for_content(
+    path: &std::path::Path,
+    pattern_bytes: &[u8],
+    case_sensitive: bool,
+) -> bool {
+    if pattern_bytes.is_empty() {
+        return true;
+    }
+
+    let file = match std::fs::File::open(path) {
+        Ok(f) => f,
+        Err(_) => return false,
+    };
+
+    use std::io::Read;
+    let mut reader = std::io::BufReader::with_capacity(64 * 1024, file);
+    let mut chunk = vec![0u8; 64 * 1024];
+
+    // Read initial chunk and inspect first 1KB for null bytes (binary file skip)
+    let n = match reader.read(&mut chunk) {
+        Ok(n) if n > 0 => n,
+        _ => return false,
+    };
+
+    let probe_len = n.min(1024);
+    if memchr::memchr(0x00, &chunk[..probe_len]).is_some() {
+        // Binary file (executable, image, archive) - skip content search
+        return false;
+    }
+
+    let pattern_len = pattern_bytes.len();
+    let overlap_len = pattern_len.saturating_sub(1);
+    let mut overlap_buf = Vec::with_capacity(overlap_len);
+
+    let check_slice = |slice: &[u8]| -> bool {
+        if case_sensitive {
+            memchr::memmem::find(slice, pattern_bytes).is_some()
+        } else {
+            contains_case_insensitive_bytes(slice, pattern_bytes)
+        }
+    };
+
+    if check_slice(&chunk[..n]) {
+        return true;
+    }
+
+    if n >= overlap_len {
+        overlap_buf.extend_from_slice(&chunk[n - overlap_len..n]);
+    } else {
+        overlap_buf.extend_from_slice(&chunk[..n]);
+    }
+
+    let mut combined = Vec::with_capacity(overlap_len + 64 * 1024);
+
+    // Process remaining chunks with boundary overlap
+    loop {
+        let bytes_read = match reader.read(&mut chunk) {
+            Ok(b) if b > 0 => b,
+            _ => break,
+        };
+
+        combined.clear();
+        combined.extend_from_slice(&overlap_buf);
+        combined.extend_from_slice(&chunk[..bytes_read]);
+
+        if check_slice(&combined) {
+            return true;
+        }
+
+        overlap_buf.clear();
+        if combined.len() >= overlap_len {
+            overlap_buf.extend_from_slice(&combined[combined.len() - overlap_len..]);
+        } else {
+            overlap_buf.extend_from_slice(&combined);
+        }
+    }
+
+    false
 }

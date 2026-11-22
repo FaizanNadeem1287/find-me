@@ -310,6 +310,9 @@ async fn test_rebuild_index_with_temp_directory() {
     let (results, _, total) = bridge.search("doc_beta", 10, ColumnId::Name, true).await;
     assert!(total >= 1);
     assert!(results.iter().any(|r| r.name == "doc_beta.rs"));
+
+    // Retain tempdir alive until after the crawl and search have completely verified
+    drop(dir);
 }
 
 #[tokio::test]
