@@ -3,6 +3,42 @@
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
+/// Returns default indexed directory roots
+pub fn default_indexed_roots() -> Vec<String> {
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string());
+    vec![home]
+}
+
+/// Returns default folder names to exclude everywhere
+pub fn default_excluded_folders() -> Vec<String> {
+    vec![
+        "node_modules".to_string(),
+        "target".to_string(),
+        ".git".to_string(),
+        "__pycache__".to_string(),
+        ".venv".to_string(),
+        ".cargo".to_string(),
+        "build".to_string(),
+        "dist".to_string(),
+    ]
+}
+
+/// Returns default file extensions to exclude everywhere
+pub fn default_excluded_extensions() -> Vec<String> {
+    vec![
+        "pyc".to_string(),
+        "pyo".to_string(),
+        "tmp".to_string(),
+        "cache".to_string(),
+        "log".to_string(),
+    ]
+}
+
+/// Returns default directory paths to exclude
+pub fn default_excluded_paths() -> Vec<String> {
+    vec!["~/.cache".to_string(), "~/.local/share/Trash".to_string()]
+}
+
 /// Comprehensive application preferences and search defaults
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AppSettings {
@@ -18,6 +54,19 @@ pub struct AppSettings {
     // Privacy & Exclusions
     pub exclude_hidden_files: bool,
     pub exclude_system_paths: bool,
+
+    // Index Roots & Custom Exclusions (Phase 14)
+    #[serde(default = "default_indexed_roots")]
+    pub indexed_roots: Vec<String>,
+
+    #[serde(default = "default_excluded_folders")]
+    pub excluded_folders: Vec<String>,
+
+    #[serde(default = "default_excluded_extensions")]
+    pub excluded_extensions: Vec<String>,
+
+    #[serde(default = "default_excluded_paths")]
+    pub excluded_paths: Vec<String>,
 }
 
 impl Default for AppSettings {
@@ -30,6 +79,10 @@ impl Default for AppSettings {
             max_results: 1000,
             exclude_hidden_files: true,
             exclude_system_paths: true,
+            indexed_roots: default_indexed_roots(),
+            excluded_folders: default_excluded_folders(),
+            excluded_extensions: default_excluded_extensions(),
+            excluded_paths: default_excluded_paths(),
         }
     }
 }
@@ -53,6 +106,16 @@ impl AppSettings {
     /// Returns the standard settings configuration file path
     pub fn config_path() -> PathBuf {
         Self::config_dir().join("settings.json")
+    }
+
+    /// Loads settings from standard default path, or returns default on failure
+    pub fn load_default() -> Self {
+        Self::load_from_path(&Self::config_path()).unwrap_or_default()
+    }
+
+    /// Saves settings to standard default path
+    pub fn save_default(&self) -> Result<(), String> {
+        self.save_to_path(&Self::config_path())
     }
 
     /// Loads settings from a JSON file path, falling back to default on error

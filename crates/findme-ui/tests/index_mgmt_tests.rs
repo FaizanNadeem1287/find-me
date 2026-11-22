@@ -163,9 +163,15 @@ fn test_add_default_exclusions() {
         stats: IndexStats::default(),
         roots: Vec::new(),
         exclusions: Vec::new(),
+        excluded_folders: Vec::new(),
+        excluded_extensions: Vec::new(),
+        excluded_paths: Vec::new(),
         indexing_state: IndexingState::Idle,
         new_root_input: String::new(),
         new_exclusion_input: String::new(),
+        new_extension_input: String::new(),
+        new_folder_input: String::new(),
+        view_gitignore_raw: false,
     };
 
     assert!(state.exclusions.is_empty());
@@ -369,4 +375,72 @@ fn test_index_mgmt_view_rendering() {
     {
         let _view_scanning = findme_ui::views::index_mgmt::view(&app.state);
     }
+}
+
+#[test]
+fn test_smart_rule_routing_and_categorization() {
+    let mut state = IndexManagementState::default();
+
+    // 1. Extensions
+    assert!(state.add_smart_rule("*.xyz"));
+    assert!(state.excluded_extensions.contains(&"xyz".to_string()));
+    assert!(state.add_smart_rule(".custom"));
+    assert!(state.excluded_extensions.contains(&"custom".to_string()));
+
+    // 2. Paths
+    assert!(state.add_smart_rule("/opt/var/cache/"));
+    assert!(state.excluded_paths.contains(&"/opt/var/cache".to_string()));
+    assert!(state.add_smart_rule("~/.npm"));
+    assert!(state.excluded_paths.contains(&"~/.npm".to_string()));
+
+    // 3. Folders
+    assert!(state.add_smart_rule("vendor/"));
+    assert!(state.excluded_folders.contains(&"vendor".to_string()));
+    assert!(state.add_smart_rule("dist_out"));
+    assert!(state.excluded_folders.contains(&"dist_out".to_string()));
+
+    // Verify .gitignore export string
+    let gitignore = state.to_gitignore_string();
+    assert!(gitignore.contains("vendor/"));
+    assert!(gitignore.contains("*.xyz"));
+    assert!(gitignore.contains("/opt/var/cache/"));
+}
+
+#[test]
+fn test_preset_toggling() {
+    let mut state = IndexManagementState::default();
+
+    assert!(state.is_preset_active(findme_ui::index_mgmt::ExclusionPreset::NodeModules));
+    state.toggle_preset(findme_ui::index_mgmt::ExclusionPreset::NodeModules);
+    assert!(!state.is_preset_active(findme_ui::index_mgmt::ExclusionPreset::NodeModules));
+
+    state.toggle_preset(findme_ui::index_mgmt::ExclusionPreset::NodeModules);
+    assert!(state.is_preset_active(findme_ui::index_mgmt::ExclusionPreset::NodeModules));
+}
+
+#[test]
+fn test_settings_schema_extension_roundtrip() {
+    let mut settings = findme_ui::settings::AppSettings {
+        indexed_roots: vec!["/custom/root".to_string()],
+        ..Default::default()
+    };
+    settings.excluded_folders.push("custom_build".to_string());
+    settings.excluded_extensions.push("ogg".to_string());
+    settings.excluded_paths.push("/custom/cache".to_string());
+
+    let temp_dir = std::env::temp_dir().join(format!("findme_test_{}", std::process::id()));
+    let temp_file = temp_dir.join("test_settings.json");
+
+    assert!(settings.save_to_path(&temp_file).is_ok());
+    let loaded = findme_ui::settings::AppSettings::load_from_path(&temp_file)
+        .expect("must load saved settings");
+
+    assert_eq!(loaded.indexed_roots, vec!["/custom/root"]);
+    assert!(loaded
+        .excluded_folders
+        .contains(&"custom_build".to_string()));
+    assert!(loaded.excluded_extensions.contains(&"ogg".to_string()));
+    assert!(loaded.excluded_paths.contains(&"/custom/cache".to_string()));
+
+    let _ = std::fs::remove_dir_all(&temp_dir);
 }
