@@ -64,7 +64,100 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .width(Length::Fill);
 
     // -------------------------------------------------------------------------
-    // 2. Search Input Bar
+    // 2. Search Mode Pills ([Everything], [Content], [Semantic], [Hybrid])
+    // -------------------------------------------------------------------------
+    let make_mode_pill = |label: &'static str,
+                          mode: findme_semantic::SearchMode,
+                          active_mode: findme_semantic::SearchMode,
+                          icon: Icon| {
+        let is_active = mode == active_mode;
+        button(
+            row![
+                icons::icon(
+                    icon,
+                    12.0,
+                    if is_active {
+                        Color::WHITE
+                    } else {
+                        state.theme.subtext_color()
+                    },
+                ),
+                text(label).size(12).color(if is_active {
+                    Color::WHITE
+                } else {
+                    state.theme.subtext_color()
+                }),
+            ]
+            .spacing(5)
+            .align_y(Alignment::Center),
+        )
+        .padding([4, 12])
+        .style(move |_theme, status| {
+            let bg = if is_active {
+                Some(Background::Color(colors::LIGHT_ACCENT))
+            } else {
+                match status {
+                    button::Status::Hovered | button::Status::Pressed => {
+                        Some(Background::Color(state.theme.hover_color()))
+                    }
+                    _ => Some(Background::Color(state.theme.surface_color())),
+                }
+            };
+            button::Style {
+                background: bg,
+                border: Border {
+                    radius: 14.0.into(),
+                    width: if is_active { 0.0 } else { 1.0 },
+                    color: state.theme.border_color(),
+                },
+                ..Default::default()
+            }
+        })
+        .on_press(Message::SetSearchMode(mode))
+    };
+
+    let mode_pills_row = row![
+        make_mode_pill(
+            "Everything",
+            findme_semantic::SearchMode::Everything,
+            state.search_mode,
+            Icon::Search
+        ),
+        make_mode_pill(
+            "Content",
+            findme_semantic::SearchMode::Content,
+            state.search_mode,
+            Icon::FileText
+        ),
+        make_mode_pill(
+            "Semantic",
+            findme_semantic::SearchMode::Semantic,
+            state.search_mode,
+            Icon::Sliders
+        ),
+        make_mode_pill(
+            "Hybrid",
+            findme_semantic::SearchMode::Hybrid,
+            state.search_mode,
+            Icon::Refresh
+        ),
+        Space::new().width(Length::Fill),
+        if state.search_mode != findme_semantic::SearchMode::Everything {
+            text("✨ Local Quantized Vector AI Active (all-MiniLM-L6-v2)")
+                .size(11)
+                .color(colors::LIGHT_ACCENT)
+        } else {
+            text("⚡ Sub-5ms Exact Filename Index")
+                .size(11)
+                .color(state.theme.muted_color())
+        }
+    ]
+    .spacing(6)
+    .align_y(Alignment::Center)
+    .width(Length::Fill);
+
+    // -------------------------------------------------------------------------
+    // 3. Search Input Bar
     // -------------------------------------------------------------------------
     let search_input = text_input(
         "Search files, paths, or operators (e.g. ext:rs size:>1mb)...",
@@ -250,6 +343,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     column![
         breadcrumbs_bar,
+        mode_pills_row,
         search_row,
         folders_section,
         files_header,
