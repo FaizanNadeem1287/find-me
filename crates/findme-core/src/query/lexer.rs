@@ -21,7 +21,7 @@ pub enum Token<'a> {
 
 /// Known operators supported by the query parser
 pub const KNOWN_OPERATORS: &[&str] = &[
-    "ext:", "size:", "dm:", "path:", "attrib:", "regex:", "content:", "utf8:",
+    "ext:", "size:", "dm:", "path:", "attrib:", "regex:", "content:", "utf8:", "fuzzy:",
 ];
 
 /// Lightweight zero-copy tokenizer for query strings
