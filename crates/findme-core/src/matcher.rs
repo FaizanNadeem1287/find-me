@@ -258,6 +258,9 @@ pub enum CompiledPredicate {
         term: String,
         term_bytes: Vec<u8>,
         quoted: bool,
+    },
+    Fuzzy {
+        term: String,
         atom: Atom,
     },
     Content {
@@ -295,7 +298,12 @@ impl CompiledPredicate {
                 let bytes_re = regex::bytes::Regex::new(r.as_str()).ok();
                 Self::Regex(bytes_re)
             }
-            SearchPredicate::Text { term, quoted } => {
+            SearchPredicate::Text { term, quoted } => Self::Text {
+                term: term.clone(),
+                term_bytes: term.as_bytes().to_vec(),
+                quoted: *quoted,
+            },
+            SearchPredicate::Fuzzy(term) => {
                 let atom = Atom::new(
                     term,
                     CaseMatching::Ignore,
@@ -303,10 +311,8 @@ impl CompiledPredicate {
                     AtomKind::Fuzzy,
                     false,
                 );
-                Self::Text {
+                Self::Fuzzy {
                     term: term.clone(),
-                    term_bytes: term.as_bytes().to_vec(),
-                    quoted: *quoted,
                     atom,
                 }
             }
@@ -365,8 +371,8 @@ impl CompiledNode {
                 CompiledPredicate::Attributes { .. } => 0,
                 CompiledPredicate::Extension(_) => 1,
                 CompiledPredicate::PathPrefix(_) => 2,
-                CompiledPredicate::Text { quoted: true, .. } => 3,
-                CompiledPredicate::Text { quoted: false, .. } => 4,
+                CompiledPredicate::Text { .. } => 3,
+                CompiledPredicate::Fuzzy { .. } => 4,
                 CompiledPredicate::Regex(_) => 5,
                 CompiledPredicate::Content { .. } => 10,
             },
@@ -499,13 +505,39 @@ fn eval_compiled_predicate(
         CompiledPredicate::Text {
             term,
             term_bytes,
-            quoted,
-            atom,
+            quoted: _,
         } => {
             let name_bytes = arena.get_record_name_bytes(record)?;
-            eval_compiled_text_term_bytes(
-                name_bytes, term, term_bytes, *quoted, atom, matcher, char_buf,
-            )
+            eval_compiled_text_term_bytes(name_bytes, term, term_bytes)
+        }
+        CompiledPredicate::Fuzzy { term, atom } => {
+            let name_bytes = arena.get_record_name_bytes(record)?;
+            let name_str = match std::str::from_utf8(name_bytes) {
+                Ok(s) => s,
+                Err(_) => return None,
+            };
+            let utf32_name = if name_str.is_ascii() {
+                Utf32Str::Ascii(name_bytes)
+            } else {
+                Utf32Str::new(name_str, char_buf)
+            };
+            let fuzzy_score = atom.score(utf32_name, matcher)? as u32;
+
+            // Apply tiered boosts so exact, stem, prefix, and substring rank above distant fuzzy matches
+            let term_bytes = term.as_bytes();
+            let boost = if name_bytes.eq_ignore_ascii_case(term_bytes) {
+                30_000
+            } else if extract_stem_bytes(name_bytes).eq_ignore_ascii_case(term_bytes) {
+                20_000
+            } else if starts_with_case_insensitive_bytes(name_bytes, term_bytes) {
+                10_000
+            } else if contains_case_insensitive_bytes(name_bytes, term_bytes) {
+                5_000
+            } else {
+                0
+            };
+
+            Some(boost + fuzzy_score)
         }
         CompiledPredicate::Content {
             pattern_bytes,
@@ -528,17 +560,9 @@ fn eval_compiled_predicate(
     }
 }
 
-/// Evaluates a text term against a filename with pre-compiled Atom
+/// Evaluates a text term against a filename with exact substring and wildcard matching
 #[inline(always)]
-fn eval_compiled_text_term_bytes(
-    name_bytes: &[u8],
-    _term: &str,
-    term_bytes: &[u8],
-    quoted: bool,
-    atom: &Atom,
-    matcher: &mut Matcher,
-    char_buf: &mut Vec<char>,
-) -> Option<u32> {
+fn eval_compiled_text_term_bytes(name_bytes: &[u8], term: &str, term_bytes: &[u8]) -> Option<u32> {
     if term_bytes.is_empty() {
         return Some(1);
     }
@@ -564,24 +588,52 @@ fn eval_compiled_text_term_bytes(
         return Some(5_000 + (term_bytes.len() as u32).min(4_000));
     }
 
-    // If quoted, fuzzy matching is disabled; must match as exact substring
-    if quoted {
-        return None;
+    // 5. Wildcard matching if term contains * or ?
+    if term.contains('*') || term.contains('?') {
+        if let Ok(name_str) = std::str::from_utf8(name_bytes) {
+            if wildcard_match_ignore_ascii_case(name_str, term) {
+                return Some(4_000 + (term_bytes.len() as u32).min(3_000));
+            }
+        }
     }
 
-    // 5. Fuzzy match via pre-compiled nucleo-matcher Atom
-    let name_str = match std::str::from_utf8(name_bytes) {
-        Ok(s) => s,
-        Err(_) => return None,
-    };
-    let utf32_name = if name_str.is_ascii() {
-        Utf32Str::Ascii(name_bytes)
-    } else {
-        Utf32Str::new(name_str, char_buf)
-    };
+    None
+}
 
-    let fuzzy_score = atom.score(utf32_name, matcher)?;
-    Some(fuzzy_score as u32)
+/// Helper zero-allocation case-insensitive wildcard matching (* and ?)
+fn wildcard_match_ignore_ascii_case(text: &str, pattern: &str) -> bool {
+    let text_bytes = text.as_bytes();
+    let pat_bytes = pattern.as_bytes();
+    let mut t_idx = 0;
+    let mut p_idx = 0;
+    let mut star_idx = None;
+    let mut match_idx = 0;
+
+    while t_idx < text_bytes.len() {
+        if p_idx < pat_bytes.len()
+            && (pat_bytes[p_idx] == b'?'
+                || pat_bytes[p_idx].eq_ignore_ascii_case(&text_bytes[t_idx]))
+        {
+            p_idx += 1;
+            t_idx += 1;
+        } else if p_idx < pat_bytes.len() && pat_bytes[p_idx] == b'*' {
+            star_idx = Some(p_idx);
+            p_idx += 1;
+            match_idx = t_idx;
+        } else if let Some(star) = star_idx {
+            p_idx = star + 1;
+            match_idx += 1;
+            t_idx = match_idx;
+        } else {
+            return false;
+        }
+    }
+
+    while p_idx < pat_bytes.len() && pat_bytes[p_idx] == b'*' {
+        p_idx += 1;
+    }
+
+    p_idx == pat_bytes.len()
 }
 
 /// Extracts the filename stem (excluding extension if present) from raw bytes

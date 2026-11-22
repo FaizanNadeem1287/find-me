@@ -1,14 +1,15 @@
 //! High-performance virtualized 60 FPS tabular results view and column header sorting
+//! Revamped with modern Pinterest / Notion aesthetic, generous row padding, file icons, and metadata badges.
 
 use crate::message::{ColumnId, Message};
 use crate::state::{compute_virtual_range, table_scrollable_id, AppState};
-use crate::theme::colors;
+use crate::theme::{colors, pill_badge_style, sidebar_item_style, table_row_btn_style};
 use findme_core::SearchResultItem;
 use iced::widget::{button, column, container, mouse_area, row, scrollable, text, Space};
-use iced::{Alignment, Element, Length};
+use iced::{Alignment, Border, Element, Length};
 
-/// Row height in pixels
-pub const ROW_HEIGHT: f32 = 30.0;
+/// Row height in pixels (generous row padding for modern Notion / Pinterest aesthetic)
+pub const ROW_HEIGHT: f32 = 36.0;
 
 /// Header height in pixels
 pub const HEADER_HEIGHT: f32 = 32.0;
@@ -22,7 +23,6 @@ pub fn item_type_str(item: &SearchResultItem) -> &'static str {
         "Folder"
     } else if let Some(idx) = item.name.rfind('.') {
         if idx > 0 && idx + 1 < item.name.len() {
-            // Check well-known extensions
             match item.name[idx + 1..].to_ascii_lowercase().as_str() {
                 "rs" => "Rust",
                 "toml" => "TOML",
@@ -45,8 +45,44 @@ pub fn item_type_str(item: &SearchResultItem) -> &'static str {
     }
 }
 
-/// Renders the clickable sort header column button
+/// Returns modern icon glyph and category display string for a search result item
+pub fn item_icon_and_type(item: &SearchResultItem) -> (&'static str, &'static str) {
+    if item.is_dir {
+        ("📁", "Folder")
+    } else if let Some(idx) = item.name.rfind('.') {
+        if idx > 0 && idx + 1 < item.name.len() {
+            match item.name[idx + 1..].to_ascii_lowercase().as_str() {
+                "rs" => ("💻", "Rust"),
+                "py" => ("🐍", "Python"),
+                "js" | "ts" | "jsx" | "tsx" => ("🌐", "Web"),
+                "c" | "cpp" | "h" | "hpp" => ("⚡", "C/C++"),
+                "toml" => ("⚙️", "TOML"),
+                "yaml" | "yml" => ("⚙️", "YAML"),
+                "json" => ("📋", "JSON"),
+                "md" => ("📝", "Markdown"),
+                "txt" => ("📄", "Text"),
+                "pdf" => ("📕", "PDF"),
+                "png" => ("🖼️", "PNG Image"),
+                "jpg" | "jpeg" => ("🖼️", "JPEG Image"),
+                "gif" | "svg" | "webp" => ("🖼️", "Image"),
+                "mp3" | "wav" | "flac" | "ogg" => ("🎵", "Audio"),
+                "mp4" | "mkv" | "avi" | "mov" => ("🎬", "Video"),
+                "zip" | "tar" | "gz" | "xz" => ("📦", "Archive"),
+                "sh" => ("⌨️", "Shell Script"),
+                "deb" => ("📦", "Debian Pkg"),
+                _ => ("📄", "File"),
+            }
+        } else {
+            ("📄", "File")
+        }
+    } else {
+        ("📄", "File")
+    }
+}
+
+/// Renders the clickable sort header column button with modern indicator
 fn column_header<'a>(
+    theme: &'a crate::theme::AppTheme,
     title: &'static str,
     col_id: ColumnId,
     active_col: ColumnId,
@@ -55,48 +91,65 @@ fn column_header<'a>(
 ) -> Element<'a, Message> {
     let arrow = if active_col == col_id {
         if ascending {
-            "▲ "
+            " ▲"
         } else {
-            "▼ "
+            " ▼"
         }
     } else {
-        "   "
+        ""
     };
 
-    let label = format!("{arrow}{title}");
-    button(text(label).size(12))
-        .padding([4, 8])
-        .width(Length::FillPortion(fill_portion))
-        .on_press(Message::SortByColumn(col_id))
-        .into()
+    let label = format!("{title}{arrow}");
+    button(text(label).size(11).color(if active_col == col_id {
+        if theme.is_dark() {
+            colors::DARK_TEXT
+        } else {
+            colors::LIGHT_ACCENT
+        }
+    } else {
+        theme.muted_color()
+    }))
+    .padding([6, 10])
+    .width(Length::FillPortion(fill_portion))
+    .style(sidebar_item_style(theme, false))
+    .on_press(Message::SortByColumn(col_id))
+    .into()
 }
 
 /// Renders the complete virtualized tabular results component
 pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
+    let is_dark = state.theme.is_dark();
     let asc = state.sort_ascending;
     let active_col = state.sort_column;
 
     // 1. Column header row with sort direction indicators
     let header = row![
-        column_header("Name", ColumnId::Name, active_col, asc, 4),
-        column_header("Path", ColumnId::Path, active_col, asc, 5),
-        column_header("Size", ColumnId::Size, active_col, asc, 2),
-        column_header("Date Modified", ColumnId::Modified, active_col, asc, 2),
-        column_header("Type", ColumnId::Type, active_col, asc, 1),
+        column_header(&state.theme, "Name", ColumnId::Name, active_col, asc, 4),
+        column_header(&state.theme, "Path", ColumnId::Path, active_col, asc, 5),
+        column_header(&state.theme, "Size", ColumnId::Size, active_col, asc, 2),
+        column_header(
+            &state.theme,
+            "Date Modified",
+            ColumnId::Modified,
+            active_col,
+            asc,
+            2
+        ),
+        column_header(&state.theme, "Type", ColumnId::Type, active_col, asc, 1),
         Space::new().width(Length::Fixed(28.0)),
     ]
     .spacing(4)
     .align_y(Alignment::Center)
     .width(Length::Fill);
 
-    let header_container = container(header).padding([4, 6]).width(Length::Fill);
+    let header_container = container(header).padding([2, 4]).width(Length::Fill);
 
     // 2. Results table body (virtualized or empty placeholder)
     let body: Element<'a, Message> = if state.results.is_empty() {
         let empty_msg = if state.query.is_empty() {
             "Index is ready. Type in search bar to find files instantaneously."
         } else {
-            "No matching files found. Check filter syntax (e.g. ext:rs, size:>10mb, dm:today)."
+            "No matching files found. Check filter syntax (e.g. ext:rs, size:>10mb, dm:today) or use fuzzy: prefix."
         };
 
         container(
@@ -119,7 +172,7 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
             OVERSCAN_ROWS,
         );
 
-        let mut rows = column![].spacing(1).width(Length::Fill);
+        let mut rows = column![].spacing(2).width(Length::Fill);
 
         if top_spacer > 0.0 {
             rows = rows.push(Space::new().height(top_spacer));
@@ -129,53 +182,101 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
             let row_idx = start_idx + offset;
             let is_selected = state.selected_row == Some(row_idx);
 
-            let icon = if item.is_dir { "📁 " } else { "📄 " };
-            let name_text = format!("{icon}{}", item.name);
+            let (icon, type_label) = item_icon_and_type(item);
             let size_text = item.formatted_size();
             let mtime_text = item.formatted_mtime();
-            let type_text = item_type_str(item);
 
-            let menu_btn =
-                button(text("⋮").size(13))
-                    .padding([2, 6])
-                    .on_press(Message::OpenContextMenu {
-                        item: item.clone(),
-                        x: 0.0,
-                        y: 0.0,
-                    });
+            let type_badge = container(text(type_label).size(10).color(state.theme.muted_color()))
+                .padding([1, 6])
+                .style(pill_badge_style(
+                    state.theme.hover_color(),
+                    state.theme.muted_color(),
+                ));
 
-            let row_cells = row![
-                text(name_text).size(12).width(Length::FillPortion(4)),
-                text(&item.path).size(11).width(Length::FillPortion(5)),
-                text(size_text).size(11).width(Length::FillPortion(2)),
-                text(mtime_text).size(11).width(Length::FillPortion(2)),
-                text(type_text).size(11).width(Length::FillPortion(1)),
-                menu_btn,
+            let size_badge = container(text(size_text).size(10).color(state.theme.muted_color()))
+                .padding([1, 6])
+                .style(pill_badge_style(
+                    state.theme.hover_color(),
+                    state.theme.muted_color(),
+                ));
+
+            let menu_btn = button(text("⋮").size(13).color(state.theme.muted_color()))
+                .padding([2, 6])
+                .style(sidebar_item_style(&state.theme, false))
+                .on_press(Message::OpenContextMenu {
+                    item: item.clone(),
+                    x: 0.0,
+                    y: 0.0,
+                });
+
+            let name_cell = row![
+                text(icon).size(13),
+                text(&item.name).size(12).color(if is_selected {
+                    if is_dark {
+                        colors::DARK_TEXT
+                    } else {
+                        colors::LIGHT_ACCENT
+                    }
+                } else {
+                    state.theme.text_color()
+                }),
             ]
-            .spacing(4)
+            .spacing(6)
             .align_y(Alignment::Center)
-            .width(Length::Fill);
+            .width(Length::FillPortion(4));
+
+            let path_cell = text(&item.path)
+                .size(11)
+                .color(state.theme.muted_color())
+                .width(Length::FillPortion(5));
+
+            let size_cell = container(size_badge)
+                .width(Length::FillPortion(2))
+                .align_x(Alignment::Start);
+
+            let mtime_cell = text(mtime_text)
+                .size(11)
+                .color(state.theme.subtext_color())
+                .width(Length::FillPortion(2));
+
+            let type_cell = container(type_badge)
+                .width(Length::FillPortion(1))
+                .align_x(Alignment::Start);
+
+            let row_cells = row![name_cell, path_cell, size_cell, mtime_cell, type_cell, menu_btn,]
+                .spacing(6)
+                .align_y(Alignment::Center)
+                .width(Length::Fill);
 
             let row_btn = button(row_cells)
-                .padding([4, 6])
+                .padding([5, 8])
                 .width(Length::Fill)
+                .style(table_row_btn_style(&state.theme, is_selected))
                 .on_press(Message::SelectRow(Some(row_idx)));
 
-            let styled_row = if is_selected {
+            let row_container =
                 container(row_btn)
                     .width(Length::Fill)
-                    .style(|_theme| container::Style {
-                        background: Some(iced::Background::Color(
-                            colors::DARK_ACCENT.scale_alpha(0.25),
-                        )),
-                        border: iced::border::rounded(3),
+                    .style(move |_theme| container::Style {
+                        border: Border {
+                            color: if is_selected {
+                                if is_dark {
+                                    colors::DARK_ACCENT
+                                } else {
+                                    colors::LIGHT_ACCENT
+                                }
+                            } else if is_dark {
+                                colors::DARK_BORDER
+                            } else {
+                                colors::LIGHT_BORDER
+                            },
+                            width: if is_selected { 1.5 } else { 1.0 },
+                            radius: 6.0.into(),
+                        },
                         ..Default::default()
-                    })
-            } else {
-                container(row_btn).width(Length::Fill)
-            };
+                    });
 
-            let row_area = mouse_area(styled_row)
+            let row_area = mouse_area(row_container)
                 .on_right_press(Message::OpenContextMenu {
                     item: item.clone(),
                     x: 0.0,
