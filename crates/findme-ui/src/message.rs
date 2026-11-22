@@ -81,6 +81,10 @@ pub enum Message {
     SwitchScreen(ScreenId),
     /// User toggled sidebar expand/collapse
     ToggleSidebar,
+    /// Toggle expansion of folder in sidebar tree
+    ToggleFolderTreeNode(String),
+    /// Apply or clear a directory/category filter from folder tree
+    SelectFolderFilter(Option<String>),
     /// Window was resized
     WindowResized { width: f32, height: f32 },
     /// Set a status toast / notification banner

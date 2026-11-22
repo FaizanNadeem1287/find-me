@@ -1316,3 +1316,39 @@ Hash | Branch | Commit Message & Description
 8. Committed to `feature/p12-design-system` and merged into `main` via non-fast-forward merge (`--no-ff`).
 9. Retained `feature/p12-design-system` branch permanently in Git.
 10. Synchronized Todoist: marked task `6j49wM5VfRm87HJx` `Completed`.
+
+---
+
+## Session 31: 2026-11-22 (Completion of Task 12.2: Modern Collapsible Sidebar with Monogram, Search Pill & Folder Tree)
+
+### Objectives Addressed:
+1. Created Task 12.2: `[TASK-12.2] UI: Modern Collapsible Sidebar with Workspace Monogram, Quick Search Pill & Color-Coded Folder Tree` (`6j49wM7FR64HF9hx`) in Todoist.
+2. Authored detailed implementation plan artifact: `task-12-2-implementation-plan.md`.
+3. Created feature branch `feature/p12-sidebar-revamp` from `main` and moved Todoist task to `In Progress`.
+4. Extended UI state and message contracts:
+   - Added `expanded_folders: HashSet<String>` and `active_folder_filter: Option<String>` in `AppState`.
+   - Added `Message::ToggleFolderTreeNode(String)` and `Message::SelectFolderFilter(Option<String>)` in `Message`.
+   - Wired `Ctrl+K` in `app.rs` keyboard listener to switch to Search screen and focus search input.
+   - Updated `card_style`, `hero_card_style`, and `pill_badge_style` to idiomatic Iced 0.14 closures `impl Fn(&iced::Theme) -> container::Style`.
+5. Revamped `crates/findme-ui/src/views/sidebar.rs` with 100% visual parity:
+   - Monogram header: circular black container with bold white `"FM"`, title `"Find-Me Core"`, subtitle `"Indexed Files • Live Inotify"`, and vertical chevron `↕`.
+   - Quick search pill input with magnifying glass, placeholder `"Search files & folders..."`, and `Ctrl+K` shortcut indicator badge.
+   - Primary navigation links with active selection pills and index root counter badge `state.index_mgmt.roots.len()`.
+   - Color-coded expandable directory tree:
+     - Header `"INDEX ROOTS & CATEGORIES"` with quick `+` button.
+     - Expandable root node with `▾`/`▸` toggle.
+     - Colored folder badges: Purple (Onboarding/Docs), Blue (Design/Code), Amber (Downloads), Green (Media Assets) with file count pills (`15`, `22`, `10`, `8`).
+     - Subtree filtering: clicking a category node dispatches `path:<filter>` immediately.
+   - Clean, rounded footer with Collapse toggle and Dark/Light Mode toggle.
+6. Added integration tests in `crates/findme-ui/tests/shell_navigation_tests.rs`:
+   - `test_sidebar_tree_node_expansion_and_filtering`: verifies node expansion/collapse and filter application.
+   - `test_ctrl_k_quick_search_shortcut`: verifies `Ctrl+K` keyboard shortcut switches to Search and focuses input.
+7. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **265 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+8. Committed to `feature/p12-sidebar-revamp` and merged into `main` via non-fast-forward merge (`--no-ff`).
+9. Retained `feature/p12-sidebar-revamp` branch permanently in Git.
+10. Synchronized Todoist: marked task `6j49wM7FR64HF9hx` `Completed`.
