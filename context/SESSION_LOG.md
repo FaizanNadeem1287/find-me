@@ -1758,3 +1758,24 @@ Hash | Branch | Commit Message & Description
      - `6j4FgW34WMVvwvRx`: `[BUGFIX] Live Arena File & Folder Counting for Monitored Directory Roots & Sub-Root Deduplication`
    - Reopened the tasks via `uncomplete-tasks`, updated their section to `Completed` (`6j45x63Fqh349Gxx`) via `update-tasks`, and re-marked them complete with `complete-tasks`.
    - Verified that the `In Progress` section now contains 0 tasks (both active and completed), and all completed cards are placed cleanly in the `Completed` section.
+
+---
+
+## Session 45: 2026-11-22 (GitHub Release Workflow, Distribution Artifacts & Release v0.1.0 Tag)
+
+### Objectives Addressed:
+1. **GitHub Actions CI/CD Release Pipeline**:
+   - Created `.github/workflows/release.yml` with permissions `contents: write` triggered on tag push `v*` and manual `workflow_dispatch`.
+   - Automated compilation of optimized release binary, packaging of Debian package (`cargo-deb` / `dpkg-deb`), packaging of standalone portable AppImage via `appimagetool`, and generation of standard `.tar.gz` and `SHA256SUMS.txt`.
+   - Integrated `softprops/action-gh-release@v2` with `releasenotes/v0.1.0.md`.
+2. **Release Documentation & Packaging Automation**:
+   - Created `releasenotes/v0.1.0.md` highlighting core engine features, search grammar, semantic vector indexing, benchmarks, and installation guides.
+   - Created local publisher utility `scripts/publish_release.sh`.
+   - Built distribution package files in `target/release-dist/`:
+     - `find-me_0.1.0-1_amd64.deb` (5.3 MB)
+     - `find-me-0.1.0-x86_64.AppImage` (8.9 MB)
+     - `find-me-v0.1.0-x86_64-unknown-linux-gnu.tar.gz` (8.8 MB)
+     - `SHA256SUMS.txt`
+3. **Git & Release Tagging**:
+   - Developed on feature branch `feature/github-release-automation` (`b20ad71`), merged into `main` using non-fast-forward merge (`--no-ff`), and permanently retained branch (52 branches total).
+   - Created annotated Git tag `v0.1.0` and pushed to `origin`: `git push origin v0.1.0`.
