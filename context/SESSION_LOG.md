@@ -1675,3 +1675,24 @@ Hash | Branch | Commit Message & Description
    - Full workspace test suite passing with **335 tests**; 0 clippy warnings; 0 compiler errors.
    - Reclaimed 18.3 GiB disk space via `cargo clean` and verified clean build tree.
    - 44 feature branches permanently retained in git history. Zero web tech; 100% pure Rust stack.
+
+
+---
+
+## Session 41: 2026-11-22 (Live Semantic Vector Indexing Progress & Completion Indicators)
+
+### Objectives Addressed:
+1. **Live Progress Event Streaming**:
+   - Diagnosed user feedback where triggering "Index Content Now" showed background indexer start banner, but status remained static as `"Vector Index Ready"`.
+   - Updated `EngineBridge::start_semantic_indexing` in `crates/findme-ui/src/engine.rs` to stream `IndexerProgress` events into `EngineEvent::SemanticProgress(progress)` and broadcast `EngineEvent::SemanticIndexReady { indexed_chunks, total_files }` upon completion.
+   - Updated `FindMeApp::update` in `crates/findme-ui/src/app.rs` to handle both events, updating `self.state.semantic_progress`, `self.state.semantic_chunks_count`, and surfacing a top completion notification toast banner.
+2. **Visual Status Indicator in Index Management View**:
+   - Updated `crates/findme-ui/src/views/index_mgmt.rs` to display:
+     - While active: `⚡ Indexing: {processed}/{total} files ({percent:.0}%) • {current_file}`.
+     - When completed with chunks: `● Vector Index Ready ({files} files • {chunks} chunks indexed)` with green accent indicator.
+     - When idle: `● Vector Index Ready (HNSW Cosine • SQLite Chunks)`.
+3. **Automated Testing & Release Installation**:
+   - Authored integration test `test_live_semantic_indexing_progress_and_completion_events` in `crates/findme-ui/tests/semantic_ui_tests.rs`. All 5 tests passed cleanly.
+   - Formatted code via `cargo fmt --all` and validated zero warnings via `cargo clippy --all-targets --all-features -- -D warnings`.
+   - Merged `feature/p14-live-semantic-indexing-progress` (`89564f7`) into `main` using `--no-ff` and permanently retained branch (45 total feature branches).
+   - Compiled optimized release binary and re-installed to user environment (`/home/muhammad-faizan-nadeem/.local/bin/find-me`) via `bash scripts/install_user.sh`.

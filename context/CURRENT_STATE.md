@@ -86,3 +86,4 @@ Branch | Commit | Description
 `feature/p14-hybrid-rrf-engine` | `d2c7cd4` | BM25 lexical ranking and dense vector Reciprocal Rank Fusion (RRF) search engine
 `feature/p14-async-background-indexer` | `a4e032f` | Non-blocking background indexer, change fingerprint cache, and three-tier power throttling
 `feature/p14-ui-semantic-integration` | `37750f0` | Desktop UI semantic mode pills, match badges, snippet previews, audio jump links, and index management controls
+`feature/p14-live-semantic-indexing-progress` | `89564f7` | Live semantic vector indexing progress streaming and completion status toast banner
