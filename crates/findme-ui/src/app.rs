@@ -790,6 +790,7 @@ impl FindMeApp {
                                     .index_mgmt
                                     .sync_to_settings(&mut self.state.settings);
                                 let _ = self.state.settings.save_default();
+                                self.purge_excluded_from_arena();
                                 self.state.notification = Some("Added exclusion rule".to_string());
                             } else {
                                 self.state.notification =
@@ -828,6 +829,7 @@ impl FindMeApp {
                             .index_mgmt
                             .sync_to_settings(&mut self.state.settings);
                         let _ = self.state.settings.save_default();
+                        self.purge_excluded_from_arena();
                         self.state.notification =
                             Some(format!("Toggled preset {}", preset.label()));
                     }
@@ -837,6 +839,7 @@ impl FindMeApp {
                                 .index_mgmt
                                 .sync_to_settings(&mut self.state.settings);
                             let _ = self.state.settings.save_default();
+                            self.purge_excluded_from_arena();
                             self.state.notification = Some(format!("Excluded extension *.{}", ext));
                         }
                     }
@@ -855,6 +858,7 @@ impl FindMeApp {
                                 .index_mgmt
                                 .sync_to_settings(&mut self.state.settings);
                             let _ = self.state.settings.save_default();
+                            self.purge_excluded_from_arena();
                             self.state.notification = Some(format!("Excluded folder {}/", folder));
                         }
                     }
@@ -954,20 +958,27 @@ impl FindMeApp {
                         let exclusions: Vec<std::path::PathBuf> = self
                             .state
                             .index_mgmt
-                            .exclusions
+                            .excluded_paths
                             .iter()
-                            .filter(|e| e.pattern.starts_with('/'))
-                            .map(|e| std::path::PathBuf::from(&e.pattern))
+                            .map(std::path::PathBuf::from)
                             .collect();
-                        let excluded_names: Vec<String> = self
+                        let excluded_names = self.state.index_mgmt.excluded_folders.clone();
+                        let excluded_extensions = self.state.index_mgmt.excluded_extensions.clone();
+                        let excluded_globs: Vec<String> = self
                             .state
                             .index_mgmt
                             .exclusions
                             .iter()
-                            .filter(|e| !e.pattern.starts_with('/'))
+                            .filter(|e| e.pattern.contains('*'))
                             .map(|e| e.pattern.clone())
                             .collect();
-                        self.engine.rebuild_index(roots, exclusions, excluded_names);
+                        self.engine.rebuild_index_with_rules(
+                            roots,
+                            exclusions,
+                            excluded_names,
+                            excluded_extensions,
+                            excluded_globs,
+                        );
                     }
                     IndexManagementMessage::TriggerRefreshIndex => {
                         self.state.notification =
@@ -1153,6 +1164,46 @@ impl FindMeApp {
                 Task::none()
             }
         }
+    }
+
+    /// Instant in-memory purge of files matching active exclusion rules (<2ms)
+    pub fn purge_excluded_from_arena(&mut self) -> usize {
+        let excluded_folders = self.state.index_mgmt.excluded_folders.clone();
+        let excluded_exts = self.state.index_mgmt.excluded_extensions.clone();
+        let excluded_paths = self.state.index_mgmt.excluded_paths.clone();
+
+        self.engine.purge_matching(move |name, path, is_dir| {
+            if is_dir
+                && excluded_folders
+                    .iter()
+                    .any(|f| f.eq_ignore_ascii_case(name))
+            {
+                return true;
+            }
+            for part in path.components() {
+                if let std::path::Component::Normal(comp) = part {
+                    let comp_str = comp.to_string_lossy();
+                    if excluded_folders
+                        .iter()
+                        .any(|f| f.eq_ignore_ascii_case(&comp_str))
+                    {
+                        return true;
+                    }
+                }
+            }
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                if excluded_exts.iter().any(|e| e.eq_ignore_ascii_case(ext)) {
+                    return true;
+                }
+            }
+            let path_str = path.to_string_lossy();
+            for p in &excluded_paths {
+                if path_str.starts_with(p) {
+                    return true;
+                }
+            }
+            false
+        })
     }
 
     /// Automatically scrolls the virtualized table so the selected row is visible

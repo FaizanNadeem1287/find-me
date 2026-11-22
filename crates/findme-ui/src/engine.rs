@@ -218,12 +218,23 @@ impl EngineBridge {
         handle.await.unwrap_or_default()
     }
 
-    /// Spawns a background filesystem crawler to re-index all configured roots
-    pub fn rebuild_index(
+    /// Instantly purges arena records matching excluded rules without a full disk recrawl (<2ms)
+    pub fn purge_matching<F>(&self, is_excluded: F) -> usize
+    where
+        F: FnMut(&str, &Path, bool) -> bool,
+    {
+        let mut arena = self.arena.write();
+        arena.purge_matching(is_excluded)
+    }
+
+    /// Spawns a background filesystem crawler to re-index all configured roots with advanced rules
+    pub fn rebuild_index_with_rules(
         &self,
         roots: Vec<PathBuf>,
         exclusions: Vec<PathBuf>,
         excluded_names: Vec<String>,
+        excluded_extensions: Vec<String>,
+        excluded_globs: Vec<String>,
     ) {
         if self.is_indexing.swap(true, Ordering::SeqCst) {
             // Already indexing, avoid starting duplicate concurrent rebuilds
@@ -244,6 +255,12 @@ impl EngineBridge {
             }
             for name in excluded_names {
                 config = config.add_excluded_name(name);
+            }
+            for ext in excluded_extensions {
+                config = config.add_excluded_extension(ext);
+            }
+            for glob in excluded_globs {
+                config = config.add_excluded_glob(glob);
             }
             config = config.skip_virtual_filesystems(true);
 
@@ -297,6 +314,16 @@ impl EngineBridge {
                 }
             }
         });
+    }
+
+    /// Spawns a background filesystem crawler to re-index all configured roots
+    pub fn rebuild_index(
+        &self,
+        roots: Vec<PathBuf>,
+        exclusions: Vec<PathBuf>,
+        excluded_names: Vec<String>,
+    ) {
+        self.rebuild_index_with_rules(roots, exclusions, excluded_names, Vec::new(), Vec::new());
     }
 
     /// Clears the in-memory index database
