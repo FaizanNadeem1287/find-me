@@ -22,7 +22,7 @@ Phase | Description | Status | Test Coverage
 **Phase 11** | Advanced CLI & Automation (Headless Query, JSON, GUI Pre-Fill, Content Search, Multi-Format Exporters) | **100% COMPLETE** | 262 passing tests (Tasks 11.1, 11.2 & 11.3 completed)
 **Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders, Precision Matching & Ergonomic Dark Mode) | **100% COMPLETE** | 291 passing tests (Tasks 12.1, 12.2, 12.3, 12.4, 12.5 & 12.6 completed)
 **Phase 13** | Zero-Flicker Rendering Optimization & Professional SVG Vector Icon Engine | **100% COMPLETE** | 296 passing tests (Tasks 13.1 & 13.2 completed)
-**Phase 14** | Deep Content Extraction & Multimodal Semantic Search | **IN PROGRESS** | 307 passing tests (Task 14.1 completed)
+**Phase 14** | Deep Content Extraction & Multimodal Semantic Search | **100% COMPLETE** | 335 passing tests (Tasks 14.1, 14.2, 14.3, 14.4, 14.5 & 14.6 completed)
 
 ---
 
@@ -30,12 +30,12 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | Sub-task 14.1 delivered and verified
-**Last Completed Task** | `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` | Todoist Task `6j4FWC25mhVvGfMx` (Completed & Audited)
-**Next Active Task** | `[TASK-14.3] Local Quantized Embeddings & Persistent HNSW Vector Store` | Todoist Task `6j4FW9xfQXj9X6MQ` (In Progress)
-**Active Git Branch** | `main` | Clean working tree; 40 feature branches preserved permanently
-**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Task 14.2 verified & completed; Task 14.3 in progress
-**Target Branch History**| 40 feature branches permanently retained | `feature/p14-multimodal-extractors` merged and preserved
+**Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | All 6 subtasks delivered and verified
+**Last Completed Task** | `[TASK-14.6] Iced Desktop UI Integration: Semantic Pills, Snippets & Previews` | Todoist Task `6j4FWC2jqqPhWRpQ` (Completed & Audited)
+**Next Active Task** | **Phase 14 Complete** • All Todoist tasks verified | Todoist Project `6j45wf6xPVCM2RJx`
+**Active Git Branch** | `main` | Clean working tree; 44 feature branches preserved permanently
+**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Phase 14 100% complete & audited
+**Target Branch History**| 44 feature branches permanently retained | All feature branches merged and preserved
 
 ---
 
@@ -82,3 +82,7 @@ Branch | Commit | Description
 `feature/fix-monitored-root-counts` | `fad87c0` | Compute live file and folder counts for monitored roots and deduplicate crawler paths
 `feature/fix-root-counts-is-dir-refinement` | `bce1818` | Refine directory records partitioning and empty directory counting in arena count_under_path
 `feature/p14-multimodal-extractors` | `f99418a` | Multimodal audio (WAV, MP3, OGG, FLAC) and image extractors with 64-bit dHash perceptual hashing
+`feature/p14-hnsw-vector-embeddings` | `6e50bd4` | Local 384-dim text embedder, multi-layer cosine HNSW vector store, and persistent chunk store
+`feature/p14-hybrid-rrf-engine` | `d2c7cd4` | BM25 lexical ranking and dense vector Reciprocal Rank Fusion (RRF) search engine
+`feature/p14-async-background-indexer` | `a4e032f` | Non-blocking background indexer, change fingerprint cache, and three-tier power throttling
+`feature/p14-ui-semantic-integration` | `37750f0` | Desktop UI semantic mode pills, match badges, snippet previews, audio jump links, and index management controls
