@@ -1381,4 +1381,6 @@ Hash | Branch | Commit Message & Description
    - Git status: PASS.
 7. Committed to `feature/p12-folder-hero-cards` and merged into `main` via non-fast-forward merge (`--no-ff`).
 8. Retained `feature/p12-folder-hero-cards` branch permanently in Git (30 total branches preserved).
-9. Synchronized Todoist: marked task `6j49wMC9Mm8cp3jx` `Completed`.
+9. Aligned hero card colors directly to specification: Documents in Amber (`#F59E0B`), Code in Blue (`#2563EB`), and Downloads/Media in Purple (`#6366F1`).
+10. Added dedicated integration test suite `crates/findme-ui/tests/folder_hero_tests.rs` (3 tests verifying breadcrumb navigation, card selection/toggling, and WCAG AA contrast compliance; total workspace tests: **273 passing tests**).
+11. Synchronized Todoist: updated task `6j49wMC9Mm8cp3jx` to `Completed` section with implementation update comment.
