@@ -287,3 +287,19 @@ fn test_all_remaining_views_rendering() {
         let _view_about = findme_ui::views::about::view(&app.state);
     }
 }
+
+#[test]
+fn test_modern_secondary_screens_theme_toggle_rendering() {
+    let mut app = FindMeApp::new();
+
+    for theme in [findme_ui::AppTheme::Dark, findme_ui::AppTheme::Light] {
+        app.state.theme = theme;
+
+        // Verify each screen renders cleanly without panic in active theme
+        let _adv = findme_ui::views::advanced::view(&app.state);
+        let _idx = findme_ui::views::index_mgmt::view(&app.state);
+        let _hist = findme_ui::views::history::view(&app.state);
+        let _sett = findme_ui::views::settings::view(&app.state);
+        let _abt = findme_ui::views::about::view(&app.state);
+    }
+}
