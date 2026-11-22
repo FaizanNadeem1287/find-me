@@ -193,3 +193,68 @@ fn test_shell_search_results_and_sorting() {
     assert_eq!(app.state.query, "");
     assert!(app.state.results.is_empty());
 }
+
+#[test]
+fn test_sidebar_tree_node_expansion_and_filtering() {
+    let mut app = FindMeApp::new();
+
+    // Verify initial folder tree state
+    assert!(app.state.expanded_folders.contains("General Knowledge"));
+    assert_eq!(app.state.active_folder_filter, None);
+
+    // Render initial view with folder tree
+    {
+        let _ = app.view();
+    }
+
+    // Toggle tree node collapse
+    let _ = app.update(Message::ToggleFolderTreeNode(
+        "General Knowledge".to_string(),
+    ));
+    assert!(!app.state.expanded_folders.contains("General Knowledge"));
+
+    // Render with tree node collapsed
+    {
+        let _ = app.view();
+    }
+
+    // Toggle tree node expand again
+    let _ = app.update(Message::ToggleFolderTreeNode(
+        "General Knowledge".to_string(),
+    ));
+    assert!(app.state.expanded_folders.contains("General Knowledge"));
+
+    // Select child folder filter
+    let _ = app.update(Message::SelectFolderFilter(Some("Projects".to_string())));
+    assert_eq!(app.state.active_folder_filter.as_deref(), Some("Projects"));
+    assert_eq!(app.state.query, "path:\"Projects\"");
+    assert_eq!(app.state.active_screen, ScreenId::Search);
+
+    // Clear folder filter
+    let _ = app.update(Message::SelectFolderFilter(None));
+    assert_eq!(app.state.active_folder_filter, None);
+    assert_eq!(app.state.query, "");
+}
+
+#[test]
+fn test_ctrl_k_quick_search_shortcut() {
+    let mut app = FindMeApp::new();
+
+    // Switch to non-search screen
+    let _ = app.update(Message::SwitchScreen(ScreenId::Settings));
+    assert_eq!(app.state.active_screen, ScreenId::Settings);
+
+    // Trigger Ctrl+K
+    let ctrl_k = iced::keyboard::Event::KeyPressed {
+        key: iced::keyboard::Key::Character("k".into()),
+        modified_key: iced::keyboard::Key::Character("k".into()),
+        physical_key: iced::keyboard::key::Physical::Code(iced::keyboard::key::Code::KeyK),
+        location: iced::keyboard::Location::Standard,
+        modifiers: iced::keyboard::Modifiers::CTRL,
+        text: None,
+        repeat: false,
+    };
+
+    let _ = app.update(Message::KeyboardEvent(ctrl_k));
+    assert_eq!(app.state.active_screen, ScreenId::Search);
+}

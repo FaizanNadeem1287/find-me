@@ -195,11 +195,11 @@ fn test_modern_styling_helpers_instantiation() {
 
     for theme in [AppTheme::Light, AppTheme::Dark] {
         // Card style
-        let card = card_style(&theme);
+        let card = card_style(&theme)(&dummy_iced_theme);
         assert!(card.background.is_some());
 
         // Hero card style
-        let hero = hero_card_style(&theme, colors::TINT_PURPLE);
+        let hero = hero_card_style(&theme, colors::TINT_PURPLE)(&dummy_iced_theme);
         assert!(hero.background.is_some());
 
         // Sidebar item style
@@ -220,7 +220,8 @@ fn test_modern_styling_helpers_instantiation() {
         assert_eq!(input_style.border.width, 1.0);
 
         // Pill badge style
-        let badge = pill_badge_style(colors::ACCENT_PURPLE, colors::LIGHT_SURFACE);
+        let badge =
+            pill_badge_style(colors::ACCENT_PURPLE, colors::LIGHT_SURFACE)(&dummy_iced_theme);
         assert!(badge.background.is_some());
 
         // Table row button style
