@@ -31,11 +31,11 @@ Phase | Description | Status | Test Coverage
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
 **Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | Sub-task 14.1 delivered and verified
-**Last Completed Task** | `[BUGFIX] Live Arena File & Folder Counting for Monitored Directory Roots & Sub-Root Deduplication` | Todoist Task `6j4FgW34WMVvwvRx` (Completed & Audited)
-**Next Active Task** | `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` | Todoist Task `6j4FWC25mhVvGfMx` (In To Do queue)
-**Active Git Branch** | `main` | Clean working tree; 39 feature branches preserved permanently
-**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Bugfix verified & completed; Task 14.2 ready
-**Target Branch History**| 39 feature branches permanently retained | `feature/fix-root-counts-is-dir-refinement` merged and preserved
+**Last Completed Task** | `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` | Todoist Task `6j4FWC25mhVvGfMx` (Completed & Audited)
+**Next Active Task** | `[TASK-14.3] Local Quantized Embeddings & Persistent HNSW Vector Store` | Todoist Task `6j4FW9xfQXj9X6MQ` (In Progress)
+**Active Git Branch** | `main` | Clean working tree; 40 feature branches preserved permanently
+**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Task 14.2 verified & completed; Task 14.3 in progress
+**Target Branch History**| 40 feature branches permanently retained | `feature/p14-multimodal-extractors` merged and preserved
 
 ---
 
@@ -81,3 +81,4 @@ Branch | Commit | Description
 `feature/p14-doc-code-extractors` | `fdb3055` | Pure Rust content extractors for PDF, CSV, Excel, PPTX, Word DOCX, TXT, and Code
 `feature/fix-monitored-root-counts` | `fad87c0` | Compute live file and folder counts for monitored roots and deduplicate crawler paths
 `feature/fix-root-counts-is-dir-refinement` | `bce1818` | Refine directory records partitioning and empty directory counting in arena count_under_path
+`feature/p14-multimodal-extractors` | `f99418a` | Multimodal audio (WAV, MP3, OGG, FLAC) and image extractors with 64-bit dHash perceptual hashing
