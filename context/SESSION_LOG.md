@@ -1696,3 +1696,24 @@ Hash | Branch | Commit Message & Description
    - Formatted code via `cargo fmt --all` and validated zero warnings via `cargo clippy --all-targets --all-features -- -D warnings`.
    - Merged `feature/p14-live-semantic-indexing-progress` (`89564f7`) into `main` using `--no-ff` and permanently retained branch (45 total feature branches).
    - Compiled optimized release binary and re-installed to user environment (`/home/muhammad-faizan-nadeem/.local/bin/find-me`) via `bash scripts/install_user.sh`.
+
+
+---
+
+## Session 42: 2026-11-22 (Fix Semantic Similarity Score Inversion, Live Size/Date, and Column Sorting)
+
+### Objectives Addressed:
+1. **Root Cause Analysis of Semantic Ranking Inversion**:
+   - `HnswVectorIndex::search` computes and returns `(u64, f32)` containing `(id, similarity)` sorted descending by similarity.
+   - In `crates/findme-semantic/src/search/hybrid.rs`, `search_semantic` and `search_hybrid` had mistakenly assumed the score was distance and executed `let similarity = (1.0 - dist).max(0.0);`, which subtracted similarity from 1.0.
+   - This caused the least similar documents (e.g., `Cyphora` cybersecurity HTML with 16.5% similarity) to be inverted to `83.5% (84%)`, while the most relevant real estate documents (e.g., `Proposal—AI-Powered Realtor Application.pdf` and `Property_Walkthrough_MVP_Phase_Quotation.docx` with 31.5% and 29.3% similarity) were inverted to `68.5%` and `70.7%`.
+   - In addition, in `app.rs`, the user clicked `Type ▲`, which sorted results alphabetically by file extension (`.html` before `.docx`, `.md`, `.pdf`).
+2. **Fixed Formula & Score Sorting**:
+   - Fixed `search_semantic` and `search_hybrid` in `crates/findme-semantic/src/search/hybrid.rs` to take the cosine similarity directly without subtracting from 1.0, and ensured semantic results are always sorted descending by relevance score.
+   - Calibrated cosine similarity to confidence percentage in `crates/findme-ui/src/views/table.rs`.
+   - Updated `ColumnId::Type` sort in `crates/findme-ui/src/app.rs` so that clicking the `Type` / Badge column in semantic mode sorts by semantic relevance score.
+   - Populated live file size and modification timestamps from `std::fs::metadata` in `index_document` and `SemanticResultsReceived`, eliminating `0 B` and `1970-01-01 00:00:00`.
+3. **Verification & Installation**:
+   - Added `test_semantic_type_column_sorts_by_score` to `crates/findme-ui/tests/semantic_ui_tests.rs`. All tests pass.
+   - Merged `feature/fix-semantic-score-inversion-and-type-sort` (`cd321f8`) into `main` with `--no-ff` and permanently retained the branch (46 branches total).
+   - Re-compiled and installed optimized release binary to user environment (`/home/muhammad-faizan-nadeem/.local/bin/find-me`).
