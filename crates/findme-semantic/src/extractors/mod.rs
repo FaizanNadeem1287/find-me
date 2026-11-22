@@ -1,6 +1,8 @@
 //! Content extraction modules for various document and code file formats
 
+pub mod audio;
 pub mod code;
+pub mod image;
 pub mod pdf;
 pub mod presentation;
 pub mod spreadsheet;
@@ -39,6 +41,8 @@ pub fn extract_content(path: &Path) -> Result<ExtractedDocument, SemanticError> 
         DocumentType::WordDocument => word::extract_word(path),
         DocumentType::PlainText => text::extract_plain_text(path),
         DocumentType::SourceCode => code::extract_code(path, ext),
+        DocumentType::Audio => audio::extract_audio(path),
+        DocumentType::Image => image::extract_image(path),
         _ => Err(SemanticError::UnsupportedFormat(format!(
             "Unsupported or binary file type: {}",
             path.display()
