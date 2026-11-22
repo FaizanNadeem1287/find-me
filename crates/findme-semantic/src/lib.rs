@@ -4,12 +4,18 @@ pub mod embeddings;
 pub mod error;
 pub mod extractors;
 pub mod models;
+pub mod search;
 pub mod storage;
 
 pub use embeddings::{TextEmbedder, VectorEmbedding, EMBEDDING_DIM};
 pub use error::SemanticError;
 pub use extractors::extract_content;
 pub use models::{DocumentChunk, DocumentMetadata, DocumentType, ExtractedDocument};
+pub use search::{
+    generate_contextual_snippet, parse_location_metadata, parse_search_query,
+    reciprocal_rank_fusion, Bm25Index, Bm25Params, HybridSearchEngine, MatchKind,
+    ParsedSearchQuery, SearchMode, SemanticHit,
+};
 pub use storage::{ChunkStore, HnswVectorIndex, StoredChunk};
 
 use findme_core::arena::FileArena;
