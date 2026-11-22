@@ -317,5 +317,16 @@ fn test_modern_styling_helpers_instantiation() {
         // Kbd badge style
         let kbd = kbd_badge_style(&theme)(&dummy_iced_theme);
         assert!(kbd.background.is_some());
+
+        // Zero-flicker performance check: ensure card_style and hero_card_style have zero blur radius
+        // to prevent CPU software rasterizer (tiny-skia) bottlenecks on hover
+        assert_eq!(
+            card.shadow.blur_radius, 0.0,
+            "Card shadow blur must be 0 for zero-flicker 60fps performance"
+        );
+        assert_eq!(
+            hero.shadow.blur_radius, 0.0,
+            "Hero card shadow blur must be 0 for zero-flicker 60fps performance"
+        );
     }
 }
