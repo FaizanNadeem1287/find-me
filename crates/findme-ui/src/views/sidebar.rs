@@ -325,50 +325,29 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     }
 
     // -------------------------------------------------------------------------
-    // 4. Hierarchical Directory Tree (When Expanded)
+    // 4. Dynamic Indexed Directory Roots (When Expanded)
     // -------------------------------------------------------------------------
     let folder_tree_section: Element<'_, Message> = if state.sidebar_expanded {
         let tree_header = row![
-            text("INDEX ROOTS & CATEGORIES")
+            text("INDEXED DIRECTORIES")
                 .size(10)
                 .color(state.theme.muted_color()),
             Space::new().width(Length::Fill),
-            button(icons::icon(Icon::Plus, 10.0, state.theme.muted_color()))
-                .padding([1, 6])
-                .style(sidebar_item_style(&state.theme, false))
-                .on_press(Message::SwitchScreen(ScreenId::IndexManagement)),
-        ]
-        .align_y(Alignment::Center);
-
-        let root_expanded = state.expanded_folders.contains("General Knowledge");
-        let chevron_icon = if root_expanded {
-            Icon::ChevronDown
-        } else {
-            Icon::ChevronRight
-        };
-
-        let root_row = row![
-            button(icons::icon(chevron_icon, 10.0, state.theme.muted_color()))
-                .padding([2, 4])
-                .style(sidebar_item_style(&state.theme, false))
-                .on_press(Message::ToggleFolderTreeNode(
-                    "General Knowledge".to_string()
-                )),
-            icons::icon(Icon::Folder, 13.0, state.theme.muted_color()),
-            text("General Knowledge")
-                .size(12)
-                .color(state.theme.text_color()),
-        ]
-        .spacing(6)
-        .align_y(Alignment::Center);
-
-        let root_btn = button(root_row)
-            .width(Length::Fill)
-            .padding([5, 8])
+            button(
+                row![
+                    icons::icon(Icon::Plus, 10.0, state.theme.muted_color()),
+                    text("Add").size(10).color(state.theme.muted_color())
+                ]
+                .spacing(3)
+                .align_y(Alignment::Center)
+            )
+            .padding([2, 6])
             .style(sidebar_item_style(&state.theme, false))
-            .on_press(Message::SelectFolderFilter(None));
+            .on_press(Message::SwitchScreen(ScreenId::IndexManagement)),
+        ]
+        .align_y(Alignment::Center);
 
-        let mut tree_col = column![tree_header, root_btn].spacing(3);
+        let mut tree_col = column![tree_header].spacing(3);
 
         if let Some(ref active_filter) = state.active_folder_filter {
             let clear_btn = button(
@@ -388,84 +367,124 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             tree_col = tree_col.push(clear_btn);
         }
 
-        if root_expanded {
-            // Child categories with colored folder icons (Purple, Blue, Amber, Emerald) and file count pills
-            let subfolders = [
-                ("Documents", state.theme.category_amber(), "Documents", "15"),
-                ("Projects", state.theme.category_blue(), "Projects", "22"),
-                (
-                    "Downloads",
-                    state.theme.category_emerald(),
-                    "Downloads",
-                    "10",
-                ),
-                (
-                    "Media Assets",
-                    state.theme.category_purple(),
-                    "Pictures",
-                    "8",
-                ),
-            ];
+        let home_dir = std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string());
+        let accent_colors = [
+            colors::ACCENT_PURPLE,
+            colors::ACCENT_BLUE,
+            colors::ACCENT_EMERALD,
+            colors::ACCENT_AMBER,
+            colors::ACCENT_ROSE,
+        ];
 
-            let mut sub_col = column![].spacing(2);
+        let mut roots_sub_col = column![].spacing(2);
 
-            for (title, accent_color, path_filter, count_str) in subfolders {
-                let is_selected = state.active_folder_filter.as_deref() == Some(path_filter);
+        for (idx, root) in state.index_mgmt.roots.iter().enumerate() {
+            let path_str = root.display_path();
+            let is_selected = state.active_folder_filter.as_deref() == Some(&path_str);
+            let accent_color = accent_colors[idx % accent_colors.len()];
 
-                let color_indicator = container(Space::new())
-                    .width(Length::Fixed(8.0))
-                    .height(Length::Fixed(8.0))
-                    .style(move |_theme| container::Style {
-                        background: Some(Background::Color(accent_color)),
-                        border: Border {
-                            color: Color::TRANSPARENT,
-                            width: 0.0,
-                            radius: 4.0.into(),
-                        },
-                        ..Default::default()
-                    });
+            let display_name = if path_str == home_dir {
+                "Home (~)".to_string()
+            } else if path_str == "/" {
+                "Root (/)".to_string()
+            } else {
+                root.path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| path_str.clone())
+            };
 
-                let badge = container(text(count_str).size(10).color(state.theme.muted_color()))
-                    .padding([1, 6])
-                    .style(pill_badge_style(
-                        state.theme.hover_color(),
-                        state.theme.muted_color(),
-                    ));
+            let color_indicator = container(Space::new())
+                .width(Length::Fixed(8.0))
+                .height(Length::Fixed(8.0))
+                .style(move |_theme| container::Style {
+                    background: Some(Background::Color(accent_color)),
+                    border: Border {
+                        color: Color::TRANSPARENT,
+                        width: 0.0,
+                        radius: 4.0.into(),
+                    },
+                    ..Default::default()
+                });
 
-                let item_row = row![
-                    Space::new().width(Length::Fixed(10.0)),
-                    color_indicator,
-                    icons::icon(Icon::Folder, 12.0, accent_color),
-                    text(title).size(12).color(if is_selected {
-                        if is_dark {
-                            colors::DARK_TEXT
-                        } else {
-                            colors::LIGHT_ACCENT
-                        }
+            let count_label = if root.file_count > 0 {
+                crate::state::format_number(root.file_count)
+            } else {
+                "0".to_string()
+            };
+
+            let badge = container(text(count_label).size(10).color(state.theme.muted_color()))
+                .padding([1, 6])
+                .style(pill_badge_style(
+                    state.theme.hover_color(),
+                    state.theme.muted_color(),
+                ));
+
+            let item_row = row![
+                Space::new().width(Length::Fixed(6.0)),
+                color_indicator,
+                icons::icon(Icon::Folder, 12.0, accent_color),
+                text(display_name).size(12).color(if is_selected {
+                    if is_dark {
+                        colors::DARK_TEXT
                     } else {
-                        state.theme.text_color()
-                    }),
-                    Space::new().width(Length::Fill),
-                    badge,
-                ]
-                .spacing(6)
-                .align_y(Alignment::Center);
+                        colors::LIGHT_ACCENT
+                    }
+                } else {
+                    state.theme.text_color()
+                }),
+                Space::new().width(Length::Fill),
+                badge,
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center);
 
-                let item_btn = button(item_row)
-                    .width(Length::Fill)
-                    .padding([5, 8])
-                    .style(sidebar_item_style(&state.theme, is_selected))
-                    .on_press(Message::SelectFolderFilter(Some(path_filter.to_string())));
+            let next_filter = if is_selected {
+                None
+            } else {
+                Some(path_str.clone())
+            };
 
-                sub_col = sub_col.push(item_btn);
-            }
+            let item_btn = button(item_row)
+                .width(Length::Fill)
+                .padding([5, 8])
+                .style(sidebar_item_style(&state.theme, is_selected))
+                .on_press(Message::SelectFolderFilter(next_filter));
 
-            tree_col = tree_col.push(sub_col);
+            roots_sub_col = roots_sub_col.push(item_btn);
         }
 
+        let manage_folders_btn = button(
+            row![
+                icons::icon(Icon::Folder, 11.0, state.theme.muted_color()),
+                text("Manage Folders...")
+                    .size(11)
+                    .color(state.theme.muted_color()),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([4, 8])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::SwitchScreen(ScreenId::IndexManagement));
+
+        roots_sub_col = roots_sub_col.push(manage_folders_btn);
+
+        tree_col = tree_col.push(roots_sub_col);
         container(tree_col).padding([8, 0]).into()
     } else {
-        Space::new().height(Length::Fixed(0.0)).into()
+        button(
+            container(icons::icon(Icon::Folder, 15.0, state.theme.muted_color()))
+                .width(Length::Fill)
+                .align_x(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([8, 0])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::SwitchScreen(ScreenId::IndexManagement))
+        .into()
     };
 
     let scrollable_content =

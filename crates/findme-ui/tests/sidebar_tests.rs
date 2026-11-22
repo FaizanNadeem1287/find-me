@@ -211,3 +211,38 @@ fn test_sidebar_theme_toggle_and_wcag_contrast() {
     let _ = app.update(Message::ToggleTheme);
     assert_eq!(app.state.theme.is_dark(), initial_is_dark);
 }
+
+#[test]
+fn test_dynamic_indexed_roots_in_sidebar() {
+    let mut app = FindMeApp::new();
+    app.state.index_mgmt.roots.clear();
+
+    app.state
+        .index_mgmt
+        .roots
+        .push(findme_ui::IndexedRoot::new("/custom/projects", 150, 12));
+    app.state
+        .index_mgmt
+        .roots
+        .push(findme_ui::IndexedRoot::new("/custom/documents", 45, 5));
+
+    // Verify view renders with dynamic roots
+    {
+        let _ = app.view();
+    }
+
+    // Select dynamic root
+    let _ = app.update(Message::SelectFolderFilter(Some(
+        "/custom/projects".to_string(),
+    )));
+    assert_eq!(
+        app.state.active_folder_filter.as_deref(),
+        Some("/custom/projects")
+    );
+    assert_eq!(app.state.query, "path:\"/custom/projects\"");
+
+    // Toggle off by passing None
+    let _ = app.update(Message::SelectFolderFilter(None));
+    assert_eq!(app.state.active_folder_filter, None);
+    assert_eq!(app.state.query, "");
+}
