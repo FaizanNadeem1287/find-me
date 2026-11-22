@@ -1473,3 +1473,40 @@ Hash | Branch | Commit Message & Description
 9. Retained `feature/p12-secondary-screens` branch permanently in Git (33 total feature branches preserved).
 10. Synchronized Todoist: added implementation summary audit comment `6j4CQRqCW5X7Hf9Q`, moved task `6j49wM96pVJWcRVx` to `Completed`, and marked complete.
 11. Phase 12 milestone (Tasks 12.1 through 12.5) successfully delivered in full!
+
+
+---
+
+## Session 35: 2026-11-22 (Completion of Task 12.6: Ergonomic Linux Dark Mode Palette & Visual Comfort Refinement)
+
+### Objectives Addressed:
+1. Created Task 12.6: `[TASK-12.6] UI: Ergonomic Linux Dark Mode Palette & Visual Comfort Refinement (GNOME/Adwaita & Cosmic Inspired)` (`6j4CRJrxr9887Prx`) on Todoist board.
+2. Authored detailed implementation plan artifact: `task-12-6-implementation-plan.md`.
+3. Created feature branch `feature/p12-dark-mode-palette` from `main` and moved Todoist task to `In Progress`.
+4. Overhauled Dark Mode Color System (`crates/findme-ui/src/theme.rs`):
+   - Calibrated canvas background `DARK_BG` to deep obsidian slate `#0E121B` (eliminates harsh `#000000` pitch black blooming).
+   - Calibrated elevated surface `DARK_SURFACE` to `#151B28` with ~1.3:1 luminance step above canvas.
+   - Calibrated grounded sidebar `DARK_SIDEBAR` to `#0B0F17` for crisp spatial visual hierarchy.
+   - Calibrated primary typography `DARK_TEXT` to soft off-white `#E2E8F0` (eliminates blinding white glare and astigmatism flare).
+   - Replaced oversaturated neon accents with anti-glare mid-tone pastels to eliminate optical vibration (chromostereopsis):
+     - Sky Blue (`#60A5FA`), Honey Amber (`#FBBF24`), Soft Lavender/Indigo (`#818CF8`), Mint Emerald (`#34D399`), Soft Coral Red (`#F87171`).
+   - Introduced luxury ambient dark category surface tints for Hero Folder cards:
+     - `DARK_TINT_AMBER`: `#19150E` (Obsidian with 4% warm amber infusion)
+     - `DARK_TINT_BLUE`: `#111624` (Obsidian with 4% azure infusion)
+     - `DARK_TINT_PURPLE`: `#151226` (Obsidian with 4% lavender purple infusion)
+     - `DARK_TINT_EMERALD`: `#0E1814` (Obsidian with 4% mint emerald infusion)
+   - Added category accessor methods on `AppTheme` (`category_amber`, `category_blue`, `category_purple`, `category_emerald`, `tint_amber`, `tint_blue`, `tint_purple`, `tint_emerald`).
+5. Overhauled Views for Dark Mode Integration:
+   - `search.rs`: Updated hero cards to use theme category pastels and ambient dark category surface tints (`tint_amber`, `tint_blue`, `tint_purple`).
+   - `sidebar.rs`: Updated folder tree category icons to use theme category pastels in Dark Mode.
+6. Added comprehensive contrast and theme tests in `crates/findme-ui/tests/theme_tests.rs`:
+   - Verified WCAG 2.1 Level AA contrast compliance across all text, accent, surface, and ambient tint combinations.
+7. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **291 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+8. Committed to `feature/p12-dark-mode-palette` (`27ac532`) and merged into `main` via non-fast-forward merge (`--no-ff`).
+9. Retained `feature/p12-dark-mode-palette` branch permanently in Git (34 total feature branches preserved).
+10. Synchronized Todoist: added implementation summary audit comment `6j4CVXRF2wcqwGhQ`, moved task `6j4CRJrxr9887Prx` to `Completed`, and marked complete.
