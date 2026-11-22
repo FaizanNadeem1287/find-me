@@ -1074,3 +1074,55 @@ Hash | Branch | Commit Message & Description
 - **Active Branch**: `main` (clean working tree).
 - **Milestone Reached**: **Phase 10: Universal Linux Distribution (Debian, AppImage, Flatpak, Arch Linux AUR) is 100% COMPLETE!**
 - **Next Backlog Item**: `[TASK-10.4] Future: Network Filesystem Indexing (SMB / NFS)` (`6j46278MhwhfHW6x`).
+
+---
+
+## Session 26: 2026-11-22 (Completion of Task 10.4: Network Filesystem Indexing & Periodic Polling)
+
+### Objectives Addressed:
+1. Reviewed Todoist Task 10.4: `[TASK-10.4] Core: Network Filesystem Indexing (SMB / NFS / SSHFS) & Periodic Polling` (`6j46278MhwhfHW6x`).
+2. Authored detailed implementation plan artifact: `task-10-4-implementation-plan.md`.
+3. Created feature branch `feature/p10-network-indexing` and moved Todoist task to `In Progress`.
+4. Extended core memory model in `crates/findme-core/src/record.rs`:
+   - Added `FileFlags::IS_NETWORK = Self(1 << 6)` using unused bit 6.
+   - Preserved `std::mem::size_of::<FileRecord>() == 32` bytes with zero memory overhead.
+   - Added `pub fn is_network(&self) -> bool` helper.
+5. Extended query parser in `crates/findme-core/src/query/units.rs`:
+   - Added `'n' | 'N'` attribute flag support to `parse_attrib_filter`, enabling `attrib:n` (network shares only) and `attrib:!n` (local drives only).
+6. Implemented network filesystem module in `crates/findme-core/src/network_fs.rs`:
+   - `NetworkFsType`: Enum for `Nfs`, `SmbCifs`, `Sshfs`, `FuseRemote`, and `GenericNetwork`.
+   - `parse_mountinfo_network_shares`: Parses `/proc/mounts`, `/proc/self/mounts`, and `/etc/mtab` with octal escape sequence decoding (e.g., `\040` for spaces) and longest-prefix sorting.
+   - `detect_network_filesystem` and `is_network_path` for runtime mount checks.
+   - `NetworkShareConfig` and `PollStats`.
+   - `NetworkPoller`: Multi-share background monitor with unprivileged atomic `sync_share` detecting remote additions, modifications, and deletions without requiring kernel inotify events.
+7. Optimized parallel crawler in `crates/findme-core/src/crawler.rs`:
+   - Pre-resolves network mount prefixes once before the crawl traversal loop to eliminate repetitive `/proc/mounts` file reads per file, maintaining high crawl throughput (>500k files/sec).
+8. Implemented comprehensive test suite in `crates/findme-core/tests/network_filesystem_tests.rs`:
+   - `test_file_record_size_with_network_flag`: Verifies 32-byte layout with IS_NETWORK bit.
+   - `test_mountinfo_parsing_nfs_smb_sshfs`: Verifies parsing of NFS, CIFS/SMB, and SSHFS mounts with octal spaces.
+   - `test_query_parser_network_attribute_filter`: Verifies `attrib:n` and `attrib:!n` query evaluation and matcher results.
+   - `test_crawler_network_share_flagging`: Verifies network shares are automatically tagged with IS_NETWORK.
+   - `test_network_poller_detects_remote_changes`: Simulates remote file addition, modification, and deletion without inotify and asserts correct arena synchronization.
+   - `test_network_poller_offline_resilience`: Verifies poller gracefully handles unreachable network shares without panicking.
+9. Executed full pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings).
+   - Test suite: **241 passing tests** across `findme-core`, `findme-ui`, and `findme-cli` (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+10. Committed to `feature/p10-network-indexing` (`f0f08f8`) and merged into `main` via non-fast-forward merge (`4132249`).
+11. Retained `feature/p10-network-indexing` branch permanently (24 total branches preserved).
+12. Synchronized Todoist: posted implementation audit comment (`6j488Vv3ggwh72rQ`) and marked task `6j46278MhwhfHW6x` `Completed`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`f0f08f8` | `feature/p10-network-indexing` | `feat(core): network filesystem indexing smb nfs and periodic polling (Task 10.4)`
+`4132249` (merge) | `main` | `feat(p10): network filesystem indexing and periodic polling (Task 10.4)`
+
+### Todoist State Updates:
+- Task: `[TASK-10.4] Core: Network Filesystem Indexing (SMB / NFS / SSHFS) & Periodic Polling` (`6j46278MhwhfHW6x`) marked `Completed`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Milestone Reached**: **All Phases (0 through 10) are 100% COMPLETE! All 20 project tasks verified, merged, and completed on Todoist!**
