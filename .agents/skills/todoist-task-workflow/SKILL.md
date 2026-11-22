@@ -70,20 +70,34 @@ If work is blocked by external factors (e.g. system packages, credentials, user 
 
 ---
 
-### Procedure 3: Completing a Task (In Progress -> Completed)
+### Procedure 3: Completing a Task (In Progress -> PR Review -> Completed)
 When development is finished:
 1. Run the automated quality gate:
    ```bash
    bash .agents/skills/find-me-qa-verification/scripts/verify_task.sh
    ```
 2. Perform code review audit (no unwraps, zero workarounds, non-blocking UI).
-3. Merge into `main` using non-fast-forward merge and **preserve the feature branch**:
+3. **Push Feature Branch to GitHub**:
+   ```bash
+   git push -u origin feature/<task-id>-<name>
+   ```
+4. **Create Pull Request against `main`**:
+   ```bash
+   gh pr create --base main --head feature/<task-id>-<name> --title "feat(<task-id>): <description>" --body "<deliverables & verification summary>"
+   ```
+5. **MANDATORY PR REVIEW GATE**:
+   - Notify the user with the PR link.
+   - **STOP & WAIT** for user review and explicit approval.
+   - **DO NOT merge into `main` directly.**
+6. **Merge into `main` (ONLY After Approval) & Preserve Feature Branch**:
    ```bash
    git checkout main
-   git merge --no-ff feature/<task-id>-<name> -m "feat(<task-id>): <description>"
+   git pull origin main
+   git merge --no-ff feature/<task-id>-<name> -m "merge: feat(<task-id>): <description>"
+   git push origin main
    ```
-4. **Post Implementation Audit Comment**: Call `add-comments` on the Todoist task to record:
-   - Git branch name and merge commit hash
+7. **Post Implementation Audit Comment**: Call `add-comments` on the Todoist task to record:
+   - Git branch name, PR link, and merge commit hash
    - Summary of features, structs, and interfaces implemented
    - Key files created/modified
    - QA verification status (`verify_task.sh` passed)
@@ -92,12 +106,12 @@ When development is finished:
      "comments": [
        {
          "taskId": "<task_id>",
-         "content": "### Implementation Summary\n- **Branch**: `feature/<task-id>-<name>`\n- **Merge Commit**: `<commit-hash>`\n- **Deliverables**: <summary of code>\n- **Verification**: `verify_task.sh` passed (fmt, clippy, unit/doc tests)."
+         "content": "### Implementation Summary\n- **Branch**: `feature/<task-id>-<name>`\n- **PR**: https://github.com/FaizanNadeem1287/find-me/pull/<pr_number>\n- **Merge Commit**: `<commit-hash>`\n- **Deliverables**: <summary of code>\n- **Verification**: `verify_task.sh` passed (fmt, clippy, unit/doc tests)."
        }
      ]
    }
    ```
-5. Move the task to **Completed** in Todoist:
+8. Move the task to **Completed** in Todoist:
    ```json
    {
      "tasks": [
@@ -108,7 +122,12 @@ When development is finished:
      ]
    }
    ```
-5. Optionally mark completed using `complete-tasks` tool.
+9. Mark completed using `complete-tasks` tool:
+   ```json
+   {
+     "ids": ["<task_id>"]
+   }
+   ```
 
 ---
 

@@ -25,8 +25,8 @@ All contributors and AI agents must adhere to the project's strict engineering d
 3. **No Unwraps**: Zero `.unwrap()` or `.expect()` in non-test production code. All errors must be handled gracefully with `Result` or `Option`.
 4. **Zero `unsafe`**: No `unsafe` shortcuts or pointer casts.
 5. **Non-Blocking UI**: UI thread must never block. All I/O, crawling, and embedding run on Tokio/Rayon worker thread pools.
-6. **Protected `main` Branch**: Never commit directly to `main`. Every task develops on a feature branch (`feature/<task-id>-<task-name>`).
-7. **Permanent Branch Retention**: Feature branches are **never deleted** (`git branch -d` / `-D` is strictly forbidden). Merges to `main` must use non-fast-forward merges (`git merge --no-ff`).
+6. **Protected `main` Branch & PR Review Gate**: Never commit directly to `main`. Every task develops on a feature branch (`feature/<task-id>-<task-name>`), is pushed to GitHub, and submitted as a Pull Request against `main`. Changes are reviewed before merging into `main`.
+7. **Permanent Branch Retention**: Feature branches are **never deleted** (`git branch -d` / `-D` is strictly forbidden). Merges to `main` must use non-fast-forward merges (`git merge --no-ff`) and push to `origin`.
 
 ---
 
@@ -65,23 +65,36 @@ This runs:
 
 ---
 
-## 4. Git Branch & Commit Workflow
+## 4. Git Branch, Pull Request & Review Workflow
 
 ```bash
 # 1. Start feature branch from main
 git checkout main
+git pull origin main
 git checkout -b feature/<task-id>-<task-name>
 
 # 2. Develop with tests and verify quality gate
 cargo test -p <affected-crate>
 cargo clippy --all-targets --all-features -- -D warnings
+bash .agents/skills/find-me-qa-verification/scripts/verify_task.sh
 
 # 3. Commit with Conventional Commits
 git commit -m "feat(<task-id>): <clear actionable description>"
 
-# 4. Merge into main using non-fast-forward merge
-git checkout main
-git merge --no-ff feature/<task-id>-<task-name> -m "merge: feat(<task-id>): <description>"
+# 4. Push feature branch to GitHub remote
+git push -u origin feature/<task-id>-<task-name>
 
-# 5. PERMANENT BRANCH RETENTION: Do NOT delete the branch!
+# 5. Create Pull Request against main
+gh pr create --base main --head feature/<task-id>-<task-name> --title "feat(<task-id>): <description>" --body "<deliverables>"
+
+# 6. STOP & WAIT FOR USER PR REVIEW
+# Do not merge directly! Wait for user review and explicit approval.
+
+# 7. Merge into main ONLY after user approval using non-fast-forward merge
+git checkout main
+git pull origin main
+git merge --no-ff feature/<task-id>-<task-name> -m "merge: feat(<task-id>): <description>"
+git push origin main
+
+# 8. PERMANENT BRANCH RETENTION: Do NOT delete the feature branch!
 ```
