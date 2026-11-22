@@ -141,3 +141,56 @@ fn test_index_management_semantic_card_and_throttling() {
     let mgmt_elem = views::index_mgmt::view(&app.state);
     let _ = mgmt_elem.as_widget();
 }
+
+#[test]
+fn test_live_semantic_indexing_progress_and_completion_events() {
+    let mut app = FindMeApp::new();
+
+    // 1. Send live indexing progress event
+    let progress = findme_semantic::IndexerProgress {
+        total_discovered: 40,
+        total_processed: 25,
+        indexed_chunks: 68,
+        current_file: Some(PathBuf::from("/home/user/Downloads/report.pdf")),
+        is_indexing: true,
+        is_paused: false,
+        throttle_mode: ThrottleMode::Balanced,
+    };
+
+    let _ = app.update(Message::Engine(
+        findme_ui::engine::EngineEvent::SemanticProgress(progress),
+    ));
+
+    assert!(app.state.semantic_progress.is_indexing);
+    assert_eq!(app.state.semantic_progress.total_processed, 25);
+    assert_eq!(app.state.semantic_progress.total_discovered, 40);
+    assert_eq!(app.state.semantic_progress.indexed_chunks, 68);
+
+    // Verify index management view renders live progress smoothly
+    {
+        let mgmt_view = views::index_mgmt::view(&app.state);
+        let _ = mgmt_view.as_widget();
+    }
+
+    // 2. Send indexing complete event
+    let ready_event = findme_ui::engine::EngineEvent::SemanticIndexReady {
+        indexed_chunks: 110,
+        total_files: 40,
+    };
+
+    let _ = app.update(Message::Engine(ready_event));
+
+    assert!(!app.state.semantic_progress.is_indexing);
+    assert_eq!(app.state.semantic_chunks_count, 110);
+    assert!(app.state.notification.is_some());
+    let note = app.state.notification.as_ref().unwrap();
+    assert!(note.contains("Semantic vector indexing complete"));
+    assert!(note.contains("40"));
+    assert!(note.contains("110"));
+
+    // Verify index management view renders completion state
+    {
+        let mgmt_view_done = views::index_mgmt::view(&app.state);
+        let _ = mgmt_view_done.as_widget();
+    }
+}

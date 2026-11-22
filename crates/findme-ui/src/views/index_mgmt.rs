@@ -231,15 +231,57 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     .color(state.theme.text_color()),
                 Space::new().width(Length::Fill),
                 if state.semantic_progress.is_indexing {
+                    let percent = if state.semantic_progress.total_discovered > 0 {
+                        (state.semantic_progress.total_processed as f32
+                            / state.semantic_progress.total_discovered as f32)
+                            * 100.0
+                    } else {
+                        0.0
+                    };
+                    let file_hint = state
+                        .semantic_progress
+                        .current_file
+                        .as_ref()
+                        .and_then(|p| p.file_name())
+                        .and_then(|n| n.to_str())
+                        .map(|name| format!(" • {name}"))
+                        .unwrap_or_default();
                     text(format!(
-                        "Indexing: {} / {} files",
+                        "⚡ Indexing: {} / {} files ({:.0}%){}",
                         state.semantic_progress.total_processed,
-                        state.semantic_progress.total_discovered
+                        state.semantic_progress.total_discovered,
+                        percent,
+                        file_hint
                     ))
                     .size(11)
                     .color(colors::LIGHT_ACCENT)
+                } else if state.semantic_chunks_count > 0
+                    || state.semantic_progress.indexed_chunks > 0
+                {
+                    let chunks = if state.semantic_chunks_count > 0 {
+                        state.semantic_chunks_count
+                    } else {
+                        state.semantic_progress.indexed_chunks
+                    };
+                    let files = state.semantic_progress.total_processed;
+                    if files > 0 {
+                        text(format!(
+                            "● Vector Index Ready ({} files • {} chunks indexed)",
+                            crate::state::format_number(files as u64),
+                            crate::state::format_number(chunks as u64)
+                        ))
+                        .size(11)
+                        .color(colors::ACCENT_EMERALD)
+                    } else {
+                        text(format!(
+                            "● Vector Index Ready ({} chunks indexed)",
+                            crate::state::format_number(chunks as u64)
+                        ))
+                        .size(11)
+                        .color(colors::ACCENT_EMERALD)
+                    }
                 } else {
-                    text("● Vector Index Ready (HNSW Cosine + SQLite Chunks)")
+                    text("● Vector Index Ready (HNSW Cosine • SQLite Chunks)")
                         .size(11)
                         .color(colors::ACCENT_EMERALD)
                 },
