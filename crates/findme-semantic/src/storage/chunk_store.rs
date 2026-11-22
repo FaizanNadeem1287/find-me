@@ -54,6 +54,11 @@ impl ChunkStore {
         self.chunks.is_empty()
     }
 
+    /// Read-only slice of all stored chunks
+    pub fn all_chunks(&self) -> &[StoredChunk] {
+        &self.chunks
+    }
+
     /// Rebuilds fast in-memory hash lookups from current chunk list
     pub fn rebuild_lookups(&mut self) {
         self.lookup_by_vector_id.clear();
