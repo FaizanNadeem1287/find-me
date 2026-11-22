@@ -1,17 +1,23 @@
 //! Settings and user preferences screen
 
+use crate::icons::{self, Icon};
 use crate::message::{Message, SettingsMessage};
 use crate::state::AppState;
 use crate::theme::{self, colors};
 use iced::widget::{button, checkbox, column, container, row, scrollable, text, Space};
-use iced::{Alignment, Element, Length};
+use iced::{Alignment, Color, Element, Length};
 
 /// Renders the Settings screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
     let settings = &state.settings;
 
     let header = column![
-        text("⚙️ Application Preferences & Settings").size(18),
+        row![
+            icons::icon(Icon::Settings, 18.0, colors::LIGHT_ACCENT),
+            text("Application Preferences & Settings").size(18),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center),
         text("Configure desktop autostart, default search options, privacy boundaries, and shortcuts")
             .size(12),
     ]
@@ -43,10 +49,25 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     )
                 ),
                 Space::new().width(Length::Fill),
-                button(text("Toggle Theme (Ctrl+T)").size(11))
-                    .padding([5, 12])
-                    .style(theme::secondary_btn_style(&state.theme))
-                    .on_press(Message::ToggleTheme),
+                button(
+                    row![
+                        icons::icon(
+                            if state.theme.is_dark() {
+                                Icon::Sun
+                            } else {
+                                Icon::Moon
+                            },
+                            12.0,
+                            state.theme.text_color()
+                        ),
+                        text("Toggle Theme (Ctrl+T)").size(11),
+                    ]
+                    .spacing(6)
+                    .align_y(Alignment::Center),
+                )
+                .padding([5, 12])
+                .style(theme::secondary_btn_style(&state.theme))
+                .on_press(Message::ToggleTheme),
             ]
             .align_y(Alignment::Center),
         ]
@@ -185,14 +206,28 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     // 6. Action Buttons Bar
     let action_bar = row![
-        button(text("💾 Save Preferences").size(12))
-            .padding([7, 16])
-            .style(theme::primary_btn_style(&state.theme))
-            .on_press(Message::Settings(SettingsMessage::SaveSettings)),
-        button(text("↺ Reset to Defaults").size(12))
-            .padding([7, 16])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::Settings(SettingsMessage::ResetToDefaults)),
+        button(
+            row![
+                icons::icon(Icon::Save, 13.0, Color::WHITE),
+                text("Save Preferences").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([7, 16])
+        .style(theme::primary_btn_style(&state.theme))
+        .on_press(Message::Settings(SettingsMessage::SaveSettings)),
+        button(
+            row![
+                icons::icon(Icon::Refresh, 13.0, state.theme.text_color()),
+                text("Reset to Defaults").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([7, 16])
+        .style(theme::secondary_btn_style(&state.theme))
+        .on_press(Message::Settings(SettingsMessage::ResetToDefaults)),
     ]
     .spacing(12);
 

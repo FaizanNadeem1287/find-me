@@ -1,6 +1,7 @@
 //! High-performance virtualized 60 FPS tabular results view and column header sorting
 //! Revamped with modern Pinterest / Notion aesthetic, generous row padding, file icons, and metadata badges.
 
+use crate::icons::{self, Icon};
 use crate::message::{ColumnId, Message};
 use crate::state::{compute_virtual_range, table_scrollable_id, AppState};
 use crate::theme::{colors, pill_badge_style, sidebar_item_style, table_row_btn_style};
@@ -45,38 +46,38 @@ pub fn item_type_str(item: &SearchResultItem) -> &'static str {
     }
 }
 
-/// Returns modern icon glyph and category display string for a search result item
-pub fn item_icon_and_type(item: &SearchResultItem) -> (&'static str, &'static str) {
+/// Returns modern vector icon and category display string for a search result item
+pub fn item_vector_icon(item: &SearchResultItem) -> (Icon, &'static str) {
     if item.is_dir {
-        ("📁", "Folder")
+        (Icon::Folder, "Folder")
     } else if let Some(idx) = item.name.rfind('.') {
         if idx > 0 && idx + 1 < item.name.len() {
             match item.name[idx + 1..].to_ascii_lowercase().as_str() {
-                "rs" => ("💻", "Rust"),
-                "py" => ("🐍", "Python"),
-                "js" | "ts" | "jsx" | "tsx" => ("🌐", "Web"),
-                "c" | "cpp" | "h" | "hpp" => ("⚡", "C/C++"),
-                "toml" => ("⚙️", "TOML"),
-                "yaml" | "yml" => ("⚙️", "YAML"),
-                "json" => ("📋", "JSON"),
-                "md" => ("📝", "Markdown"),
-                "txt" => ("📄", "Text"),
-                "pdf" => ("📕", "PDF"),
-                "png" => ("🖼️", "PNG Image"),
-                "jpg" | "jpeg" => ("🖼️", "JPEG Image"),
-                "gif" | "svg" | "webp" => ("🖼️", "Image"),
-                "mp3" | "wav" | "flac" | "ogg" => ("🎵", "Audio"),
-                "mp4" | "mkv" | "avi" | "mov" => ("🎬", "Video"),
-                "zip" | "tar" | "gz" | "xz" => ("📦", "Archive"),
-                "sh" => ("⌨️", "Shell Script"),
-                "deb" => ("📦", "Debian Pkg"),
-                _ => ("📄", "File"),
+                "rs" => (Icon::FileCode, "Rust"),
+                "py" => (Icon::FileCode, "Python"),
+                "js" | "ts" | "jsx" | "tsx" => (Icon::FileCode, "Web"),
+                "c" | "cpp" | "h" | "hpp" => (Icon::FileCode, "C/C++"),
+                "toml" => (Icon::FileCode, "TOML"),
+                "yaml" | "yml" => (Icon::FileCode, "YAML"),
+                "json" => (Icon::FileCode, "JSON"),
+                "md" => (Icon::FileText, "Markdown"),
+                "txt" => (Icon::FileText, "Text"),
+                "pdf" => (Icon::FileText, "PDF"),
+                "png" => (Icon::FileImage, "PNG Image"),
+                "jpg" | "jpeg" => (Icon::FileImage, "JPEG Image"),
+                "gif" | "svg" | "webp" => (Icon::FileImage, "Image"),
+                "mp3" | "wav" | "flac" | "ogg" => (Icon::FileAudio, "Audio"),
+                "mp4" | "mkv" | "avi" | "mov" => (Icon::FileVideo, "Video"),
+                "zip" | "tar" | "gz" | "xz" => (Icon::FileArchive, "Archive"),
+                "sh" => (Icon::FileCode, "Shell Script"),
+                "deb" => (Icon::FileArchive, "Debian Pkg"),
+                _ => (Icon::File, "File"),
             }
         } else {
-            ("📄", "File")
+            (Icon::File, "File")
         }
     } else {
-        ("📄", "File")
+        (Icon::File, "File")
     }
 }
 
@@ -153,9 +154,17 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
         };
 
         container(
-            column![text("🔍 No Results").size(15), text(empty_msg).size(12),]
-                .spacing(6)
-                .align_x(Alignment::Center),
+            column![
+                row![
+                    icons::icon(Icon::Search, 16.0, state.theme.muted_color()),
+                    text("No Results Found").size(15),
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center),
+                text(empty_msg).size(12).color(state.theme.muted_color()),
+            ]
+            .spacing(6)
+            .align_x(Alignment::Center),
         )
         .width(Length::Fill)
         .height(Length::Fill)
@@ -182,7 +191,7 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
             let row_idx = start_idx + offset;
             let is_selected = state.selected_row == Some(row_idx);
 
-            let (icon, type_label) = item_icon_and_type(item);
+            let (vec_icon, type_label) = item_vector_icon(item);
             let size_text = item.formatted_size();
             let mtime_text = item.formatted_mtime();
 
@@ -210,7 +219,19 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
                 });
 
             let name_cell = row![
-                text(icon).size(13),
+                icons::icon(
+                    vec_icon,
+                    13.0,
+                    if is_selected {
+                        if is_dark {
+                            colors::DARK_TEXT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        }
+                    } else {
+                        state.theme.muted_color()
+                    }
+                ),
                 text(&item.name).size(12).color(if is_selected {
                     if is_dark {
                         colors::DARK_TEXT
