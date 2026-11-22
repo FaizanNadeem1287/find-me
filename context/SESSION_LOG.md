@@ -1717,3 +1717,24 @@ Hash | Branch | Commit Message & Description
    - Added `test_semantic_type_column_sorts_by_score` to `crates/findme-ui/tests/semantic_ui_tests.rs`. All tests pass.
    - Merged `feature/fix-semantic-score-inversion-and-type-sort` (`cd321f8`) into `main` with `--no-ff` and permanently retained the branch (46 branches total).
    - Re-compiled and installed optimized release binary to user environment (`/home/muhammad-faizan-nadeem/.local/bin/find-me`).
+
+
+---
+
+## Session 43: 2026-11-22 (Comprehensive Project Documentation Suite in `docs/`)
+
+### Objectives Addressed:
+1. **Creation of `docs/` Directory**: Created dedicated folder `docs/` containing 10 comprehensive, modular markdown documentation guides covering the entire Find-Me system.
+2. **Authored Documentation Suite**:
+   - `docs/README.md`: Master documentation index, table of contents, and architectural highlights.
+   - `docs/GETTING_STARTED.md`: System requirements, quick-start workflow, and user installation.
+   - `docs/ARCHITECTURE.md`: 4-crate workspace design, 32-byte arena layout, parallel crawler, inotify engine, and binary format.
+   - `docs/SEARCH_SYNTAX.md`: Complete query reference for Everything operators, size filters, date math, wildcards, regex, and boolean logic.
+   - `docs/SEMANTIC_SEARCH_AND_AI.md`: Deep content extractors, 384-dim text embeddings, HNSW graph, BM25, and Hybrid RRF fusion.
+   - `docs/KEYBOARD_SHORTCUTS.md`: Keyboard-first navigation map, screen switching, row navigation, and clipboard operations.
+   - `docs/CLI_AND_HEADLESS.md`: Headless search, JSON streaming, batch exporters (CSV, TXT, EFU), and GUI query pre-filling.
+   - `docs/PACKAGING_AND_DISTRIBUTION.md`: Debian `.deb`, AppImage, Flatpak, Arch Linux AUR, and FreeDesktop XDG specifications.
+   - `docs/DEVELOPER_GUIDE.md`: Toolchain setup, testing pyramid, Criterion benchmarks, and Git branch retention rules.
+   - `docs/TROUBLESHOOTING_AND_FAQ.md`: Diagnostic procedures for inotify limits, permission issues, index rebuilds, and power throttling.
+3. **Repository Linking**: Updated root `README.md` with official documentation table of contents.
+4. **Git Workflow Compliance**: Developed on dedicated branch `feature/comprehensive-project-documentation` (`fa3785e`), merged into `main` using non-fast-forward merge (`--no-ff`), and permanently retained branch (47 total branches).

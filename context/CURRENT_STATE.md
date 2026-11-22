@@ -88,3 +88,4 @@ Branch | Commit | Description
 `feature/p14-ui-semantic-integration` | `37750f0` | Desktop UI semantic mode pills, match badges, snippet previews, audio jump links, and index management controls
 `feature/p14-live-semantic-indexing-progress` | `89564f7` | Live semantic vector indexing progress streaming and completion status toast banner
 `feature/fix-semantic-score-inversion-and-type-sort` | `cd321f8` | Fix inverted similarity score formula, extract live mtime/size, and sort by score on Type column
+`feature/comprehensive-project-documentation` | `fa3785e` | Complete markdown documentation suite in docs/ directory (10 comprehensive guides)
