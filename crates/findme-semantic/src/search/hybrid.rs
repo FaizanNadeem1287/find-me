@@ -297,8 +297,14 @@ impl HybridSearchEngine {
         let _ = self.remove_document(&doc.path);
 
         let mut indexed_count = 0;
-        let mtime = 0; // default mtime if not specified
-        let size_bytes = 0;
+        let metadata = std::fs::metadata(&doc.path).ok();
+        let size_bytes = metadata.as_ref().map(|m| m.len()).unwrap_or(0);
+        let mtime = metadata
+            .as_ref()
+            .and_then(|m| m.modified().ok())
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
 
         for chunk in &doc.chunks {
             let embedding = self.embedder.embed_text(&chunk.text);
@@ -432,13 +438,13 @@ impl HybridSearchEngine {
     /// Performs dense vector semantic search using HNSW
     fn search_semantic(&self, query: &str, top_k: usize) -> Vec<SemanticHit> {
         let query_vec = self.embedder.embed_text(query);
-        let hnsw_results = self.vector_index.search(&query_vec, top_k * 2);
+        let hnsw_results = self.vector_index.search(&query_vec, top_k * 4);
 
         let mut results = Vec::with_capacity(hnsw_results.len());
 
-        for (vector_id, dist) in hnsw_results {
-            // Cosine distance = 1.0 - similarity, so similarity = 1.0 - dist
-            let similarity = (1.0 - dist).max(0.0);
+        for (vector_id, sim) in hnsw_results {
+            // HnswVectorIndex::search already returns cosine similarity sorted descending
+            let similarity = sim.max(0.0);
 
             if let Some(chunk) = self.chunk_store.get_by_vector_id(vector_id) {
                 let (page_or_line, audio_timestamp) = parse_location_metadata(&chunk.location);
@@ -465,6 +471,12 @@ impl HybridSearchEngine {
             }
         }
 
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+
         if results.len() > top_k {
             results.truncate(top_k);
         }
@@ -490,7 +502,7 @@ impl HybridSearchEngine {
         let hnsw_hits = self.vector_index.search(&query_vec, fetch_limit);
         let semantic_ranks: Vec<(u64, f32)> = hnsw_hits
             .into_iter()
-            .map(|(vid, dist)| (vid, (1.0 - dist).max(0.0)))
+            .map(|(vid, sim)| (vid, sim.max(0.0)))
             .collect();
 
         // 3. Cormack Reciprocal Rank Fusion
