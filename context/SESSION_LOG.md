@@ -1639,3 +1639,39 @@ Hash | Branch | Commit Message & Description
 9. Committed to `feature/p14-multimodal-extractors` (`f99418a`) and merged into `main` via non-fast-forward merge (`--no-ff`).
 10. Preserved `feature/p14-multimodal-extractors` branch permanently (40 total branches retained).
 11. Updated Todoist task `6j4FWC25mhVvGfMx` with implementation audit comment `6j4G3ggg58mWq2Vx` and marked complete. Moved Task 14.3 (`6j4FW9xfQXj9X6MQ`) to `In Progress`.
+
+---
+
+## Session 40: 2026-11-22 (Phase 14: Tasks 14.3, 14.4, 14.5, and 14.6 Complete - Full Semantic & Hybrid Pipeline Delivered)
+
+### Objectives Addressed:
+1. **Delivered Task 14.3**: `[TASK-14.3] Local Quantized Embeddings & Persistent HNSW Vector Store` (`6j4FW9xfQXj9X6MQ`)
+   - Implemented 384-dimensional `VectorEmbedding` struct supporting cosine similarity, dot product, Euclidean distance, and L2 normalization.
+   - Implemented `TextEmbedder` with subword character n-gram hashing, sublinear term-frequency weighting, and 16-topic dense semantic concept cluster projection (e.g. CV/resume, AI/ML, engineering, audio, visual, databases).
+   - Implemented multi-layer `HnswVectorIndex` ($M=16, ef_{construction}=64, ef_{search}=32$) with multi-layer beam search, binary disk serialization (`FMHV`), and CRC32 verification.
+   - Implemented `ChunkStore` with $O(1)$ vector lookup, path indexing, atomic chunk deletion, and binary serialization (`FMCS`).
+   - Added 6 integration tests in `storage_and_embedding_tests.rs`. Committed to `feature/p14-hnsw-vector-embeddings` (`6e50bd4`) and merged into `main`. Todoist task completed with audit comment `6j4G5GRQcGfJJ4cQ`.
+2. **Delivered Task 14.4**: `[TASK-14.4] Hybrid Search Engine: BM25 + Dense Vector Reciprocal Rank Fusion` (`6j4FW9wjPgM9655x`)
+   - Implemented `Bm25Index` supporting Robertson-Spärck Jones BM25 scoring over chunk text with term frequency saturation ($k_1=1.2$) and document length normalization ($b=0.75$).
+   - Implemented `HybridSearchEngine` blending lexical BM25 rankings and dense vector cosine similarity via Cormack Reciprocal Rank Fusion ($k=60.0$).
+   - Added query syntax parser supporting `semantic:`, `sem:`, `content:`, `text:`, and `hybrid:` operator prefixes.
+   - Implemented contextual snippet generator (~160 character windows centered around match tokens) and parser for page numbers, line numbers, and audio timestamps.
+   - Added document-level result aggregation avoiding multi-chunk duplicates.
+   - Added 5 integration tests in `hybrid_search_tests.rs`. Committed to `feature/p14-hybrid-rrf-engine` (`d2c7cd4`) and merged into `main`. Todoist task completed with audit comment `6j4G6RX4X7qQXgpQ`.
+3. **Delivered Task 14.5**: `[TASK-14.5] Asynchronous Background Indexer & Low-Priority Throttling` (`6j4FW9xPXh3JPcWx`)
+   - Implemented `ThrottleMode`: three-tier CPU governor (MaxPerformance 0ms, Balanced 5ms, BatterySaver 25ms) with automated Linux power supply detection (`/sys/class/power_supply/` battery discharging status).
+   - Implemented `FileFingerprintCache`: fast incremental change detection (`mtime`, `size`, `crc32`) with zero-copy binary serialization (`FMCF`) and CRC32 verification, skipping unchanged files with 0ms overhead.
+   - Implemented `BackgroundIndexer`: low-priority asynchronous indexing daemon with graceful pause/resume/stop controls, live progress channel (`IndexerProgress`), and inotify event handlers (`handle_file_created_or_modified`, `handle_file_deleted`).
+   - Added 5 integration tests in `worker_tests.rs`. Committed to `feature/p14-async-background-indexer` (`a4e032f`) and merged into `main`. Todoist task completed with audit comment `6j4G77QF9cfqjHjx`.
+4. **Delivered Task 14.6**: `[TASK-14.6] Iced Desktop UI Integration: Semantic Pills, Snippets & Previews` (`6j4FWC2jqqPhWRpQ`)
+   - **Search Mode Pills**: Added interactive `[Everything]`, `[Content]`, `[Semantic]`, and `[Hybrid]` toggle pills above the search input bar with active model indicator badge.
+   - **Match Reason Badges**: Rendered match badges on result rows (`✨ 98% Sem`, `📄 Content`, `🎙️ Audio`, `🖼️ Vision`, `⚡ Hybrid`).
+   - **Expandable Contextual Snippets**: Rendered contextual snippet boxes beneath results showing match location (`↳ Page 1: ...`, `↳ Lines 1-25: ...`, `↳ [01:30]: ...`).
+   - **Audio Timestamp Playback**: One-click `[▶ Play from MM:SS]` action launching the desktop audio player and displaying toast notification.
+   - **Index Management Controls**: Added "Local Semantic Vector Search & Content Indexing" control card with three-tier throttling buttons and background indexing controls (`Index Content Now`, `Pause`, `Resume`).
+   - Added 4 integration tests in `semantic_ui_tests.rs`. Committed to `feature/p14-ui-semantic-integration` (`37750f0`) and merged into `main`. Todoist task completed with audit comment `6j4GFJ46cvJQFGJQ`.
+5. **Completed Master Phase 14 Milestone**:
+   - Todoist milestone task `[PHASE-14] Deep Content Extraction & Local Semantic Vector Search (Docs, Code, Audio, Images)` (`6j4C2HrmhG6HMqWQ`) marked complete with comprehensive audit comment `6j4GFJ29chh2GJhQ`.
+   - Full workspace test suite passing with **335 tests**; 0 clippy warnings; 0 compiler errors.
+   - Reclaimed 18.3 GiB disk space via `cargo clean` and verified clean build tree.
+   - 44 feature branches permanently retained in git history. Zero web tech; 100% pure Rust stack.
