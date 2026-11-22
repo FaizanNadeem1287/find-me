@@ -444,3 +444,84 @@ fn test_settings_schema_extension_roundtrip() {
 
     let _ = std::fs::remove_dir_all(&temp_dir);
 }
+
+#[test]
+fn test_app_task_14_3_messages_and_rendering() {
+    let mut app = FindMeApp::new();
+
+    // 1. Quick root adder
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::AddQuickRoot("~/MyTestDir".to_string()),
+    ));
+    assert!(app
+        .state
+        .index_mgmt
+        .roots
+        .iter()
+        .any(|r| r.path.to_string_lossy().contains("MyTestDir")));
+
+    // 2. Preset toggling via app message
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::TogglePreset(findme_ui::index_mgmt::ExclusionPreset::NodeModules),
+    ));
+    assert!(!app
+        .state
+        .index_mgmt
+        .is_preset_active(findme_ui::index_mgmt::ExclusionPreset::NodeModules));
+
+    // 3. Extension adding & removing
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::AddExcludedExtension("mytestext".to_string()),
+    ));
+    assert!(app
+        .state
+        .index_mgmt
+        .excluded_extensions
+        .contains(&"mytestext".to_string()));
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::RemoveExcludedExtension("mytestext".to_string()),
+    ));
+    assert!(!app
+        .state
+        .index_mgmt
+        .excluded_extensions
+        .contains(&"mytestext".to_string()));
+
+    // 4. Folder adding & removing
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::AddExcludedFolder("mytestfolder".to_string()),
+    ));
+    assert!(app
+        .state
+        .index_mgmt
+        .excluded_folders
+        .contains(&"mytestfolder".to_string()));
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::RemoveExcludedFolder("mytestfolder".to_string()),
+    ));
+    assert!(!app
+        .state
+        .index_mgmt
+        .excluded_folders
+        .contains(&"mytestfolder".to_string()));
+
+    // 5. Raw view toggling & copying
+    assert!(!app.state.index_mgmt.view_gitignore_raw);
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::ToggleGitignoreRawView,
+    ));
+    assert!(app.state.index_mgmt.view_gitignore_raw);
+
+    // Verify rendering with raw view enabled
+    {
+        let _view_raw = findme_ui::views::index_mgmt::view(&app.state);
+    }
+
+    let _ = app.update(Message::IndexManagement(
+        IndexManagementMessage::CopyGitignoreRules,
+    ));
+    assert_eq!(
+        app.state.notification,
+        Some("Copied .gitignore rules to clipboard".to_string())
+    );
+}
