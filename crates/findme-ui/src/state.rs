@@ -198,7 +198,15 @@ impl Default for AppState {
             scroll_y: 0.0,
             table_viewport_height: 600.0,
             advanced_filters: AdvancedFilterState::default(),
-            index_mgmt: crate::index_mgmt::IndexManagementState::default(),
+            index_mgmt: {
+                let s = crate::settings::AppSettings::load_from_path(
+                    &crate::settings::AppSettings::config_path(),
+                )
+                .unwrap_or_default();
+                let mut im = crate::index_mgmt::IndexManagementState::default();
+                im.sync_from_settings(&s);
+                im
+            },
             settings: crate::settings::AppSettings::load_from_path(
                 &crate::settings::AppSettings::config_path(),
             )
