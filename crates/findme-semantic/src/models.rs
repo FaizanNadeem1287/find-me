@@ -73,6 +73,17 @@ pub struct DocumentMetadata {
     pub sheet_count: Option<usize>,
     pub slide_count: Option<usize>,
     pub language_or_ext: Option<String>,
+    // Multimodal audio metadata
+    pub duration_secs: Option<u64>,
+    pub sample_rate: Option<u32>,
+    pub channels: Option<u16>,
+    pub audio_codec: Option<String>,
+    // Multimodal image metadata
+    pub image_width: Option<u32>,
+    pub image_height: Option<u32>,
+    pub color_type: Option<String>,
+    pub aspect_ratio: Option<String>,
+    pub perceptual_hash: Option<String>,
 }
 
 /// Fully extracted document containing all segmented chunks and metadata
