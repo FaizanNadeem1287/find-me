@@ -28,15 +28,15 @@ impl ScreenId {
         }
     }
 
-    /// Returns the icon symbol for the screen
-    pub fn icon(&self) -> &'static str {
+    /// Returns the modern SVG vector icon for the screen
+    pub fn vector_icon(&self) -> crate::icons::Icon {
         match self {
-            ScreenId::Search => "🔍",
-            ScreenId::AdvancedSearch => "⚡",
-            ScreenId::IndexManagement => "📁",
-            ScreenId::SearchHistory => "🕒",
-            ScreenId::Settings => "⚙️",
-            ScreenId::About => "ℹ️",
+            ScreenId::Search => crate::icons::Icon::Search,
+            ScreenId::AdvancedSearch => crate::icons::Icon::Sliders,
+            ScreenId::IndexManagement => crate::icons::Icon::Folder,
+            ScreenId::SearchHistory => crate::icons::Icon::Clock,
+            ScreenId::Settings => crate::icons::Icon::Settings,
+            ScreenId::About => crate::icons::Icon::Info,
         }
     }
 

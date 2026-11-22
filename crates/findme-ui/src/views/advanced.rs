@@ -1,11 +1,12 @@
 //! Advanced Search visual filter builder screen
 
 use crate::advanced::{DatePreset, PresetFilter, SizeUnit};
+use crate::icons::{self, Icon};
 use crate::message::{AdvancedSearchMessage, Message};
 use crate::state::AppState;
-use crate::theme;
+use crate::theme::{self, colors};
 use iced::widget::{button, checkbox, column, container, row, scrollable, text, text_input, Space};
-use iced::{Alignment, Element, Length};
+use iced::{Alignment, Color, Element, Length};
 
 /// Renders the Advanced Search query builder
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -14,7 +15,12 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     // 1. Header & Live Query Preview Card
     let header_title = column![
-        text("⚡ Advanced Search & Visual Query Builder").size(18),
+        row![
+            icons::icon(Icon::Sliders, 18.0, colors::ACCENT_AMBER),
+            text("Advanced Search & Visual Query Builder").size(18),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center),
         text("Construct precise multi-criteria file search queries without memorizing syntax")
             .size(12),
     ]
@@ -36,14 +42,28 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             row![
                 text("Generated Query Syntax:").size(13),
                 Space::new().width(Length::Fill),
-                button(text("↺ Reset Filters").size(12))
-                    .padding([5, 12])
-                    .style(theme::secondary_btn_style(&state.theme))
-                    .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ResetFilters)),
-                button(text("🔍 Search Now").size(12))
-                    .padding([5, 14])
-                    .style(theme::primary_btn_style(&state.theme))
-                    .on_press(Message::AdvancedSearch(AdvancedSearchMessage::SubmitSearch)),
+                button(
+                    row![
+                        icons::icon(Icon::Refresh, 12.0, state.theme.text_color()),
+                        text("Reset Filters").size(12),
+                    ]
+                    .spacing(6)
+                    .align_y(Alignment::Center),
+                )
+                .padding([5, 12])
+                .style(theme::secondary_btn_style(&state.theme))
+                .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ResetFilters)),
+                button(
+                    row![
+                        icons::icon(Icon::Search, 12.0, Color::WHITE),
+                        text("Search Now").size(12),
+                    ]
+                    .spacing(6)
+                    .align_y(Alignment::Center),
+                )
+                .padding([5, 14])
+                .style(theme::primary_btn_style(&state.theme))
+                .on_press(Message::AdvancedSearch(AdvancedSearchMessage::SubmitSearch)),
             ]
             .spacing(8)
             .align_y(Alignment::Center),
@@ -123,15 +143,15 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // 3. File Types & Extensions Card
     let ext_checkboxes_row1 = row![
         checkbox(filters.ext_documents)
-            .label("📄 Documents (pdf, doc, txt, md)")
+            .label("Documents (pdf, doc, txt, md)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtDocuments(b))),
         checkbox(filters.ext_code)
-            .label("📝 Source Code (rs, c, cpp, py, js, go)")
+            .label("Source Code (rs, c, cpp, py, js, go)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtCode(b))),
         checkbox(filters.ext_images)
-            .label("🖼️ Images (png, jpg, svg, gif)")
+            .label("Images (png, jpg, svg, gif)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtImages(b))),
     ]
@@ -139,15 +159,15 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     let ext_checkboxes_row2 = row![
         checkbox(filters.ext_audio)
-            .label("🎵 Audio (mp3, wav, flac, ogg)")
+            .label("Audio (mp3, wav, flac, ogg)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtAudio(b))),
         checkbox(filters.ext_video)
-            .label("🎬 Video (mp4, mkv, avi, webm)")
+            .label("Video (mp4, mkv, avi, webm)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtVideo(b))),
         checkbox(filters.ext_archives)
-            .label("📦 Archives (zip, tar, gz, xz, 7z)")
+            .label("Archives (zip, tar, gz, xz, 7z)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtArchives(b))),
     ]
@@ -331,31 +351,28 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .width(Length::Fill);
 
     // 8. 1-Click Quick Template Presets
+    let template_btn = |label: &'static str, preset: PresetFilter| -> Element<'_, Message> {
+        button(
+            row![
+                icons::icon(Icon::Sparkles, 11.0, colors::ACCENT_AMBER),
+                text(label).size(11),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([5, 12])
+        .style(theme::secondary_btn_style(&state.theme))
+        .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
+            preset,
+        )))
+        .into()
+    };
+
     let templates_row = row![
-        button(text("⚡ Large Code (> 1 MB)").size(11))
-            .padding([5, 12])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
-                PresetFilter::LargeCode
-            ))),
-        button(text("⚡ Recent Docs (Past Week)").size(11))
-            .padding([5, 12])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
-                PresetFilter::RecentDocuments
-            ))),
-        button(text("⚡ Gigantic Files (> 1 GB)").size(11))
-            .padding([5, 12])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
-                PresetFilter::GiganticFiles
-            ))),
-        button(text("⚡ Archives Only").size(11))
-            .padding([5, 12])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
-                PresetFilter::ArchivesOnly
-            ))),
+        template_btn("Large Code (> 1 MB)", PresetFilter::LargeCode),
+        template_btn("Recent Docs (Past Week)", PresetFilter::RecentDocuments),
+        template_btn("Gigantic Files (> 1 GB)", PresetFilter::GiganticFiles),
+        template_btn("Archives Only", PresetFilter::ArchivesOnly),
     ]
     .spacing(8);
 

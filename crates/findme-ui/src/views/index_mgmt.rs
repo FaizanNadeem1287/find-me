@@ -1,11 +1,12 @@
 //! Index management and custom exclusion rules screen
 
+use crate::icons::{self, Icon};
 use crate::index_mgmt::IndexingState;
 use crate::message::{IndexManagementMessage, Message};
 use crate::state::AppState;
 use crate::theme::{self, colors};
 use iced::widget::{button, column, container, row, scrollable, text, text_input, Space};
-use iced::{Alignment, Element, Length};
+use iced::{Alignment, Color, Element, Length};
 
 /// Renders the Index Management screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -14,29 +15,55 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     // 1. Header & Actions Bar
     let header_title = column![
-        text("📁 Index Management & Custom Folder Exclusions").size(18),
+        row![
+            icons::icon(Icon::Folder, 18.0, colors::LIGHT_ACCENT),
+            text("Index Management & Custom Folder Exclusions").size(18),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center),
         text("Configure indexed directory roots, monitor memory footprint, and manage skip rules")
             .size(12),
     ]
     .spacing(4);
 
     let action_bar = row![
-        button(text("⚡ Rebuild Index").size(12))
-            .padding([6, 14])
-            .style(theme::primary_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(
-                IndexManagementMessage::TriggerRebuildIndex
-            )),
-        button(text("🔄 Refresh Index").size(12))
-            .padding([6, 14])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(
-                IndexManagementMessage::TriggerRefreshIndex
-            )),
-        button(text("🗑️ Clear Index").size(12))
-            .padding([6, 14])
-            .style(theme::danger_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(IndexManagementMessage::ClearIndex)),
+        button(
+            row![
+                icons::icon(Icon::Refresh, 12.0, Color::WHITE),
+                text("Rebuild Index").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 14])
+        .style(theme::primary_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(
+            IndexManagementMessage::TriggerRebuildIndex,
+        )),
+        button(
+            row![
+                icons::icon(Icon::Refresh, 12.0, state.theme.text_color()),
+                text("Refresh Index").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 14])
+        .style(theme::secondary_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(
+            IndexManagementMessage::TriggerRefreshIndex,
+        )),
+        button(
+            row![
+                icons::icon(Icon::Trash, 12.0, colors::LIGHT_DANGER),
+                text("Clear Index").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 14])
+        .style(theme::danger_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(IndexManagementMessage::ClearIndex)),
     ]
     .spacing(8);
 
@@ -59,7 +86,8 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             container(
                 column![
                     row![
-                        text(format!("⚡ Rebuilding Index: {:.1}%", percent)).size(14),
+                        icons::icon(Icon::Refresh, 16.0, colors::LIGHT_ACCENT),
+                        text(format!("Rebuilding Index: {:.1}%", percent)).size(14),
                         Space::new().width(Length::Fill),
                         text(format!(
                             "{} files indexed so far",
@@ -67,6 +95,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                         ))
                         .size(12),
                     ]
+                    .spacing(8)
                     .align_y(Alignment::Center),
                     text(format!("Scanning: {}", current_path)).size(11),
                 ]
@@ -181,7 +210,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
         let root_row = container(
             row![
-                text("📁").size(18),
+                icons::icon(Icon::Folder, 16.0, colors::LIGHT_ACCENT),
                 column![text(path_str.clone()).size(13), text(counts_str).size(11),].spacing(2),
                 Space::new().width(Length::Fill),
                 container(text(format!("[{}]", root.status.as_str())).size(11))
@@ -198,12 +227,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                             colors::LIGHT_ACCENT
                         },
                     )),
-                button(text("🗑️ Remove").size(11))
-                    .padding([4, 10])
-                    .style(theme::danger_btn_style(&state.theme))
-                    .on_press(Message::IndexManagement(
-                        IndexManagementMessage::RemoveRoot(root.path.clone(),)
-                    )),
+                button(
+                    row![
+                        icons::icon(Icon::Trash, 11.0, colors::LIGHT_DANGER),
+                        text("Remove").size(11),
+                    ]
+                    .spacing(4)
+                    .align_y(Alignment::Center),
+                )
+                .padding([4, 10])
+                .style(theme::danger_btn_style(&state.theme))
+                .on_press(Message::IndexManagement(
+                    IndexManagementMessage::RemoveRoot(root.path.clone(),)
+                )),
             ]
             .spacing(12)
             .align_y(Alignment::Center),
@@ -225,12 +261,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         .padding(8)
         .size(13)
         .width(Length::Fill),
-        button(text("➕ Add Folder").size(12))
-            .padding([6, 14])
-            .style(theme::primary_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(
-                IndexManagementMessage::AddRootFromInput
-            )),
+        button(
+            row![
+                icons::icon(Icon::Plus, 12.0, Color::WHITE),
+                text("Add Folder").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 14])
+        .style(theme::primary_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(
+            IndexManagementMessage::AddRootFromInput
+        )),
     ]
     .spacing(8)
     .align_y(Alignment::Center);
@@ -281,12 +324,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 IndexManagementMessage::AddExclusion("~/.cache".to_string())
             )),
         Space::new().width(Length::Fill),
-        button(text("↺ Restore Defaults").size(11))
-            .padding([3, 10])
-            .style(theme::secondary_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(
-                IndexManagementMessage::AddDefaultExclusions
-            )),
+        button(
+            row![
+                icons::icon(Icon::Refresh, 11.0, state.theme.text_color()),
+                text("Restore Defaults").size(11),
+            ]
+            .spacing(4)
+            .align_y(Alignment::Center),
+        )
+        .padding([3, 10])
+        .style(theme::secondary_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(
+            IndexManagementMessage::AddDefaultExclusions
+        )),
     ]
     .spacing(6)
     .align_y(Alignment::Center);
@@ -298,7 +348,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         let is_builtin = exclusion.is_builtin;
 
         let right_widget: Element<'_, Message> = if is_builtin {
-            container(text("🔒 System Built-in (Kernel Virtual FS)").size(11))
+            container(text("System Built-in (Kernel Virtual FS)").size(11))
                 .padding([2, 6])
                 .style(theme::pill_badge_style(
                     if state.theme.is_dark() {
@@ -314,18 +364,25 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 ))
                 .into()
         } else {
-            button(text("✕ Remove").size(11))
-                .padding([3, 8])
-                .style(theme::danger_btn_style(&state.theme))
-                .on_press(Message::IndexManagement(
-                    IndexManagementMessage::RemoveExclusion(pattern_str.clone()),
-                ))
-                .into()
+            button(
+                row![
+                    icons::icon(Icon::Cross, 10.0, colors::LIGHT_DANGER),
+                    text("Remove").size(11),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
+            )
+            .padding([3, 8])
+            .style(theme::danger_btn_style(&state.theme))
+            .on_press(Message::IndexManagement(
+                IndexManagementMessage::RemoveExclusion(pattern_str.clone()),
+            ))
+            .into()
         };
 
         let item_row = container(
             row![
-                text("🚫").size(14),
+                icons::icon(Icon::Cross, 12.0, colors::LIGHT_DANGER),
                 text(pattern_str).size(13),
                 Space::new().width(Length::Fill),
                 right_widget,
@@ -350,12 +407,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         .padding(8)
         .size(13)
         .width(Length::Fill),
-        button(text("➕ Add Exclusion").size(12))
-            .padding([6, 14])
-            .style(theme::primary_btn_style(&state.theme))
-            .on_press(Message::IndexManagement(
-                IndexManagementMessage::AddExclusionFromInput
-            )),
+        button(
+            row![
+                icons::icon(Icon::Plus, 12.0, Color::WHITE),
+                text("Add Exclusion").size(12),
+            ]
+            .spacing(6)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 14])
+        .style(theme::primary_btn_style(&state.theme))
+        .on_press(Message::IndexManagement(
+            IndexManagementMessage::AddExclusionFromInput,
+        )),
     ]
     .spacing(8)
     .align_y(Alignment::Center);
