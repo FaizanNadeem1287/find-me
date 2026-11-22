@@ -1177,3 +1177,52 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Milestone Reached**: **Phase 11 (Advanced CLI & Automation) is 100% COMPLETE! All 21 tasks across Phases 0 through 11 are verified, merged, and completed on Todoist!**
+
+
+---
+
+## Session 28: 2026-11-22 (Completion of Task 11.2: Fast Full-Text File Content Search `content:<pattern>`)
+
+### Objectives Addressed:
+1. Created Task 11.2: `[TASK-11.2] Core: Fast Full-Text File Content Search (content:<pattern>)` (`6j49XCHpWGrp7CpQ`) in Todoist.
+2. Authored detailed implementation plan artifact: `task-11-2-implementation-plan.md`.
+3. Created feature branch `feature/p11-content-search` from `main` and moved Todoist task to `In Progress`.
+4. Extended Query Lexer & Parser:
+   - Added `"content:"` and `"utf8:"` to `KNOWN_OPERATORS` in `crates/findme-core/src/query/lexer.rs`.
+   - Added `SearchPredicate::Content { pattern: String, case_sensitive: bool }` to `crates/findme-core/src/query/ast.rs` with `PartialEq` implementation.
+   - Parsed quoted and unquoted content terms into `SearchPredicate::Content` in `crates/findme-core/src/query/parser.rs`.
+5. Implemented Matcher Engine Content Search:
+   - Added `CompiledPredicate::Content { pattern, pattern_bytes, pattern_lower, case_sensitive }` in `crates/findme-core/src/matcher.rs`.
+   - Set execution cost `10` in `CompiledNode::cost` to ensure Rayon evaluates metadata filters (`ext:`, `size:`, `path:`, `dm:`, filename) prior to reading disk data.
+   - Implemented `scan_file_for_content` with 64KB chunked buffered reading, null-byte binary probe on the first 1KB, and chunk boundary overlap (`pattern_len - 1` bytes) to guarantee no false negatives across chunk edges.
+   - Enforced 20MB file size ceiling and directory exclusion.
+6. Resolved test flakiness:
+   - Fixed `test_rebuild_index_with_temp_directory` in `crates/findme-ui/tests/engine_integration_tests.rs` where `tempdir()` was prematurely dropped before async crawl completion.
+7. Authored comprehensive integration test suite in `crates/findme-core/tests/content_search_tests.rs`:
+   - `test_lexer_and_parser_content_syntax`: Validates tokenizer and AST parsing of `content:` and `utf8:`.
+   - `test_content_search_plain_text_files`: Validates multi-file content matching.
+   - `test_content_search_boundary_overlap`: Validates tokens straddling 64KB chunk boundaries.
+   - `test_content_search_binary_file_skipped`: Validates null-byte rejection of binary files.
+   - `test_content_search_oversized_file_skipped`: Validates skipping files > 20MB.
+8. Executed full pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings).
+   - Test suite: **252 passing tests** across `findme-core`, `findme-ui`, and `findme-cli` (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+9. Committed to `feature/p11-content-search` (`b58dd00`) and merged into `main` via non-fast-forward merge (`2e146a8`).
+10. Retained `feature/p11-content-search` branch permanently (26 total branches preserved).
+11. Synchronized Todoist: posted implementation audit comment (`6j49j2rwHWXcVGmQ`) and marked task `6j49XCHpWGrp7CpQ` `Completed`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`b58dd00` | `feature/p11-content-search` | `feat(core): fast full-text file content search content: and utf8: predicates (Task 11.2)`
+`2e146a8` (merge) | `main` | `feat(p11): fast full-text file content search (Task 11.2)`
+
+### Todoist State Updates:
+- Task: `[TASK-11.2] Core: Fast Full-Text File Content Search (content:<pattern>)` (`6j49XCHpWGrp7CpQ`) marked `Completed`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Milestone Reached**: **Task 11.2 verified, merged, and completed on Todoist! Total 252 tests passing.**
