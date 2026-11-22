@@ -7,6 +7,7 @@ use crate::message::{
 };
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
+use findme_core::SearchResultItem;
 use iced::widget::{column, container, operation, row};
 use iced::{Background, Element, Length, Size, Subscription, Task, Theme};
 use std::sync::Arc;
@@ -176,15 +177,40 @@ impl FindMeApp {
                 let max_results = self.state.settings.max_results;
                 let sort_col = self.state.sort_column;
                 let sort_asc = self.state.sort_ascending;
-                Task::future(async move {
-                    let (results, duration_ms, total_matches) =
-                        engine.search(&query, max_results, sort_col, sort_asc).await;
-                    Message::ResultsReceived {
-                        results,
-                        search_duration_ms: duration_ms,
-                        total_matches,
-                    }
-                })
+                let search_mode = self.state.search_mode;
+
+                let is_semantic = search_mode != findme_semantic::SearchMode::Everything
+                    || query.starts_with("semantic:")
+                    || query.starts_with("sem:")
+                    || query.starts_with("content:")
+                    || query.starts_with("text:")
+                    || query.starts_with("hybrid:");
+
+                if is_semantic {
+                    let mode = if search_mode != findme_semantic::SearchMode::Everything {
+                        search_mode
+                    } else {
+                        findme_semantic::SearchMode::Hybrid
+                    };
+                    Task::future(async move {
+                        let (hits, duration_ms) =
+                            engine.search_semantic(query, mode, max_results).await;
+                        Message::SemanticResultsReceived {
+                            results: hits,
+                            search_duration_ms: duration_ms,
+                        }
+                    })
+                } else {
+                    Task::future(async move {
+                        let (results, duration_ms, total_matches) =
+                            engine.search(&query, max_results, sort_col, sort_asc).await;
+                        Message::ResultsReceived {
+                            results,
+                            search_duration_ms: duration_ms,
+                            total_matches,
+                        }
+                    })
+                }
             }
             Message::KeyboardEvent(event) => {
                 if let iced::keyboard::Event::KeyPressed { key, modifiers, .. } = event {
@@ -581,6 +607,7 @@ impl FindMeApp {
                     now,
                 );
                 self.state.results = results;
+                self.state.semantic_results.clear();
                 self.state.last_search_duration_ms = search_duration_ms;
                 self.state.is_searching = false;
                 self.state.scroll_y = 0.0;
@@ -590,6 +617,117 @@ impl FindMeApp {
                     Some(0)
                 };
                 self.sort_results();
+                Task::none()
+            }
+            Message::SetSearchMode(mode) => {
+                self.state.search_mode = mode;
+                let q = self.state.query.clone();
+                if !q.is_empty() {
+                    return self.update(Message::ExecuteSearch(q));
+                }
+                Task::none()
+            }
+            Message::ToggleSnippetExpansion(row_idx) => {
+                if self.state.expanded_snippets.contains(&row_idx) {
+                    self.state.expanded_snippets.remove(&row_idx);
+                } else {
+                    self.state.expanded_snippets.insert(row_idx);
+                }
+                Task::none()
+            }
+            Message::JumpAudioTimestamp {
+                path,
+                timestamp_secs,
+            } => {
+                let _ = open::that_detached(&path);
+                let mins = (timestamp_secs / 60.0).floor() as u64;
+                let secs = (timestamp_secs % 60.0).floor() as u64;
+                self.state.notification = Some(format!(
+                    "Playing audio file from {:02}:{:02} ({path})",
+                    mins, secs
+                ));
+                Task::none()
+            }
+            Message::SemanticResultsReceived {
+                results,
+                search_duration_ms,
+            } => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                self.state.history.record_query(
+                    &self.state.query,
+                    results.len(),
+                    search_duration_ms,
+                    now,
+                );
+                self.state.semantic_results = results.clone();
+                self.state.last_search_duration_ms = search_duration_ms;
+                self.state.is_searching = false;
+                self.state.scroll_y = 0.0;
+
+                let mut converted = Vec::with_capacity(results.len());
+                for (idx, hit) in results.into_iter().enumerate() {
+                    let name = hit
+                        .path
+                        .file_name()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("document")
+                        .to_string();
+                    converted.push(SearchResultItem {
+                        id: hit.vector_id.max(idx as u64),
+                        name,
+                        path: hit.path.to_string_lossy().to_string(),
+                        size_bytes: hit.size_bytes,
+                        mtime_secs: hit.mtime,
+                        is_dir: false,
+                    });
+                }
+                self.state.results = converted;
+                self.state.selected_row = if self.state.results.is_empty() {
+                    None
+                } else {
+                    Some(0)
+                };
+                Task::none()
+            }
+            Message::SetThrottleMode(mode) => {
+                self.state.throttle_mode = mode;
+                self.engine.set_throttle_mode(mode);
+                Task::none()
+            }
+            Message::SemanticProgressReceived(progress) => {
+                self.state.semantic_progress = progress;
+                Task::none()
+            }
+            Message::TriggerSemanticRebuild => {
+                let roots: Vec<std::path::PathBuf> = self
+                    .state
+                    .index_mgmt
+                    .roots
+                    .iter()
+                    .map(|r| r.path.clone())
+                    .collect();
+                let _ = self
+                    .engine
+                    .indexer()
+                    .write()
+                    .start_background_indexing(roots);
+                self.state.notification =
+                    Some("Semantic vector indexing started in background".to_string());
+                Task::none()
+            }
+            Message::ToggleSemanticPause => {
+                if self.state.semantic_progress.is_paused {
+                    self.engine.resume_semantic_indexing();
+                    self.state.semantic_progress.is_paused = false;
+                    self.state.notification = Some("Semantic indexing resumed".to_string());
+                } else {
+                    self.engine.pause_semantic_indexing();
+                    self.state.semantic_progress.is_paused = true;
+                    self.state.notification = Some("Semantic indexing paused".to_string());
+                }
                 Task::none()
             }
             Message::TableScrolled {

@@ -6,7 +6,7 @@ use crate::message::{IndexManagementMessage, Message};
 use crate::state::AppState;
 use crate::theme::{self, colors};
 use iced::widget::{button, column, container, row, scrollable, text, text_input, Space};
-use iced::{Alignment, Color, Element, Length};
+use iced::{Alignment, Background, Border, Color, Element, Length};
 
 /// Renders the Index Management & Visual .gitignore Exclusion screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -189,6 +189,124 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         watcher_card,
     ]
     .spacing(12);
+
+    // Semantic Vector Index & Background Throttling Governor
+    let current_throttle = state.throttle_mode;
+    let throttle_pill = |label: &'static str, mode: findme_semantic::ThrottleMode| {
+        let is_sel = current_throttle == mode;
+        button(text(label).size(11).color(if is_sel {
+            Color::WHITE
+        } else {
+            state.theme.subtext_color()
+        }))
+        .padding([3, 10])
+        .style(move |_theme, status| {
+            let bg = if is_sel {
+                Some(Background::Color(colors::LIGHT_ACCENT))
+            } else {
+                match status {
+                    button::Status::Hovered => Some(Background::Color(state.theme.hover_color())),
+                    _ => None,
+                }
+            };
+            button::Style {
+                background: bg,
+                border: Border {
+                    radius: 12.0.into(),
+                    width: if is_sel { 0.0 } else { 1.0 },
+                    color: state.theme.border_color(),
+                },
+                ..Default::default()
+            }
+        })
+        .on_press(Message::SetThrottleMode(mode))
+    };
+
+    let semantic_card = container(
+        column![
+            row![
+                icons::icon(Icon::Sliders, 16.0, colors::LIGHT_ACCENT),
+                text("Local Semantic Vector Search & Content Indexing")
+                    .size(14)
+                    .color(state.theme.text_color()),
+                Space::new().width(Length::Fill),
+                if state.semantic_progress.is_indexing {
+                    text(format!(
+                        "Indexing: {} / {} files",
+                        state.semantic_progress.total_processed,
+                        state.semantic_progress.total_discovered
+                    ))
+                    .size(11)
+                    .color(colors::LIGHT_ACCENT)
+                } else {
+                    text("● Vector Index Ready (HNSW Cosine + SQLite Chunks)")
+                        .size(11)
+                        .color(colors::ACCENT_EMERALD)
+                },
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+            text("Indexes PDF documents, Word/PPTX, spreadsheets, source code, and multimodal audio/vision without cloud dependencies.")
+                .size(11)
+                .color(state.theme.muted_color()),
+            row![
+                text("Background Throttling:")
+                    .size(11)
+                    .color(state.theme.subtext_color()),
+                throttle_pill(
+                    "⚡ Max Performance",
+                    findme_semantic::ThrottleMode::MaxPerformance
+                ),
+                throttle_pill("⚖ Balanced", findme_semantic::ThrottleMode::Balanced),
+                throttle_pill(
+                    "🍃 Battery Saver",
+                    findme_semantic::ThrottleMode::BatterySaver
+                ),
+                Space::new().width(Length::Fill),
+                button(
+                    row![
+                        icons::icon(Icon::Refresh, 11.0, Color::WHITE),
+                        text("Index Content Now").size(11),
+                    ]
+                    .spacing(5)
+                    .align_y(Alignment::Center),
+                )
+                .padding([4, 12])
+                .style(theme::primary_btn_style(&state.theme))
+                .on_press(Message::TriggerSemanticRebuild),
+                button(
+                    row![
+                        icons::icon(
+                            if state.semantic_progress.is_paused {
+                                Icon::Refresh
+                            } else {
+                                Icon::Clock
+                            },
+                            11.0,
+                            state.theme.text_color(),
+                        ),
+                        text(if state.semantic_progress.is_paused {
+                            "Resume"
+                        } else {
+                            "Pause"
+                        })
+                        .size(11),
+                    ]
+                    .spacing(5)
+                    .align_y(Alignment::Center),
+                )
+                .padding([4, 12])
+                .style(theme::secondary_btn_style(&state.theme))
+                .on_press(Message::ToggleSemanticPause),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+        ]
+        .spacing(8),
+    )
+    .padding(14)
+    .style(theme::card_style(&state.theme))
+    .width(Length::Fill);
 
     // 4. Indexed Locations Section (Clean & Easy to Use)
     let roots_header = row![
@@ -658,6 +776,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     main_content = main_content
         .push(stats_row)
+        .push(semantic_card)
         .push(roots_card)
         .push(exclusions_card);
 
