@@ -1,0 +1,44 @@
+{
+  "app-id": "io.github.faizan_nadeem.find_me",
+  "runtime": "org.freedesktop.Platform",
+  "runtime-version": "24.08",
+  "sdk": "org.freedesktop.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable"
+  ],
+  "command": "find-me",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=fallback-x11",
+    "--socket=wayland",
+    "--device=dri",
+    "--filesystem=host",
+    "--talk-name=org.freedesktop.FileManager1",
+    "--talk-name=org.freedesktop.portal.Desktop"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "env": {
+      "CARGO_HOME": "/run/build/find-me/cargo"
+    }
+  },
+  "modules": [
+    {
+      "name": "find-me",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo build --release -p findme-cli",
+        "install -Dm755 target/release/find-me /app/bin/find-me",
+        "install -Dm644 assets/find-me.desktop /app/share/applications/io.github.faizan_nadeem.find_me.desktop",
+        "install -Dm644 assets/icons/find-me.svg /app/share/icons/hicolor/scalable/apps/io.github.faizan_nadeem.find_me.svg",
+        "install -Dm644 assets/io.github.faizan_nadeem.find_me.metainfo.xml /app/share/metainfo/io.github.faizan_nadeem.find_me.metainfo.xml"
+      ],
+      "sources": [
+        {
+          "type": "dir",
+          "path": "../.."
+        }
+      ]
+    }
+  ]
+}
