@@ -194,3 +194,45 @@ fn test_live_semantic_indexing_progress_and_completion_events() {
         let _ = mgmt_view_done.as_widget();
     }
 }
+
+#[test]
+fn test_semantic_type_column_sorts_by_score() {
+    let mut app = FindMeApp::new();
+
+    let hits = vec![
+        SemanticHit {
+            path: PathBuf::from("/home/user/document_b.html"),
+            score: 0.20,
+            match_kind: MatchKind::SemanticMatch,
+            location: "Lines 1-10".to_string(),
+            best_snippet: "... b ...".to_string(),
+            vector_id: 1,
+            mtime: 1700000000,
+            size_bytes: 1000,
+            page_or_line: Some(1),
+            audio_timestamp: None,
+        },
+        SemanticHit {
+            path: PathBuf::from("/home/user/document_a.pdf"),
+            score: 0.90,
+            match_kind: MatchKind::SemanticMatch,
+            location: "Page 1".to_string(),
+            best_snippet: "... a ...".to_string(),
+            vector_id: 2,
+            mtime: 1700000000,
+            size_bytes: 5000,
+            page_or_line: Some(1),
+            audio_timestamp: None,
+        },
+    ];
+
+    let _ = app.update(Message::SemanticResultsReceived {
+        results: hits,
+        search_duration_ms: 5,
+    });
+
+    // When sorting by ColumnId::Type in semantic mode, highest score comes first
+    let _ = app.update(Message::SortByColumn(findme_ui::message::ColumnId::Type));
+    assert_eq!(app.state.results[0].name, "document_a.pdf");
+    assert_eq!(app.state.results[1].name, "document_b.html");
+}

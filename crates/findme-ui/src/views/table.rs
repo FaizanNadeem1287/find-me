@@ -202,10 +202,19 @@ pub fn view<'a>(state: &'a AppState) -> Element<'a, Message> {
 
             let type_badge = if let Some(hit) = semantic_hit {
                 let (badge_text, badge_color) = match hit.match_kind {
-                    findme_semantic::MatchKind::SemanticMatch => (
-                        format!("✨ {:.0}% Sem", hit.score * 100.0),
-                        colors::LIGHT_ACCENT,
-                    ),
+                    findme_semantic::MatchKind::SemanticMatch => {
+                        let pct = if hit.score > 0.0 && hit.score <= 1.0 {
+                            if hit.score >= 0.5 {
+                                hit.score * 100.0
+                            } else {
+                                // Calibrate 384-dim cosine similarity (0.10 - 0.35) into intuitive confidence %
+                                ((hit.score - 0.10) / 0.25).clamp(0.15, 0.99) * 100.0
+                            }
+                        } else {
+                            50.0
+                        };
+                        (format!("✨ {:.0}% Sem", pct), colors::LIGHT_ACCENT)
+                    }
                     findme_semantic::MatchKind::ExactContent => {
                         ("📄 Content".to_string(), colors::TINT_BLUE)
                     }

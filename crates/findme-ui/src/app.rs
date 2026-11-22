@@ -675,16 +675,35 @@ impl FindMeApp {
                         .and_then(|s| s.to_str())
                         .unwrap_or("document")
                         .to_string();
+                    let (size_bytes, mtime_secs) = if hit.size_bytes > 0 && hit.mtime > 0 {
+                        (hit.size_bytes, hit.mtime)
+                    } else if let Ok(meta) = std::fs::metadata(&hit.path) {
+                        let size = meta.len();
+                        let mtime = meta
+                            .modified()
+                            .ok()
+                            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                            .map(|d| d.as_secs())
+                            .unwrap_or(0);
+                        (size, mtime)
+                    } else {
+                        (hit.size_bytes, hit.mtime)
+                    };
                     converted.push(SearchResultItem {
                         id: hit.vector_id.max(idx as u64),
                         name,
                         path: hit.path.to_string_lossy().to_string(),
-                        size_bytes: hit.size_bytes,
-                        mtime_secs: hit.mtime,
+                        size_bytes,
+                        mtime_secs,
                         is_dir: false,
                     });
                 }
                 self.state.results = converted;
+                if self.state.sort_column == ColumnId::Type
+                    && !self.state.semantic_results.is_empty()
+                {
+                    self.sort_results();
+                }
                 self.state.selected_row = if self.state.results.is_empty() {
                     None
                 } else {
@@ -1437,15 +1456,39 @@ impl FindMeApp {
                 });
             }
             ColumnId::Type => {
-                self.state.results.sort_by(|a, b| {
-                    let type_a = crate::views::table::item_type_str(a);
-                    let type_b = crate::views::table::item_type_str(b);
-                    if asc {
-                        type_a.cmp(type_b).then_with(|| a.name.cmp(&b.name))
-                    } else {
-                        type_b.cmp(type_a).then_with(|| b.name.cmp(&a.name))
-                    }
-                });
+                if !self.state.semantic_results.is_empty() {
+                    let semantic_scores: std::collections::HashMap<String, f32> = self
+                        .state
+                        .semantic_results
+                        .iter()
+                        .map(|h| (h.path.to_string_lossy().to_string(), h.score))
+                        .collect();
+                    self.state.results.sort_by(|a, b| {
+                        let score_a = semantic_scores.get(&a.path).copied().unwrap_or(0.0);
+                        let score_b = semantic_scores.get(&b.path).copied().unwrap_or(0.0);
+                        if asc {
+                            score_b
+                                .partial_cmp(&score_a)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                                .then_with(|| a.name.cmp(&b.name))
+                        } else {
+                            score_a
+                                .partial_cmp(&score_b)
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                                .then_with(|| a.name.cmp(&b.name))
+                        }
+                    });
+                } else {
+                    self.state.results.sort_by(|a, b| {
+                        let type_a = crate::views::table::item_type_str(a);
+                        let type_b = crate::views::table::item_type_str(b);
+                        if asc {
+                            type_a.cmp(type_b).then_with(|| a.name.cmp(&b.name))
+                        } else {
+                            type_b.cmp(type_a).then_with(|| b.name.cmp(&a.name))
+                        }
+                    });
+                }
             }
             ColumnId::Size => {
                 self.state.results.sort_by(|a, b| {
