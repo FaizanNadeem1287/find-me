@@ -1568,3 +1568,25 @@ Hash | Branch | Commit Message & Description
    - Location: `SEMANTIC_CONTENT_SEARCH_PLAN.md`
    - Covers: multi-format extraction engine, quantized on-device embedding runtime (all-MiniLM-L6-v2), persistent HNSW vector store, hybrid BM25+vector RRF retrieval, non-blocking low-priority background indexing daemon, and Iced UI preview integration.
 5. Prepared detailed 6-task sub-milestone breakdown (Tasks 14.1 through 14.6) ready for user review.
+6. User approved master plan artifact `SEMANTIC_CONTENT_SEARCH_PLAN.md`.
+7. Created 6 discrete subtasks in Todoist for Phase 14 (`6j4FW9w2hf2pvfFQ` through `6j4FWC2jqqPhWRpQ`).
+8. Created feature branch `feature/p14-doc-code-extractors`.
+9. Created new workspace crate `crates/findme-semantic`:
+   - `models.rs`: `DocumentType`, `DocumentChunk`, `DocumentMetadata`, `ExtractedDocument`.
+   - `error.rs`: Strongly typed `SemanticError`.
+   - `extractors/pdf.rs`: Page-aware text stream extraction via `pdf-extract`.
+   - `extractors/spreadsheet.rs`: `calamine` Excel reader + `csv` delimiter stream reader with header preservation.
+   - `extractors/presentation.rs`: PowerPoint (.pptx) XML slide parser via `zip` + `quick-xml` (`<a:t>` runs).
+   - `extractors/word.rs`: Word (.docx) XML document parser via `zip` + `quick-xml` (`<w:t>` runs).
+   - `extractors/text.rs`: Plain text / markdown chunker with line-range indexing.
+   - `extractors/code.rs`: Source code extractor (Python, Dockerfile, Rust, Go, etc.) with window chunking.
+   - `extractors/mod.rs`: Format routing and size boundary protection.
+   - `lib.rs`: `extract_record_content` bridging `findme-core::FileArena` and `FileRecord`.
+10. Added 11 comprehensive integration tests in `crates/findme-semantic/tests/extractor_tests.rs`.
+11. Cleaned up unused workspace dependencies (`nix`, `rkyv`).
+12. Executed pre-merge QA verification gate `verify_task.sh`:
+    - Code formatting checked and verified (`cargo fmt`).
+    - Strict zero-warning Clippy passed (`cargo clippy --all-targets --all-features -- -D warnings`).
+    - **307 passing tests** across all 4 workspace crates.
+13. Committed to `feature/p14-doc-code-extractors` (`fdb3055`) and merged into `main` via `--no-ff` (`2464170`). Permanently retained feature branch.
+14. Synchronized Todoist: added implementation audit comment `6j4FcH33V5wJm4qx`, moved `[TASK-14.1]` (`6j4FW9w2hf2pvfFQ`) to `Completed`, and marked complete.

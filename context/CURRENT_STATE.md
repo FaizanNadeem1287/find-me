@@ -22,6 +22,7 @@ Phase | Description | Status | Test Coverage
 **Phase 11** | Advanced CLI & Automation (Headless Query, JSON, GUI Pre-Fill, Content Search, Multi-Format Exporters) | **100% COMPLETE** | 262 passing tests (Tasks 11.1, 11.2 & 11.3 completed)
 **Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders, Precision Matching & Ergonomic Dark Mode) | **100% COMPLETE** | 291 passing tests (Tasks 12.1, 12.2, 12.3, 12.4, 12.5 & 12.6 completed)
 **Phase 13** | Zero-Flicker Rendering Optimization & Professional SVG Vector Icon Engine | **100% COMPLETE** | 296 passing tests (Tasks 13.1 & 13.2 completed)
+**Phase 14** | Deep Content Extraction & Multimodal Semantic Search | **IN PROGRESS** | 307 passing tests (Task 14.1 completed)
 
 ---
 
@@ -29,11 +30,12 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | Planning & architectural specification phase
-**Active Task** | `[PHASE-14] Deep Content Extraction & Local Semantic Vector Search (Docs, Code, Audio, Images)` | Todoist Task `6j4C2HrmhG6HMqWQ` (Priority P3)
-**Active Git Branch** | `feature/p14-doc-code-extractors` | Task 14.1 feature branch created
-**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Task updated with refined scope (Video out of scope)
-**Target Branch History**| 36 feature branches permanently retained | Ready for Phase 14 feature branch creation once plan approved
+**Active Phase** | **Phase 14: Deep Content Extraction & Multimodal Semantic Search** | Sub-task 14.1 delivered and verified
+**Last Completed Task** | `[TASK-14.1] Content Extractors: PDF, CSV, Excel, PPTX, Word, Text & Code` | Todoist Task `6j4FW9w2hf2pvfFQ` (Completed & Audited)
+**Next Active Task** | `[TASK-14.2] Multimodal Extractors: Whisper Speech-to-Text & CLIP Vision Embeddings` | Todoist Task `6j4FWC25mhVvGfMx` (In To Do queue)
+**Active Git Branch** | `main` | Clean working tree; 37 feature branches preserved permanently
+**Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | Task 14.1 marked complete; Task 14.2 ready
+**Target Branch History**| 37 feature branches permanently retained | `feature/p14-doc-code-extractors` merged and preserved
 
 ---
 
@@ -76,3 +78,4 @@ Branch | Commit | Description
 `feature/p12-dark-mode-palette` | `27ac532` | Ergonomic Linux dark mode palette, anti-glare pastels, ambient hero card tints
 `feature/p13-zero-flicker-opt` | `55ac40d` | Zero-flicker rendering optimization, CPU shadow elimination, opaque container compositing
 `feature/p13-svg-vector-icons` | `8a61515` | Modern resolution-independent SVG vector icon engine (34 icons) and 100% Unicode emoji elimination
+`feature/p14-doc-code-extractors` | `fdb3055` | Pure Rust content extractors for PDF, CSV, Excel, PPTX, Word DOCX, TXT, and Code
