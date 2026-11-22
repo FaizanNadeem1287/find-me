@@ -749,6 +749,254 @@ pub fn table_row_btn_style(
     }
 }
 
+/// Subtle nested card container style (used for inner rows like roots, exclusions, history items)
+pub fn subtle_card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style {
+    let is_dark = theme.is_dark();
+    move |_theme| {
+        if is_dark {
+            container::Style {
+                background: Some(Background::Color(colors::DARK_HOVER)),
+                border: Border {
+                    color: colors::DARK_BORDER,
+                    width: 1.0,
+                    radius: 8.0.into(),
+                },
+                text_color: Some(colors::DARK_TEXT),
+                ..Default::default()
+            }
+        } else {
+            container::Style {
+                background: Some(Background::Color(colors::LIGHT_HOVER)),
+                border: Border {
+                    color: colors::LIGHT_BORDER,
+                    width: 1.0,
+                    radius: 8.0.into(),
+                },
+                text_color: Some(colors::LIGHT_TEXT),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+/// Primary action button style (Electric blue, rounded 8px corners, crisp hover states)
+pub fn primary_btn_style(
+    theme: &AppTheme,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    let base_color = if is_dark {
+        colors::DARK_ACCENT
+    } else {
+        colors::LIGHT_ACCENT
+    };
+    move |_theme, status| {
+        let bg = match status {
+            button::Status::Hovered => Some(Background::Color(Color {
+                r: (base_color.r * 1.1).min(1.0),
+                g: (base_color.g * 1.1).min(1.0),
+                b: (base_color.b * 1.1).min(1.0),
+                a: 1.0,
+            })),
+            button::Status::Pressed => Some(Background::Color(Color {
+                r: base_color.r * 0.9,
+                g: base_color.g * 0.9,
+                b: base_color.b * 0.9,
+                a: 1.0,
+            })),
+            _ => Some(Background::Color(base_color)),
+        };
+        button::Style {
+            background: bg,
+            text_color: Color::WHITE,
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 8.0.into(),
+            },
+            shadow: Shadow::default(),
+            ..Default::default()
+        }
+    }
+}
+
+/// Secondary action button style (neutral surface, subtle border, smooth hover transitions)
+pub fn secondary_btn_style(
+    theme: &AppTheme,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    move |_theme, status| {
+        let (bg, border_color) = match status {
+            button::Status::Hovered | button::Status::Pressed => {
+                if is_dark {
+                    (
+                        Some(Background::Color(colors::DARK_HOVER)),
+                        colors::DARK_MUTED,
+                    )
+                } else {
+                    (
+                        Some(Background::Color(colors::LIGHT_HOVER)),
+                        colors::LIGHT_MUTED,
+                    )
+                }
+            }
+            _ => {
+                if is_dark {
+                    (
+                        Some(Background::Color(colors::DARK_SURFACE)),
+                        colors::DARK_BORDER,
+                    )
+                } else {
+                    (
+                        Some(Background::Color(colors::LIGHT_SURFACE)),
+                        colors::LIGHT_BORDER,
+                    )
+                }
+            }
+        };
+        button::Style {
+            background: bg,
+            text_color: if is_dark {
+                colors::DARK_TEXT
+            } else {
+                colors::LIGHT_TEXT
+            },
+            border: Border {
+                color: border_color,
+                width: 1.0,
+                radius: 8.0.into(),
+            },
+            shadow: Shadow::default(),
+            ..Default::default()
+        }
+    }
+}
+
+/// Danger/destructive action button style (rose accent, clean outline & hover fills)
+pub fn danger_btn_style(
+    theme: &AppTheme,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    let danger_color = if is_dark {
+        colors::DARK_DANGER
+    } else {
+        colors::LIGHT_DANGER
+    };
+    move |_theme, status| {
+        let (bg, text_color) = match status {
+            button::Status::Hovered | button::Status::Pressed => {
+                (Some(Background::Color(danger_color)), Color::WHITE)
+            }
+            _ => (None, danger_color),
+        };
+        button::Style {
+            background: bg,
+            text_color,
+            border: Border {
+                color: danger_color.scale_alpha(0.5),
+                width: 1.0,
+                radius: 8.0.into(),
+            },
+            shadow: Shadow::default(),
+            ..Default::default()
+        }
+    }
+}
+
+/// Segmented chip button style (for units, date presets, and max result limits)
+pub fn chip_btn_style(
+    theme: &AppTheme,
+    active: bool,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    move |_theme, status| {
+        if active {
+            let (bg, text_color) = if is_dark {
+                (
+                    Some(Background::Color(colors::DARK_SELECTED)),
+                    colors::DARK_ACCENT,
+                )
+            } else {
+                (
+                    Some(Background::Color(colors::LIGHT_SELECTED)),
+                    colors::LIGHT_ACCENT,
+                )
+            };
+            button::Style {
+                background: bg,
+                text_color,
+                border: Border {
+                    color: if is_dark {
+                        colors::DARK_ACCENT
+                    } else {
+                        colors::LIGHT_ACCENT
+                    },
+                    width: 1.0,
+                    radius: 999.0.into(),
+                },
+                shadow: Shadow::default(),
+                ..Default::default()
+            }
+        } else {
+            let bg = match status {
+                button::Status::Hovered | button::Status::Pressed => {
+                    if is_dark {
+                        Some(Background::Color(colors::DARK_HOVER))
+                    } else {
+                        Some(Background::Color(colors::LIGHT_HOVER))
+                    }
+                }
+                _ => None,
+            };
+            button::Style {
+                background: bg,
+                text_color: if is_dark {
+                    colors::DARK_SUBTEXT
+                } else {
+                    colors::LIGHT_SUBTEXT
+                },
+                border: Border {
+                    color: if is_dark {
+                        colors::DARK_BORDER
+                    } else {
+                        colors::LIGHT_BORDER
+                    },
+                    width: 1.0,
+                    radius: 999.0.into(),
+                },
+                shadow: Shadow::default(),
+                ..Default::default()
+            }
+        }
+    }
+}
+
+/// Keyboard shortcut keycap badge style
+pub fn kbd_badge_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style {
+    let is_dark = theme.is_dark();
+    move |_theme| container::Style {
+        background: Some(Background::Color(if is_dark {
+            colors::DARK_HOVER
+        } else {
+            colors::LIGHT_HOVER
+        })),
+        border: Border {
+            color: if is_dark {
+                colors::DARK_BORDER
+            } else {
+                colors::LIGHT_BORDER
+            },
+            width: 1.0,
+            radius: 4.0.into(),
+        },
+        text_color: Some(if is_dark {
+            colors::DARK_TEXT
+        } else {
+            colors::LIGHT_TEXT
+        }),
+        ..Default::default()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
