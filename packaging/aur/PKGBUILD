@@ -1,0 +1,40 @@
+# Maintainer: Muhammad Faizan Nadeem <faizan@find-me.local>
+# Contributor: Find-Me Team <dev@find-me.local>
+
+pkgname=find-me
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Offline-first, high-performance Linux desktop file search utility written in 100% pure Rust"
+arch=('x86_64')
+url="https://github.com/Faizan-Nadeem/Find-Me"
+license=('MIT' 'Apache-2.0')
+depends=('glibc' 'libxkbcommon' 'wayland')
+makedepends=('cargo' 'git')
+optdepends=(
+    'xdg-desktop-portal: Desktop portal integration for file opening and theme sync'
+    'nautilus: DBus file manager highlighting support'
+    'dolphin: DBus file manager highlighting support'
+    'thunar: DBus file manager highlighting support'
+)
+provides=('find-me')
+conflicts=('find-me-bin' 'find-me-git')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+    cd "$srcdir/$pkgname-$pkgver" 2>/dev/null || cd "$srcdir/$pkgname" 2>/dev/null || cd "$startdir/../.."
+    export RUSTUP_TOOLCHAIN=stable
+}
+
+build() {
+    cd "$srcdir/$pkgname-$pkgver" 2>/dev/null || cd "$srcdir/$pkgname" 2>/dev/null || cd "$startdir/../.."
+    cargo build --release --locked -p findme-cli
+}
+
+package() {
+    cd "$srcdir/$pkgname-$pkgver" 2>/dev/null || cd "$srcdir/$pkgname" 2>/dev/null || cd "$startdir/../.."
+    install -Dm755 "target/release/find-me" "$pkgdir/usr/bin/find-me"
+    install -Dm644 "assets/find-me.desktop" "$pkgdir/usr/share/applications/find-me.desktop"
+    install -Dm644 "assets/icons/find-me.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/find-me.svg"
+    install -Dm644 "assets/io.github.faizan_nadeem.find_me.metainfo.xml" "$pkgdir/usr/share/metainfo/io.github.faizan_nadeem.find_me.metainfo.xml"
+}
