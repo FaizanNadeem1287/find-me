@@ -697,6 +697,10 @@ impl FindMeApp {
                             let path = std::path::PathBuf::from(trimmed);
                             if self.state.index_mgmt.add_root(path) {
                                 self.state.index_mgmt.new_root_input.clear();
+                                self.state
+                                    .index_mgmt
+                                    .sync_to_settings(&mut self.state.settings);
+                                let _ = self.state.settings.save_default();
                                 self.state.notification =
                                     Some("Added indexed root directory".to_string());
                             } else {
@@ -706,12 +710,42 @@ impl FindMeApp {
                         }
                     }
                     IndexManagementMessage::AddRoot(path) => {
-                        self.state.index_mgmt.add_root(path);
+                        if self.state.index_mgmt.add_root(path) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                        }
                     }
                     IndexManagementMessage::RemoveRoot(path) => {
                         if self.state.index_mgmt.remove_root(&path) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
                             self.state.notification =
                                 Some("Removed indexed directory root".to_string());
+                        }
+                    }
+                    IndexManagementMessage::AddQuickRoot(path_str) => {
+                        let home =
+                            std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string());
+                        let resolved_path = if let Some(stripped) = path_str.strip_prefix("~/") {
+                            std::path::PathBuf::from(&home).join(stripped)
+                        } else if path_str == "~" {
+                            std::path::PathBuf::from(&home)
+                        } else {
+                            std::path::PathBuf::from(&path_str)
+                        };
+                        if self.state.index_mgmt.add_root(resolved_path) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Added {}", path_str));
+                        } else {
+                            self.state.notification =
+                                Some(format!("{} is already indexed", path_str));
                         }
                     }
                     IndexManagementMessage::UpdateNewExclusionInput(input) => {
@@ -720,8 +754,12 @@ impl FindMeApp {
                     IndexManagementMessage::AddExclusionFromInput => {
                         let trimmed = self.state.index_mgmt.new_exclusion_input.trim().to_string();
                         if !trimmed.is_empty() {
-                            if self.state.index_mgmt.add_exclusion(trimmed) {
+                            if self.state.index_mgmt.add_smart_rule(&trimmed) {
                                 self.state.index_mgmt.new_exclusion_input.clear();
+                                self.state
+                                    .index_mgmt
+                                    .sync_to_settings(&mut self.state.settings);
+                                let _ = self.state.settings.save_default();
                                 self.state.notification = Some("Added exclusion rule".to_string());
                             } else {
                                 self.state.notification =
@@ -730,16 +768,142 @@ impl FindMeApp {
                         }
                     }
                     IndexManagementMessage::AddExclusion(pat) => {
-                        self.state.index_mgmt.add_exclusion(pat);
+                        if self.state.index_mgmt.add_smart_rule(&pat) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                        }
                     }
                     IndexManagementMessage::RemoveExclusion(pat) => {
                         if self.state.index_mgmt.remove_exclusion(&pat) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
                             self.state.notification = Some("Removed exclusion pattern".to_string());
                         }
                     }
                     IndexManagementMessage::AddDefaultExclusions => {
                         self.state.index_mgmt.add_default_exclusions();
+                        self.state
+                            .index_mgmt
+                            .sync_to_settings(&mut self.state.settings);
+                        let _ = self.state.settings.save_default();
                         self.state.notification = Some("Default exclusion rules added".to_string());
+                    }
+                    IndexManagementMessage::TogglePreset(preset) => {
+                        self.state.index_mgmt.toggle_preset(preset);
+                        self.state
+                            .index_mgmt
+                            .sync_to_settings(&mut self.state.settings);
+                        let _ = self.state.settings.save_default();
+                        self.state.notification =
+                            Some(format!("Toggled preset {}", preset.label()));
+                    }
+                    IndexManagementMessage::AddExcludedExtension(ext) => {
+                        if self.state.index_mgmt.add_excluded_extension(&ext) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Excluded extension *.{}", ext));
+                        }
+                    }
+                    IndexManagementMessage::RemoveExcludedExtension(ext) => {
+                        if self.state.index_mgmt.remove_excluded_extension(&ext) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Removed extension *.{}", ext));
+                        }
+                    }
+                    IndexManagementMessage::AddExcludedFolder(folder) => {
+                        if self.state.index_mgmt.add_excluded_folder(&folder) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Excluded folder {}/", folder));
+                        }
+                    }
+                    IndexManagementMessage::RemoveExcludedFolder(folder) => {
+                        if self.state.index_mgmt.remove_excluded_folder(&folder) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Removed folder {}/", folder));
+                        }
+                    }
+                    IndexManagementMessage::AddExcludedPath(path) => {
+                        if self.state.index_mgmt.add_excluded_path(&path) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Excluded path {}", path));
+                        }
+                    }
+                    IndexManagementMessage::RemoveExcludedPath(path) => {
+                        if self.state.index_mgmt.remove_excluded_path(&path) {
+                            self.state
+                                .index_mgmt
+                                .sync_to_settings(&mut self.state.settings);
+                            let _ = self.state.settings.save_default();
+                            self.state.notification = Some(format!("Removed path {}", path));
+                        }
+                    }
+                    IndexManagementMessage::ToggleGitignoreRawView => {
+                        self.state.index_mgmt.view_gitignore_raw =
+                            !self.state.index_mgmt.view_gitignore_raw;
+                    }
+                    IndexManagementMessage::UpdateNewExtensionInput(input) => {
+                        self.state.index_mgmt.new_extension_input = input;
+                    }
+                    IndexManagementMessage::UpdateNewFolderInput(input) => {
+                        self.state.index_mgmt.new_folder_input = input;
+                    }
+                    IndexManagementMessage::AddExtensionFromInput => {
+                        let trimmed = self.state.index_mgmt.new_extension_input.trim().to_string();
+                        if !trimmed.is_empty() {
+                            if self.state.index_mgmt.add_excluded_extension(&trimmed) {
+                                self.state.index_mgmt.new_extension_input.clear();
+                                self.state
+                                    .index_mgmt
+                                    .sync_to_settings(&mut self.state.settings);
+                                let _ = self.state.settings.save_default();
+                                self.state.notification =
+                                    Some(format!("Excluded extension *.{}", trimmed));
+                            } else {
+                                self.state.notification =
+                                    Some("Extension already excluded".to_string());
+                            }
+                        }
+                    }
+                    IndexManagementMessage::AddFolderFromInput => {
+                        let trimmed = self.state.index_mgmt.new_folder_input.trim().to_string();
+                        if !trimmed.is_empty() {
+                            if self.state.index_mgmt.add_excluded_folder(&trimmed) {
+                                self.state.index_mgmt.new_folder_input.clear();
+                                self.state
+                                    .index_mgmt
+                                    .sync_to_settings(&mut self.state.settings);
+                                let _ = self.state.settings.save_default();
+                                self.state.notification =
+                                    Some(format!("Excluded folder {}/", trimmed));
+                            } else {
+                                self.state.notification =
+                                    Some("Folder already excluded".to_string());
+                            }
+                        }
+                    }
+                    IndexManagementMessage::CopyGitignoreRules => {
+                        let rules = self.state.index_mgmt.to_gitignore_string();
+                        let _ = crate::desktop::copy_to_clipboard(&rules);
+                        self.state.notification =
+                            Some("Copied .gitignore rules to clipboard".to_string());
                     }
                     IndexManagementMessage::TriggerRebuildIndex => {
                         self.state.index_mgmt.indexing_state =
