@@ -17,12 +17,18 @@ This file serves as the **Master Project Index** (the Antigravity equivalent of 
    - Zero `unsafe` shortcuts, zero `.unwrap()` or `.expect()` in non-test production code.
    - Zero root/`sudo` privilege requirements; operates 100% within unprivileged user space.
    - Never block the UI thread; long-running operations execute on Tokio or Rayon thread pools.
-3. **Protected `main` Branch**:
+3. **Protected `main` Branch & Mandatory Pull Request (PR) Review Gate**:
    - **NEVER write, edit, or commit implementation code directly on `main`**.
-   - Every task is developed on a dedicated branch: `feature/<task-id>-<task-name>`.
+   - **NEVER merge into `main` directly without user PR review and explicit confirmation**.
+   - Every task is developed on a dedicated feature branch: `feature/<task-id>-<task-name>`.
+   - Once development and QA verification pass on the branch:
+     1. Push the feature branch to GitHub: `git push -u origin feature/<task-id>-<task-name>`.
+     2. Create a Pull Request against `main` via `gh pr create` or the GitHub compare URL.
+     3. **STOP and WAIT** for the user to review the PR.
+     4. Merge into `main` via `git merge --no-ff` **ONLY** after the user reviews and signals approval.
 4. **Permanent Branch Retention**:
    - **DO NOT delete feature branches after merging** (`git branch -d` / `-D` is strictly forbidden).
-   - Always merge into `main` using non-fast-forward merges (`git merge --no-ff`).
+   - Always merge into `main` using non-fast-forward merges (`git merge --no-ff`) and push `main` to `origin`.
 5. **Live Todoist Synchronization**:
    - Synchronize all task states with the [Everything Todoist Project](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`).
 
@@ -78,23 +84,33 @@ Whenever an agent starts a session or finishes a task, it must maintain the [con
 ## 5. Quick Development Commands
 
 ```bash
-# Start a task
+# 1. Start a task on a dedicated feature branch
 git checkout main
+git pull origin main
 git checkout -b feature/<task-id>-<task-name>
 
-# Format code
+# 2. Quality checks & formatting
 cargo fmt --all
-
-# Run strict clippy check
 cargo clippy --all-targets --all-features -- -D warnings
-
-# Execute test suite
 cargo test --workspace
 
-# Run automated pre-merge quality gate
+# 3. Run automated pre-merge quality gate
 bash .agents/skills/find-me-qa-verification/scripts/verify_task.sh
 
-# Merge into main (NEVER delete the feature branch)
+# 4. Commit and push feature branch to GitHub
+git add <modified-files>
+git commit -m "feat(<task-id>): <description>"
+git push -u origin feature/<task-id>-<task-name>
+
+# 5. Create Pull Request against main (or use the GitHub compare URL)
+gh pr create --base main --head feature/<task-id>-<task-name> --title "feat(<task-id>): <description>" --body "<summary>"
+
+# 6. MANDATORY PR REVIEW GATE:
+# STOP and notify the user with the PR link.
+# AWAIT user review and approval before proceeding with merge!
+
+# 7. Merge into main ONLY after user approval (NEVER delete the feature branch)
 git checkout main
-git merge --no-ff feature/<task-id>-<task-name> -m "feat(<task-id>): <description>"
+git merge --no-ff feature/<task-id>-<task-name> -m "merge: feat(<task-id>): <description>"
+git push origin main
 ```

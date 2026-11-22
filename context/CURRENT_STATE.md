@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 21:11 PKT
+*Last Updated*: 2026-11-22 21:31 PKT
 
 ---
 
@@ -30,12 +30,12 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :--- |
-**Active Phase** | **Release Engineering & Documentation** | Root README updated with roadmap & benchmarks
-**Last Completed Task** | Comprehensive README Overhaul & Roadmap | Embedded future works & distribution milestones
-**Next Active Task** | **Ready for User Direction / v0.2.0 Planning** | Todoist Project `6j45wf6xPVCM2RJx`
-**Active Git Branch** | `main` | Clean working tree; 53 feature branches retained permanently
-**GitHub Remote** | `git@github.com:FaizanNadeem1287/find-me.git` | Synced (`main`, 53 branches, and tag `v0.1.0`)
-**Target Branch History**| 53 feature branches permanently retained | Merged with `--no-ff` and pushed to remote origin
+**Active Phase** | **Workflow Standard & Engineering Governance** | Mandating GitHub Branch Push + PR Review Gate
+**Last Completed Task** | Workflow & Runbook Modernization | Added mandatory PR creation and review gate to all skills and AGENTS.md
+**Next Active Task** | **Pull Request Review & User Confirmation** | Branch `feature/update-github-pr-review-workflow`
+**Active Git Branch** | `feature/update-github-pr-review-workflow` | Pushed to GitHub; awaiting PR review
+**GitHub Remote** | `git@github.com:FaizanNadeem1287/find-me.git` | Synced (`main`, 54 branches, and tag `v0.1.0`)
+**Target Branch History**| 54 feature branches permanently retained | Merged with `--no-ff` only after explicit user PR review approval
 
 ---
 
