@@ -1510,3 +1510,42 @@ Hash | Branch | Commit Message & Description
 8. Committed to `feature/p12-dark-mode-palette` (`27ac532`) and merged into `main` via non-fast-forward merge (`--no-ff`).
 9. Retained `feature/p12-dark-mode-palette` branch permanently in Git (34 total feature branches preserved).
 10. Synchronized Todoist: added implementation summary audit comment `6j4CVXRF2wcqwGhQ`, moved task `6j4CRJrxr9887Prx` to `Completed`, and marked complete.
+
+---
+
+## Session 36: 2026-11-22 (Phase 13: Zero-Flicker Rendering Optimization & Professional SVG Vector Icon Engine)
+
+### Objectives Addressed:
+1. User identified dark mode workspace flickering on hover (especially in Settings when hovering sidebar buttons) and requested replacing all Unicode emojis across the app with crisp vector icons matching the Pinterest/Notion reference design.
+2. Authored and user-approved Phase 13 Master Plan artifact: `phase-13-flicker-and-vector-icons-master-plan.md`.
+3. Created Todoist tasks:
+   - `[TASK-13.1] UI: Zero-Flicker Architecture & Rendering Optimization` (`6j4CfrXw72v8QmgQ`)
+   - `[TASK-13.2] UI: Modern SVG Vector Icon Engine & Emojis Elimination` (`6j4CfrcqJxFgH9xx`)
+4. **Task 13.1: Zero-Flicker Architecture & Rendering Optimization**:
+   - Diagnosed root cause: `iced` 0.14 uses `tiny-skia` CPU software rasterizer on Linux. 16px blur radius shadows on 5+ stacked cards caused ~30ms fragment re-rasterization on every hover event.
+   - Removed CPU blur shadows (`Shadow::default()`) in `theme.rs`, `search.rs`, and `sidebar.rs`.
+   - Wrapped `workspace_content` and root `base_layout` in explicit opaque background containers in `app.rs`, preventing buffer compositing gaps under Wayland/X11.
+   - Added `test_zero_flicker_shadow_performance` in `theme_tests.rs`.
+   - Passed pre-merge QA gate, committed on `feature/p13-zero-flicker-opt` (`55ac40d`), and merged into `main` via `--no-ff` (`ca4dae2`). Permanently retained branch.
+   - Updated Todoist task `6j4CfrXw72v8QmgQ` to `Completed` with audit comment `6j4ChPFggQW96p2x`.
+5. **Task 13.2: Modern SVG Vector Icon Engine & Emojis Elimination**:
+   - Enabled `iced/svg` feature in `Cargo.toml`.
+   - Created `crates/findme-ui/src/icons.rs` with zero-allocation SVG engine featuring 34 outline vector icons (Search, Sliders, Folder, FolderOpen, Clock, Settings, Info, Moon, Sun, File, FileText, FileCode, FileImage, FileAudio, FileVideo, FileArchive, Trash, Refresh, Plus, Save, StarFilled, StarEmpty, ExternalLink, Clipboard, Copy, Cross, ChevronDown, ChevronRight, ChevronVertical, Collapse, Expand, Sparkles, Terminal, Database).
+   - Dynamic theme color tinting via `currentColor` SVG stroke/fill with `iced::widget::svg` Handle from static memory bytes.
+   - 100% eliminated Unicode emojis across the entire UI codebase:
+     - `sidebar.rs`: Monogram, search pill, nav items, folder tree, filter clear, collapse, and theme toggle.
+     - `search.rs`: Clear button, hero card folder/file graphics, and search/ready status indicator.
+     - `table.rs`: File type badges, results table rows, and empty state search graphic.
+     - `settings.rs`: Screen headers, theme toggles, save, and reset buttons.
+     - `advanced.rs`: Filter presets, search, reset, and form controls.
+     - `index_mgmt.rs`: Rebuild/refresh/clear actions, root folders, add/remove exclusion buttons, and active scanning banner.
+     - `history.rs`: Star bookmark toggles, clear history, and search actions.
+     - `properties.rs`: Modal title folder/file icon, close cross, and copy path button.
+     - `mod.rs`: Notification banner info and dismiss cross.
+     - `context_menu.rs`: Open, containing folder, copy path/name/URL, properties, and cancel actions.
+     - `message.rs`: Replaced emoji method with `ScreenId::vector_icon(&self)`.
+   - Created `crates/findme-ui/tests/icon_tests.rs` with 4 comprehensive integration tests (all passing).
+   - Executed pre-merge QA verification gate `verify_task.sh`: **296 passing tests**, zero warnings, strict Clippy clean.
+   - Committed on `feature/p13-svg-vector-icons` (`8a61515`) and merged into `main` via `--no-ff` (`df271af`). Permanently retained branch.
+   - Updated Todoist task `6j4CfrcqJxFgH9xx` to `Completed` with audit comment `6j4CqR9RM59fHQxQ`.
+6. Preserved 36 total feature branches permanently in Git.
