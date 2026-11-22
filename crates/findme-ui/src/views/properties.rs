@@ -3,18 +3,27 @@
 //! Visualizes POSIX permissions, octal mode, inode, size, timestamps, and full paths.
 
 use crate::desktop::FileProperties;
+use crate::icons::{self, Icon};
 use crate::message::Message;
+use crate::theme::colors;
 use iced::widget::{button, column, container, row, rule, text, Space};
 use iced::{Alignment, Element, Length};
 
 /// Renders the file properties modal dialog
 pub fn view<'a>(props: &'a FileProperties) -> Element<'a, Message> {
     // Header
+    let icon_type = if props.is_dir {
+        Icon::Folder
+    } else {
+        Icon::FileText
+    };
     let title = row![
-        text(if props.is_dir { "📁" } else { "📄" }).size(20),
+        icons::icon(icon_type, 20.0, colors::LIGHT_ACCENT),
         text(&props.name).size(18),
         Space::new().width(Length::Fill),
-        button(text("✕").size(14)).on_press(Message::CloseProperties),
+        button(icons::icon(Icon::Cross, 14.0, colors::DARK_MUTED))
+            .padding([4, 8])
+            .on_press(Message::CloseProperties),
     ]
     .spacing(10)
     .align_y(Alignment::Center);
@@ -97,9 +106,16 @@ pub fn view<'a>(props: &'a FileProperties) -> Element<'a, Message> {
     .spacing(6);
 
     // Footer actions
-    let copy_path_btn = button(text("📋 Copy Path").size(12))
-        .padding([6, 12])
-        .on_press(Message::CopyPath(props.path.to_string_lossy().to_string()));
+    let copy_path_btn = button(
+        row![
+            icons::icon(Icon::Copy, 14.0, colors::LIGHT_ACCENT),
+            text("Copy Path").size(12),
+        ]
+        .spacing(6)
+        .align_y(Alignment::Center),
+    )
+    .padding([6, 12])
+    .on_press(Message::CopyPath(props.path.to_string_lossy().to_string()));
 
     let close_btn = button(text("Close").size(12))
         .padding([6, 16])

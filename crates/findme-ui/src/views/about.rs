@@ -1,5 +1,6 @@
 //! About screen displaying application branding, technical architecture, and system details
 
+use crate::icons::{self, Icon};
 use crate::message::Message;
 use crate::state::AppState;
 use crate::theme::{self, colors};
@@ -9,7 +10,12 @@ use iced::{Alignment, Color, Element, Length};
 /// Renders the About screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
     let header = column![
-        text("ℹ️ About Find-Me").size(18),
+        row![
+            icons::icon(Icon::Info, 18.0, colors::LIGHT_ACCENT),
+            text("About Find-Me").size(18),
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center),
         text("Instant, offline-first Linux desktop file search utility").size(12),
     ]
     .spacing(4);
@@ -115,12 +121,19 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             row![
                 text("Repository: https://github.com/Faizan-Nadeem/Find-Me").size(12),
                 Space::new().width(Length::Fill),
-                button(text("📋 Copy URL").size(11))
-                    .padding([5, 12])
-                    .style(theme::secondary_btn_style(&state.theme))
-                    .on_press(Message::CopyPath(
-                        "https://github.com/Faizan-Nadeem/Find-Me".to_string(),
-                    )),
+                button(
+                    row![
+                        icons::icon(Icon::Copy, 11.0, state.theme.text_color()),
+                        text("Copy URL").size(11),
+                    ]
+                    .spacing(6)
+                    .align_y(Alignment::Center),
+                )
+                .padding([5, 12])
+                .style(theme::secondary_btn_style(&state.theme))
+                .on_press(Message::CopyPath(
+                    "https://github.com/Faizan-Nadeem/Find-Me".to_string(),
+                )),
             ]
             .align_y(Alignment::Center),
         ]
