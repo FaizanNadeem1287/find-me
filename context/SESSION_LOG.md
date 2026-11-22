@@ -1417,3 +1417,59 @@ Hash | Branch | Commit Message & Description
 8. Committed to `feature/p12-results-table` (`e2da600`) and merged into `main` via non-fast-forward merge (`--no-ff`).
 9. Retained `feature/p12-results-table` branch permanently in Git (31 total feature branches preserved).
 10. Synchronized Todoist: added implementation summary audit comment `6j4CMf72CmVFVhxx`, moved task `6j49wM8Qcp3r5MjQ` to `Completed`, and marked completed.
+
+
+---
+
+## Session 34: 2026-11-22 (Completion of Task 12.5 & Phase 12 Milestone: Modern Secondary Screens Overhaul)
+
+### Objectives Addressed:
+1. Created Task 12.5: `[TASK-12.5] UI: Modern Secondary Screens Overhaul (Advanced Search, Index Management, History & Settings)` (`6j49wM96pVJWcRVx`) on Todoist board.
+2. Authored detailed implementation plan artifact: `task-12-5-implementation-plan.md`.
+3. Created feature branch `feature/p12-secondary-screens` from `main` and moved Todoist task to `In Progress`.
+4. Extended Theme System (`crates/findme-ui/src/theme.rs` and `lib.rs`):
+   - Added `subtle_card_style`: nested row container with soft border and subtle surface tint.
+   - Added `primary_btn_style`: Electric Blue background (`#2563EB` / `#3B82F6`), pure white text, 8px radius, smooth hover states.
+   - Added `secondary_btn_style`: neutral surface button with subtle border and responsive hover transitions.
+   - Added `danger_btn_style`: rose accent button for destructive actions ("Clear Index", "Clear History", "Remove").
+   - Added `chip_btn_style`: segmented pill buttons (999px radius) for single-choice option sets (Units, Presets, Limits).
+   - Added `kbd_badge_style`: keyboard shortcut keycap badges with monospaced font styling.
+5. Overhauled Secondary Views to 100% Pinterest/Notion Card Aesthetic:
+   - **Advanced Search Screen (`crates/findme-ui/src/views/advanced.rs`)**:
+     - Live Query Preview card with monospaced code background, Reset and Search action buttons.
+     - Keywords & Phrases card with modern rounded text inputs (`search_input_style`).
+     - File Types & Extensions card with organized glyph category checkboxes (`📄`, `📝`, `🖼️`, `🎵`, `🎬`, `📦`).
+     - File Size Bounds card with min/max inputs and segmented unit chips (`B`, `KB`, `MB`, `GB`).
+     - Modification Date card with segmented date preset chips (`Any`, `Today`, `Past Week`, etc.).
+     - Target Location, Search Options, and 1-Click Preset Templates cards encased in elevated containers (`card_style`).
+   - **Index Management Screen (`crates/findme-ui/src/views/index_mgmt.rs`)**:
+     - Header actions bar with primary Rebuild, secondary Refresh, and danger Clear Index buttons.
+     - Rebuilding progress hero card with live file counter and scan path.
+     - 5-metric overview cards with vibrant category accents: Total Files (Purple), Folders (Blue), Memory (Amber), Last Scan (Emerald), Watcher (Active/Inactive).
+     - Indexed Roots and Excluded Locations sections in clean elevated cards with inline removal and quick-add controls.
+   - **Search History Screen (`crates/findme-ui/src/views/history.rs`)**:
+     - Header with query filter input, Starred Only filter toggle, and Clear History button.
+     - Empty state with centered icon and guidance.
+     - Query entries in elevated cards with amber bookmark star toggle, latency/count metadata, and 1-click "Run Search".
+   - **Application Settings Screen (`crates/findme-ui/src/views/settings.rs`)**:
+     - Appearance card with active theme pill badge and Toggle Theme button.
+     - Desktop Integration and Privacy Boundary cards with styled checkboxes.
+     - Search Defaults card with segmented max results chips (`1,000`, `5,000`, `10,000`, `50,000`).
+     - Desktop Shortcuts Cheat Sheet card with `<kbd>` keycap badges.
+     - Action bar with Save Preferences and Reset to Defaults buttons.
+   - **About Screen (`crates/findme-ui/src/views/about.rs`)**:
+     - Hero card with bold `"FM"` monogram badge, app title, version pill badge (`v0.1.0`), and mission statement.
+     - Engineering Highlights, Host Environment, and Dual MIT/Apache 2.0 License cards with 1-click Copy URL button.
+6. Added/updated tests:
+   - Extended `test_modern_styling_helpers_instantiation` in `crates/findme-ui/tests/theme_tests.rs`.
+   - Added `test_modern_secondary_screens_theme_toggle_rendering` in `crates/findme-ui/tests/remaining_screens_tests.rs`.
+7. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **291 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+8. Committed to `feature/p12-secondary-screens` (`b9330f5`) and merged into `main` via non-fast-forward merge (`--no-ff`).
+9. Retained `feature/p12-secondary-screens` branch permanently in Git (33 total feature branches preserved).
+10. Synchronized Todoist: added implementation summary audit comment `6j4CQRqCW5X7Hf9Q`, moved task `6j49wM96pVJWcRVx` to `Completed`, and marked complete.
+11. Phase 12 milestone (Tasks 12.1 through 12.5) successfully delivered in full!
