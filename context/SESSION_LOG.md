@@ -1590,3 +1590,27 @@ Hash | Branch | Commit Message & Description
     - **307 passing tests** across all 4 workspace crates.
 13. Committed to `feature/p14-doc-code-extractors` (`fdb3055`) and merged into `main` via `--no-ff` (`2464170`). Permanently retained feature branch.
 14. Synchronized Todoist: added implementation audit comment `6j4FcH33V5wJm4qx`, moved `[TASK-14.1]` (`6j4FW9w2hf2pvfFQ`) to `Completed`, and marked complete.
+
+---
+
+## Session 38: 2026-11-22 (Bugfix: Monitored Directory Roots Live File & Folder Counting & Sub-Root Deduplication)
+
+### Objectives Addressed:
+1. User reported bug shown via screenshots: Downloads folder has 33 files and 1 folder in GNOME Files, but the Find-Me desktop app displayed `0 files • 0 folders` under Monitored Directory Roots in Index Management.
+2. Diagnosed root cause:
+   - Initial root in `IndexManagementState::default()` was initialized with mock numbers `IndexedRoot::new(home_dir, 142_850, 18_420)`, while adding roots always set `0, 0`.
+   - The UI never recalculated per-root file/folder counts from the indexed `FileArena`.
+   - Crawler did not prune nested/overlapping roots (e.g. `~` and `~/Downloads`), resulting in duplicate traversals when both were configured.
+3. Implemented robust zero-overhead solution:
+   - Added `FileArena::count_under_path(&self, root: &Path) -> (u64, u64)` in `crates/findme-core/src/arena.rs` (<1ms execution over `DirectoryTable`).
+   - Added crawler ancestor root deduplication in `Crawler::crawl_with_progress` in `crates/findme-core/src/crawler.rs`.
+   - Replaced mock initial counts with `0, 0` and added `FindMeApp::refresh_root_counts(&mut self)` in `crates/findme-ui/src/app.rs` hooked into boot, `IndexReady`, `RebuildFinished`, `AddRoot` (with tilde `~/` expansion), `RemoveRoot`, and `AddQuickRoot`.
+   - Made Hero Folder Cards in `crates/findme-ui/src/views/search.rs` dynamically display live arena tallies for Documents, Projects, and Downloads.
+4. QA Verification:
+   - Added unit test `test_count_under_path_nested_and_exact` in `crates/findme-core/tests/arena_edge_cases.rs`.
+   - Added integration test `test_live_root_counting_downloads_and_subdirectories` in `crates/findme-ui/tests/index_mgmt_tests.rs`.
+   - Ran `cargo fmt --all`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --workspace` (308 passing tests).
+   - Executed pre-merge quality gate `verify_task.sh` (5/5 passed).
+5. Git & Todoist:
+   - Committed on `feature/fix-monitored-root-counts` (`fad87c0`) and merged into `main` via `--no-ff` (`9b19ea4`). Permanently retained feature branch (38 total branches).
+   - Added implementation audit comment `6j4FmfWmmQggw8wQ` to Todoist task `[BUGFIX] Live Arena File & Folder Counting for Monitored Directory Roots & Sub-Root Deduplication` (`6j4FgW34WMVvwvRx`) and marked complete.
