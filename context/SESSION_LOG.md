@@ -1384,3 +1384,36 @@ Hash | Branch | Commit Message & Description
 9. Aligned hero card colors directly to specification: Documents in Amber (`#F59E0B`), Code in Blue (`#2563EB`), and Downloads/Media in Purple (`#6366F1`).
 10. Added dedicated integration test suite `crates/findme-ui/tests/folder_hero_tests.rs` (3 tests verifying breadcrumb navigation, card selection/toggling, and WCAG AA contrast compliance; total workspace tests: **273 passing tests**).
 11. Synchronized Todoist: updated task `6j49wMC9Mm8cp3jx` to `Completed` section with implementation update comment.
+
+
+---
+
+## Session 33: 2026-11-22 (Completion of Task 12.4: Revamped Modern Files Table & Exact Substring Match Default)
+
+### Objectives Addressed:
+1. Created Task 12.4: `[TASK-12.4] UI: Revamped Modern Files Table & Exact Substring Match Default` (`6j49wM8Qcp3r5MjQ`) on Todoist board.
+2. Authored detailed implementation plan artifact: `task-12-4-implementation-plan.md`.
+3. Created feature branch `feature/p12-results-table` from `main` and moved Todoist task to `In Progress`.
+4. Overhauled Query Engine precision matching:
+   - Updated `crates/findme-core/src/query/lexer.rs` to tokenize explicit `fuzzy:` prefix operator.
+   - Added `SearchPredicate::Fuzzy(String)` variant to query AST in `crates/findme-core/src/query/ast.rs` and recursive descent parser in `crates/findme-core/src/query/parser.rs`.
+   - Defaulted unquoted terms in `crates/findme-core/src/matcher.rs` to exact case-insensitive substring matching and wildcard (`*`, `?`) expansion (matching Windows *Everything* behavior).
+   - Retained high-performance `nucleo-matcher` fuzzy engine strictly for `fuzzy:<term>` queries with tiered score bonuses (+30k exact match, +20k stem match, +10k prefix match, +5k substring match) to ensure strict ranking hierarchy.
+5. Revamped virtual results table in `crates/findme-ui/src/views/table.rs`:
+   - Updated `ROW_HEIGHT` to 36.0 px for generous padding, touch-friendly hit areas, and Notion-style density.
+   - Added `item_icon_and_type()` classifying files with dedicated Unicode icons and color mapping for Folders (`📁`), Code (`📝`), Documents (`📄`), Images (`🖼️`), Archives (`📦`), and Audio/Video (`🎵`/`🎬`).
+   - Rendered type badges using `pill_badge_style` with subtle neutral borders and rounded corners.
+   - Rendered file size badges with human-readable SI formatting.
+   - Added `table_row_btn_style` with subtle horizontal bottom border dividers separating results.
+6. Added/updated comprehensive test suites:
+   - Updated `crates/findme-core/tests/matcher_edge_cases.rs` (`test_strict_score_ordering_hierarchy`, `test_quoted_search_disables_fuzzy`, `test_user_inquiry_plan_md_precision_matching`).
+   - Updated fuzzy query benchmark in `crates/findme-core/tests/benchmark_matcher.rs`.
+7. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **278 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+8. Committed to `feature/p12-results-table` (`e2da600`) and merged into `main` via non-fast-forward merge (`--no-ff`).
+9. Retained `feature/p12-results-table` branch permanently in Git (31 total feature branches preserved).
+10. Synchronized Todoist: added implementation summary audit comment `6j4CMf72CmVFVhxx`, moved task `6j49wM8Qcp3r5MjQ` to `Completed`, and marked completed.
