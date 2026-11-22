@@ -11,16 +11,21 @@ pub mod settings;
 pub mod sidebar;
 pub mod table;
 
+use crate::icons::{self, Icon};
 use crate::message::Message;
+use crate::theme::colors;
 use iced::widget::{button, container, row, text, Space};
 use iced::{Element, Length};
 
 /// Renders a top notification banner when active
 pub fn notification_banner<'a>(msg: &'a str) -> Element<'a, Message> {
     let banner_content = row![
-        text(format!("ℹ️  {msg}")).size(13),
+        icons::icon(Icon::Info, 16.0, colors::LIGHT_ACCENT),
+        text(msg).size(13),
         Space::new().width(Length::Fill),
-        button(text("✕").size(12)).on_press(Message::DismissNotification),
+        button(icons::icon(Icon::Cross, 12.0, colors::DARK_MUTED))
+            .padding([4, 8])
+            .on_press(Message::DismissNotification),
     ]
     .spacing(12)
     .align_y(iced::Alignment::Center);

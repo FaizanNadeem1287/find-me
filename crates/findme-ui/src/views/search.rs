@@ -1,5 +1,6 @@
 //! Modern Search view layout with Pinterest / Notion-style Breadcrumbs, Folders Hero Showcase, and Files Table
 
+use crate::icons::{self, Icon};
 use crate::message::Message;
 use crate::state::{format_number, search_input_id, AppState};
 use crate::theme::{colors, hero_card_style, pill_badge_style, search_input_style};
@@ -82,7 +83,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         .width(Length::Fill);
 
     if !state.query.is_empty() {
-        let clear_btn = button(text("✕").size(12).color(state.theme.subtext_color()))
+        let clear_btn = button(icons::icon(Icon::Cross, 12.0, state.theme.subtext_color()))
             .padding([8, 12])
             .style(move |_theme, status| {
                 let bg = match status {
@@ -177,17 +178,26 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         Space::new().width(Length::Fixed(12.0)),
         text(matches_text).size(12).color(state.theme.muted_color()),
         Space::new().width(Length::Fill),
-        text(if state.is_searching {
-            "⚡ Searching index..."
-        } else {
-            "✓ Ready"
-        })
-        .size(11)
-        .color(if state.is_searching {
-            colors::LIGHT_ACCENT
-        } else {
-            state.theme.muted_color()
-        }),
+        row![
+            if state.is_searching {
+                icons::icon(Icon::Refresh, 12.0, colors::LIGHT_ACCENT)
+            } else {
+                icons::icon(Icon::Folder, 12.0, state.theme.muted_color())
+            },
+            text(if state.is_searching {
+                "Searching index..."
+            } else {
+                "Ready"
+            })
+            .size(11)
+            .color(if state.is_searching {
+                colors::LIGHT_ACCENT
+            } else {
+                state.theme.muted_color()
+            }),
+        ]
+        .spacing(6)
+        .align_y(Alignment::Center),
     ]
     .align_y(Alignment::Center)
     .width(Length::Fill);
@@ -252,9 +262,9 @@ fn render_hero_card<'a>(
 
     // Layered 3D folder center graphic
     let center_graphic = row![
-        text("📁").size(34),
-        Space::new().width(Length::Fixed(4.0)),
-        text("📄").size(24),
+        icons::icon(Icon::FolderOpen, 36.0, accent_color),
+        Space::new().width(Length::Fixed(6.0)),
+        icons::icon(Icon::FileText, 24.0, accent_color.scale_alpha(0.7)),
     ]
     .align_y(Alignment::Center);
 

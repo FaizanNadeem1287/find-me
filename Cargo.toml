@@ -56,7 +56,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # UI Framework
-iced = { version = "0.14", default-features = false, features = ["tokio", "advanced", "tiny-skia", "x11", "wayland", "linux-theme-detection"] }
+iced = { version = "0.14", default-features = false, features = ["tokio", "advanced", "tiny-skia", "x11", "wayland", "linux-theme-detection", "svg"] }
 iced_test = "0.14"
 
 # Testing & Benchmarking

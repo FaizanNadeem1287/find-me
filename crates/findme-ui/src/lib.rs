@@ -8,6 +8,7 @@ pub mod app;
 pub mod desktop;
 pub mod engine;
 pub mod history;
+pub mod icons;
 pub mod index_mgmt;
 pub mod message;
 pub mod settings;
@@ -22,6 +23,7 @@ pub use desktop::{
 };
 pub use engine::{engine_subscription, EngineBridge, EngineEvent};
 pub use history::{HistoryEntry, SearchHistoryState};
+pub use icons::{icon, Icon};
 pub use index_mgmt::{
     ExcludedPattern, IndexManagementState, IndexStats, IndexedRoot, IndexingState, RootStatus,
 };

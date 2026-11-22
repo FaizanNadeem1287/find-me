@@ -1,5 +1,6 @@
 //! Modern responsive sidebar navigation component inspired by Notion / Pinterest file workspace aesthetic
 
+use crate::icons::{self, Icon};
 use crate::message::{Message, ScreenId};
 use crate::state::AppState;
 use crate::theme::{colors, pill_badge_style, sidebar_item_style};
@@ -46,7 +47,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         ]
         .spacing(1);
 
-        let chevron = text("↕").size(12).color(state.theme.muted_color());
+        let chevron = icons::icon(Icon::ChevronVertical, 11.0, state.theme.muted_color());
 
         let header_row = row![
             monogram,
@@ -96,7 +97,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // 2. Quick Search Pill
     // -------------------------------------------------------------------------
     let search_pill_section: Element<'_, Message> = if state.sidebar_expanded {
-        let search_icon = text("🔍").size(12).color(state.theme.muted_color());
+        let search_icon = icons::icon(Icon::Search, 12.0, state.theme.muted_color());
         let placeholder = text("Search files & folders...")
             .size(12)
             .color(state.theme.muted_color());
@@ -165,7 +166,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .into()
     } else {
         button(
-            container(text("🔍").size(14).color(state.theme.text_color()))
+            container(icons::icon(Icon::Search, 14.0, state.theme.text_color()))
                 .width(Length::Fill)
                 .align_x(Alignment::Center),
         )
@@ -183,6 +184,15 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 
     for screen in ScreenId::ALL {
         let is_active = state.active_screen == screen;
+        let icon_col = if is_active {
+            if is_dark {
+                colors::DARK_TEXT
+            } else {
+                colors::LIGHT_ACCENT
+            }
+        } else {
+            state.theme.muted_color()
+        };
 
         let nav_btn = if state.sidebar_expanded {
             let label_row = match screen {
@@ -205,7 +215,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                         ));
 
                     row![
-                        text(screen.icon()).size(14),
+                        icons::icon(screen.vector_icon(), 14.0, icon_col),
                         text(screen.title()).size(13).color(if is_active {
                             if is_dark {
                                 colors::DARK_TEXT
@@ -241,7 +251,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     };
 
                     let mut r = row![
-                        text(screen.icon()).size(14),
+                        icons::icon(screen.vector_icon(), 14.0, icon_col),
                         text(screen.title()).size(13).color(if is_active {
                             if is_dark {
                                 colors::DARK_TEXT
@@ -262,7 +272,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     r
                 }
                 ScreenId::AdvancedSearch => row![
-                    text(screen.icon()).size(14),
+                    icons::icon(screen.vector_icon(), 14.0, icon_col),
                     text(screen.title()).size(13).color(if is_active {
                         if is_dark {
                             colors::DARK_TEXT
@@ -273,12 +283,13 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                         state.theme.text_color()
                     }),
                     Space::new().width(Length::Fill),
-                    container(text("⚡").size(10).color(colors::ACCENT_AMBER)).padding([1, 4]),
+                    container(icons::icon(Icon::Sparkles, 11.0, colors::ACCENT_AMBER))
+                        .padding([1, 4]),
                 ]
                 .spacing(10)
                 .align_y(Alignment::Center),
                 _ => row![
-                    text(screen.icon()).size(14),
+                    icons::icon(screen.vector_icon(), 14.0, icon_col),
                     text(screen.title()).size(13).color(if is_active {
                         if is_dark {
                             colors::DARK_TEXT
@@ -300,7 +311,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 .on_press(Message::SwitchScreen(screen))
         } else {
             button(
-                container(text(screen.icon()).size(15))
+                container(icons::icon(screen.vector_icon(), 16.0, icon_col))
                     .width(Length::Fill)
                     .align_x(Alignment::Center),
             )
@@ -322,7 +333,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 .size(10)
                 .color(state.theme.muted_color()),
             Space::new().width(Length::Fill),
-            button(text("+").size(12).color(state.theme.muted_color()))
+            button(icons::icon(Icon::Plus, 10.0, state.theme.muted_color()))
                 .padding([1, 6])
                 .style(sidebar_item_style(&state.theme, false))
                 .on_press(Message::SwitchScreen(ScreenId::IndexManagement)),
@@ -330,20 +341,20 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         .align_y(Alignment::Center);
 
         let root_expanded = state.expanded_folders.contains("General Knowledge");
-        let chevron_symbol = if root_expanded { "▾" } else { "▸" };
+        let chevron_icon = if root_expanded {
+            Icon::ChevronDown
+        } else {
+            Icon::ChevronRight
+        };
 
         let root_row = row![
-            button(
-                text(chevron_symbol)
-                    .size(11)
-                    .color(state.theme.muted_color())
-            )
-            .padding([2, 4])
-            .style(sidebar_item_style(&state.theme, false))
-            .on_press(Message::ToggleFolderTreeNode(
-                "General Knowledge".to_string()
-            )),
-            text("📁").size(13),
+            button(icons::icon(chevron_icon, 10.0, state.theme.muted_color()))
+                .padding([2, 4])
+                .style(sidebar_item_style(&state.theme, false))
+                .on_press(Message::ToggleFolderTreeNode(
+                    "General Knowledge".to_string()
+                )),
+            icons::icon(Icon::Folder, 13.0, state.theme.muted_color()),
             text("General Knowledge")
                 .size(12)
                 .color(state.theme.text_color()),
@@ -362,7 +373,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         if let Some(ref active_filter) = state.active_folder_filter {
             let clear_btn = button(
                 row![
-                    text("✕").size(10).color(colors::ACCENT_AMBER),
+                    icons::icon(Icon::Cross, 9.0, colors::ACCENT_AMBER),
                     text(format!("Filter: {active_filter}"))
                         .size(10)
                         .color(state.theme.muted_color()),
@@ -424,7 +435,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 let item_row = row![
                     Space::new().width(Length::Fixed(10.0)),
                     color_indicator,
-                    text("📁").size(12),
+                    icons::icon(Icon::Folder, 12.0, accent_color),
                     text(title).size(12).color(if is_selected {
                         if is_dark {
                             colors::DARK_TEXT
@@ -463,59 +474,60 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // -------------------------------------------------------------------------
     // 5. Footer Actions: Collapse & Theming
     // -------------------------------------------------------------------------
-    let collapse_label = if state.sidebar_expanded {
-        "⇤  Collapse"
-    } else {
-        "⇥"
-    };
-
-    let theme_label = if state.sidebar_expanded {
-        if is_dark {
-            "🌙  Dark Mode"
-        } else {
-            "☀️  Light Mode"
-        }
-    } else if is_dark {
-        "🌙"
-    } else {
-        "☀️"
-    };
-
-    let collapse_btn = button(
-        container(
-            text(collapse_label)
-                .size(12)
-                .color(state.theme.subtext_color()),
+    let collapse_btn = if state.sidebar_expanded {
+        button(
+            row![
+                icons::icon(Icon::Collapse, 13.0, state.theme.subtext_color()),
+                text("Collapse").size(12).color(state.theme.subtext_color()),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
         )
         .width(Length::Fill)
-        .align_x(if state.sidebar_expanded {
-            Alignment::Start
-        } else {
-            Alignment::Center
-        }),
-    )
-    .width(Length::Fill)
-    .padding([6, 10])
-    .style(sidebar_item_style(&state.theme, false))
-    .on_press(Message::ToggleSidebar);
-
-    let theme_btn = button(
-        container(
-            text(theme_label)
-                .size(12)
-                .color(state.theme.subtext_color()),
+        .padding([6, 10])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::ToggleSidebar)
+    } else {
+        button(
+            container(icons::icon(Icon::Expand, 14.0, state.theme.subtext_color()))
+                .width(Length::Fill)
+                .align_x(Alignment::Center),
         )
         .width(Length::Fill)
-        .align_x(if state.sidebar_expanded {
-            Alignment::Start
-        } else {
-            Alignment::Center
-        }),
-    )
-    .width(Length::Fill)
-    .padding([6, 10])
-    .style(sidebar_item_style(&state.theme, false))
-    .on_press(Message::ToggleTheme);
+        .padding([6, 0])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::ToggleSidebar)
+    };
+
+    let theme_icon = if is_dark { Icon::Moon } else { Icon::Sun };
+    let theme_label_text = if is_dark { "Dark Mode" } else { "Light Mode" };
+
+    let theme_btn = if state.sidebar_expanded {
+        button(
+            row![
+                icons::icon(theme_icon, 13.0, state.theme.subtext_color()),
+                text(theme_label_text)
+                    .size(12)
+                    .color(state.theme.subtext_color()),
+            ]
+            .spacing(8)
+            .align_y(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([6, 10])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::ToggleTheme)
+    } else {
+        button(
+            container(icons::icon(theme_icon, 14.0, state.theme.subtext_color()))
+                .width(Length::Fill)
+                .align_x(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([6, 0])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::ToggleTheme)
+    };
 
     let footer_section = column![collapse_btn, theme_btn].spacing(4);
 
