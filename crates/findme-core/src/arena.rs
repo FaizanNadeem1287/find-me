@@ -276,6 +276,48 @@ impl FileArena {
             .count()
     }
 
+    /// Returns the exact count of `(files, subfolders)` residing under the specified directory path.
+    ///
+    /// Evaluates all indexed directory paths in `DirectoryTable` and tallies non-deleted records
+    /// belonging to directories matching or nested within `root`.
+    pub fn count_under_path(&self, root: &Path) -> (u64, u64) {
+        let clean_root = PathBuf::from(root.to_string_lossy().trim_end_matches('/'));
+        if clean_root.as_os_str().is_empty() {
+            return (
+                self.active_len() as u64,
+                self.dirs.len().saturating_sub(1) as u64,
+            );
+        }
+
+        let dir_count = self.dirs.len();
+        let mut matching_dirs = vec![false; dir_count];
+        let mut subfolder_count = 0u64;
+
+        for (id, is_matching) in matching_dirs.iter_mut().enumerate() {
+            if let Some(dir_path) = self.dirs.get_path(id as u32) {
+                let clean_dir = PathBuf::from(dir_path.to_string_lossy().trim_end_matches('/'));
+                if clean_dir == clean_root || clean_dir.starts_with(&clean_root) {
+                    *is_matching = true;
+                    if clean_dir != clean_root {
+                        subfolder_count += 1;
+                    }
+                }
+            }
+        }
+
+        let mut file_count = 0u64;
+        for record in &self.records {
+            if !record.flags.is_deleted() {
+                let d_id = record.dir_id as usize;
+                if d_id < matching_dirs.len() && matching_dirs[d_id] {
+                    file_count += 1;
+                }
+            }
+        }
+
+        (file_count, subfolder_count)
+    }
+
     /// Updates existing file metadata (size, mtime, flags)
     pub fn update_file_metadata(
         &mut self,

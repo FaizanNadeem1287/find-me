@@ -111,11 +111,39 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // -------------------------------------------------------------------------
     let folders_title = text("Folders").size(18).color(state.theme.text_color());
 
+    let find_root_count = |target: &str| -> Option<u64> {
+        state
+            .index_mgmt
+            .roots
+            .iter()
+            .find(|r| {
+                r.path
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.eq_ignore_ascii_case(target))
+                    .unwrap_or(false)
+            })
+            .map(|r| r.file_count)
+    };
+
+    let docs_subtitle = match find_root_count("Documents") {
+        Some(c) => format!("{} files • PDF & Notes", crate::state::format_number(c)),
+        None => "PDF & Notes".to_string(),
+    };
+    let dev_subtitle = match find_root_count("Projects") {
+        Some(c) => format!("{} files • Rust & Python", crate::state::format_number(c)),
+        None => "Rust & Python".to_string(),
+    };
+    let downloads_subtitle = match find_root_count("Downloads") {
+        Some(c) => format!("{} files • Media & Zip", crate::state::format_number(c)),
+        None => "Media & Zip".to_string(),
+    };
+
     // Hero Card 1: Documents (Amber)
     let card1 = render_hero_card(
         &state.theme,
         "Documents",
-        "24 files • PDF & Notes",
+        docs_subtitle,
         "Documents",
         state.theme.category_amber(),
         state.theme.tint_amber(),
@@ -128,7 +156,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     let card2 = render_hero_card(
         &state.theme,
         "Code & Dev",
-        "58 files • Rust & Python",
+        dev_subtitle,
         "Projects",
         state.theme.category_blue(),
         state.theme.tint_blue(),
@@ -141,7 +169,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     let card3 = render_hero_card(
         &state.theme,
         "Downloads & Media",
-        "18 files • Media & Zip",
+        downloads_subtitle,
         "Downloads",
         state.theme.category_purple(),
         state.theme.tint_purple(),
@@ -240,7 +268,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
 fn render_hero_card<'a>(
     theme: &'a crate::theme::AppTheme,
     title: &'static str,
-    subtitle: &'static str,
+    subtitle: String,
     filter_target: &'static str,
     accent_color: Color,
     tint_color: Color,

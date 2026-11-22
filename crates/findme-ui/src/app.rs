@@ -67,7 +67,9 @@ impl FindMeApp {
             ..Default::default()
         };
 
-        Self { state, engine }
+        let mut app = Self { state, engine };
+        app.refresh_root_counts();
+        app
     }
 
     /// Boots the application and initializes primary focus on the search input
@@ -104,6 +106,17 @@ impl FindMeApp {
     /// Application window title
     pub fn title(&self) -> String {
         format!("Find-Me — {}", self.state.active_screen.title())
+    }
+
+    /// Recalculates live file and folder counts for all monitored roots from the active FileArena
+    pub fn refresh_root_counts(&mut self) {
+        let arena = self.engine.arena();
+        let lock = arena.read();
+        for root in &mut self.state.index_mgmt.roots {
+            let (files, folders) = lock.count_under_path(&root.path);
+            root.file_count = files;
+            root.folder_count = folders;
+        }
     }
 
     /// Handles messages and performs state transitions
@@ -724,9 +737,18 @@ impl FindMeApp {
                     IndexManagementMessage::AddRootFromInput => {
                         let trimmed = self.state.index_mgmt.new_root_input.trim();
                         if !trimmed.is_empty() {
-                            let path = std::path::PathBuf::from(trimmed);
+                            let home =
+                                std::env::var("HOME").unwrap_or_else(|_| "/home/user".to_string());
+                            let path = if let Some(stripped) = trimmed.strip_prefix("~/") {
+                                std::path::PathBuf::from(&home).join(stripped)
+                            } else if trimmed == "~" {
+                                std::path::PathBuf::from(&home)
+                            } else {
+                                std::path::PathBuf::from(trimmed)
+                            };
                             if self.state.index_mgmt.add_root(path) {
                                 self.state.index_mgmt.new_root_input.clear();
+                                self.refresh_root_counts();
                                 self.state
                                     .index_mgmt
                                     .sync_to_settings(&mut self.state.settings);
@@ -741,6 +763,7 @@ impl FindMeApp {
                     }
                     IndexManagementMessage::AddRoot(path) => {
                         if self.state.index_mgmt.add_root(path) {
+                            self.refresh_root_counts();
                             self.state
                                 .index_mgmt
                                 .sync_to_settings(&mut self.state.settings);
@@ -749,6 +772,7 @@ impl FindMeApp {
                     }
                     IndexManagementMessage::RemoveRoot(path) => {
                         if self.state.index_mgmt.remove_root(&path) {
+                            self.refresh_root_counts();
                             self.state
                                 .index_mgmt
                                 .sync_to_settings(&mut self.state.settings);
@@ -768,6 +792,7 @@ impl FindMeApp {
                             std::path::PathBuf::from(&path_str)
                         };
                         if self.state.index_mgmt.add_root(resolved_path) {
+                            self.refresh_root_counts();
                             self.state
                                 .index_mgmt
                                 .sync_to_settings(&mut self.state.settings);
@@ -1020,6 +1045,7 @@ impl FindMeApp {
                         self.state.index_mgmt.stats = stats;
                         self.state.index_mgmt.indexing_state =
                             crate::index_mgmt::IndexingState::Idle;
+                        self.refresh_root_counts();
                         self.state.notification =
                             Some("Index rebuild completed successfully".to_string());
                     }
@@ -1138,6 +1164,7 @@ impl FindMeApp {
                             Some((duration_ms / 1000).max(1));
                         self.state.index_mgmt.indexing_state =
                             crate::index_mgmt::IndexingState::Idle;
+                        self.refresh_root_counts();
                         self.state.notification = Some(format!(
                             "Index ready: {} files in {} folders ({:.2} MB in {} ms)",
                             crate::state::format_number(total_files),
