@@ -185,7 +185,7 @@ impl FileFingerprintCache {
 }
 
 /// Snapshot of live indexing progress
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct IndexerProgress {
     pub total_discovered: usize,
     pub total_processed: usize,
