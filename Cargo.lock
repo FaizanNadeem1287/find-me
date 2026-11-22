@@ -1382,6 +1382,7 @@ version = "0.1.0"
 dependencies = [
  "arboard",
  "findme-core",
+ "findme-semantic",
  "iced",
  "iced_test",
  "open",

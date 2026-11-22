@@ -9,6 +9,7 @@ repository.workspace = true
 
 [dependencies]
 findme-core.workspace = true
+findme-semantic.workspace = true
 iced.workspace = true
 tokio.workspace = true
 parking_lot.workspace = true

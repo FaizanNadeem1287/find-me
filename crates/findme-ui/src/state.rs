@@ -62,6 +62,18 @@ pub struct AppState {
     pub expanded_folders: std::collections::HashSet<String>,
     /// Active directory or folder filter applied from sidebar/hero cards
     pub active_folder_filter: Option<String>,
+    /// Active search mode (Everything, Content, Semantic, Hybrid)
+    pub search_mode: findme_semantic::SearchMode,
+    /// Live semantic/hybrid search hits
+    pub semantic_results: Vec<findme_semantic::SemanticHit>,
+    /// Set of expanded row indices displaying rich contextual snippets
+    pub expanded_snippets: std::collections::HashSet<usize>,
+    /// Live progress snapshot of the background semantic indexer
+    pub semantic_progress: findme_semantic::IndexerProgress,
+    /// Total count of indexed semantic vector chunks
+    pub semantic_chunks_count: usize,
+    /// Operating throttling mode of the semantic indexer
+    pub throttle_mode: findme_semantic::ThrottleMode,
 }
 
 /// State of the right-click file context menu
@@ -220,6 +232,12 @@ impl Default for AppState {
                 set
             },
             active_folder_filter: None,
+            search_mode: findme_semantic::SearchMode::Everything,
+            semantic_results: Vec::new(),
+            expanded_snippets: std::collections::HashSet::new(),
+            semantic_progress: findme_semantic::IndexerProgress::default(),
+            semantic_chunks_count: 0,
+            throttle_mode: findme_semantic::ThrottleMode::default(),
         }
     }
 }

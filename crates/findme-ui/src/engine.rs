@@ -76,6 +76,8 @@ pub struct EngineBridge {
     watcher: Arc<RwLock<Option<FsWatcher>>>,
     event_tx: broadcast::Sender<EngineEvent>,
     is_indexing: Arc<AtomicBool>,
+    semantic_engine: Arc<RwLock<findme_semantic::HybridSearchEngine>>,
+    indexer: Arc<RwLock<findme_semantic::BackgroundIndexer>>,
 }
 
 impl Default for EngineBridge {
@@ -118,12 +120,69 @@ impl EngineBridge {
 
     /// Creates an `EngineBridge` with an arena and an explicit event channel
     pub fn with_channel(arena: FileArena, event_tx: broadcast::Sender<EngineEvent>) -> Self {
+        let hnsw = findme_semantic::HnswVectorIndex::new(16, 64, 32);
+        let chunk_store = findme_semantic::ChunkStore::new();
+        let semantic_engine = Arc::new(RwLock::new(findme_semantic::HybridSearchEngine::new(
+            hnsw,
+            chunk_store,
+        )));
+        let indexer = Arc::new(RwLock::new(findme_semantic::BackgroundIndexer::new(
+            Arc::clone(&semantic_engine),
+        )));
+
         Self {
             arena: Arc::new(RwLock::new(arena)),
             watcher: Arc::new(RwLock::new(None)),
             event_tx,
             is_indexing: Arc::new(AtomicBool::new(false)),
+            semantic_engine,
+            indexer,
         }
+    }
+
+    /// Access to shared semantic search engine
+    pub fn semantic_engine(&self) -> Arc<RwLock<findme_semantic::HybridSearchEngine>> {
+        Arc::clone(&self.semantic_engine)
+    }
+
+    /// Access to shared background semantic indexer
+    pub fn indexer(&self) -> Arc<RwLock<findme_semantic::BackgroundIndexer>> {
+        Arc::clone(&self.indexer)
+    }
+
+    /// Asynchronously runs semantic, content, or hybrid search off the main UI thread
+    pub async fn search_semantic(
+        &self,
+        query: String,
+        mode: findme_semantic::SearchMode,
+        max_results: usize,
+    ) -> (Vec<findme_semantic::SemanticHit>, u64) {
+        let engine = Arc::clone(&self.semantic_engine);
+        let handle = tokio::task::spawn_blocking(move || {
+            let start = std::time::Instant::now();
+            let hits = engine
+                .read()
+                .search_aggregate_by_file(&query, mode, max_results);
+            let duration_ms = start.elapsed().as_millis() as u64;
+            (hits, duration_ms)
+        });
+
+        handle.await.unwrap_or_default()
+    }
+
+    /// Sets operating throttle mode on background indexer
+    pub fn set_throttle_mode(&self, mode: findme_semantic::ThrottleMode) {
+        self.indexer.read().set_throttle_mode(mode);
+    }
+
+    /// Pauses background semantic indexer
+    pub fn pause_semantic_indexing(&self) {
+        self.indexer.read().pause();
+    }
+
+    /// Resumes background semantic indexer
+    pub fn resume_semantic_indexing(&self) {
+        self.indexer.read().resume();
     }
 
     /// Returns shared reference to the inner `FileArena`
