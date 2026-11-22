@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Rust Stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            pkg-config \
+            libxkbcommon-dev \
+            libwayland-dev \
+            appstream \
+            desktop-file-utils \
+            file \
+            zstd
+
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/release/
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-release-
+
+      - name: Install cargo-deb
+        run: |
+          if ! command -v cargo-deb >/dev/null 2>&1; then
+            cargo install cargo-deb --locked
+          fi
+
+      - name: Compile Release Binary
+        run: cargo build --release -p findme-cli
+
+      - name: Build Debian (.deb) Package
+        run: bash scripts/package_deb.sh
+
+      - name: Build Standalone AppImage Bundle
+        run: bash scripts/package_appimage.sh
+
+      - name: Prepare Release Distribution Directory & Checksums
+        run: |
+          mkdir -p target/release-dist
+          cp target/debian/find-me_*.deb target/release-dist/
+          cp target/appimage/find-me-*.AppImage target/release-dist/
+
+          TAG_NAME="${{ github.ref_name }}"
+          [ -z "${TAG_NAME}" ] && TAG_NAME="v0.1.0"
+          PKG_NAME="find-me-${TAG_NAME}-x86_64-unknown-linux-gnu"
+          STAGING="target/${PKG_NAME}"
+          mkdir -p "${STAGING}"
+          cp target/release/find-me "${STAGING}/"
+          cp assets/find-me.desktop "${STAGING}/"
+          cp assets/icons/find-me.svg "${STAGING}/"
+          cp assets/io.github.faizan_nadeem.find_me.metainfo.xml "${STAGING}/"
+          cp README.md "${STAGING}/"
+
+          cd target
+          tar -czvf "release-dist/${PKG_NAME}.tar.gz" "${PKG_NAME}"
+
+          cd release-dist
+          sha256sum find-me* > SHA256SUMS.txt
+          ls -lh
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: Find-Me ${{ github.ref_name }}
+          body_path: releasenotes/${{ github.ref_name }}.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            target/release-dist/find-me_*.deb
+            target/release-dist/find-me-*.AppImage
+            target/release-dist/find-me-*.tar.gz
+            target/release-dist/SHA256SUMS.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
