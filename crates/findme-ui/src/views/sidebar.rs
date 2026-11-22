@@ -386,12 +386,22 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         }
 
         if root_expanded {
-            // Child categories with colored folder icons (Purple, Blue, Amber, Slate) and file count pills
+            // Child categories with colored folder icons (Purple, Blue, Amber, Emerald) and file count pills
             let subfolders = [
-                ("Documents", colors::ACCENT_AMBER, "Documents", "15"),
-                ("Projects", colors::ACCENT_BLUE, "Projects", "22"),
-                ("Downloads", colors::ACCENT_SLATE, "Downloads", "10"),
-                ("Media Assets", colors::ACCENT_PURPLE, "Pictures", "8"),
+                ("Documents", state.theme.category_amber(), "Documents", "15"),
+                ("Projects", state.theme.category_blue(), "Projects", "22"),
+                (
+                    "Downloads",
+                    state.theme.category_emerald(),
+                    "Downloads",
+                    "10",
+                ),
+                (
+                    "Media Assets",
+                    state.theme.category_purple(),
+                    "Pictures",
+                    "8",
+                ),
             ];
 
             let mut sub_col = column![].spacing(2);
