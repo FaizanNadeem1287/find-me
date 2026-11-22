@@ -1,6 +1,6 @@
 # Project Current State & Active Task Snapshot
 
-*Last Updated*: 2026-11-22 13:12 PKT
+*Last Updated*: 2026-11-22 13:23 PKT
 
 ---
 
@@ -20,7 +20,7 @@ Phase | Description | Status | Test Coverage
 **Phase 9** | Packaging, Release Engineering & Production QA | **100% COMPLETE** | 222 passing tests (Tasks 9.1 & 9.2 completed)
 **Phase 10** | Universal Linux Distribution (AppImage, Flatpak, AUR, Network FS) | **100% COMPLETE** | 241 passing tests (Tasks 10.1, 10.2, 10.3 & 10.4 completed)
 **Phase 11** | Advanced CLI & Automation (Headless Query, JSON, GUI Pre-Fill, Content Search, Multi-Format Exporters) | **100% COMPLETE** | 262 passing tests (Tasks 11.1, 11.2 & 11.3 completed)
-**Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders & Precision Matching) | **100% COMPLETE** | 291 passing tests (Tasks 12.1, 12.2, 12.3, 12.4 & 12.5 completed)
+**Phase 12** | Modern UI Revamp (Pinterest/Notion Aesthetic, Hero Folders, Precision Matching & Ergonomic Dark Mode) | **100% COMPLETE** | 291 passing tests (Tasks 12.1, 12.2, 12.3, 12.4, 12.5 & 12.6 completed)
 
 ---
 
@@ -28,12 +28,12 @@ Phase | Description | Status | Test Coverage
 
 Attribute | Current Value | Notes / References
 :--- | :--- | :---
-**Active Phase** | **Phase 12: Modern UI Revamp (Pinterest / Notion Aesthetic)** | **100% COMPLETE** — All 5 Phase 12 tasks delivered & verified
-**Last Completed Task** | `[TASK-12.5] UI: Modern Secondary Screens Overhaul (Advanced Search, Index Management, History & Settings)` | Todoist Task `6j49wM96pVJWcRVx`
+**Active Phase** | **Phase 12: Modern UI Revamp (Pinterest / Notion Aesthetic & Linux Dark Mode)** | **100% COMPLETE** — All 6 Phase 12 tasks delivered & verified
+**Last Completed Task** | `[TASK-12.6] UI: Ergonomic Linux Dark Mode Palette & Visual Comfort Refinement (GNOME/Adwaita & Cosmic Inspired)` | Todoist Task `6j4CRJrxr9887Prx`
 **Next Active Task** | None (Phase 12 Complete; Future backlog in Todoist `Future Ideas`) | Standing by for user instruction
-**Active Git Branch** | `main` | Clean working tree; 33 feature branches preserved permanently
+**Active Git Branch** | `main` | Clean working tree; 34 feature branches preserved permanently
 **Todoist Project** | [Everything](https://app.todoist.com/app/project/everything-6j45wf6xPVCM2RJx) (`id: 6j45wf6xPVCM2RJx`) | All lifecycle tasks 100% completed & verified
-**Target Branch History**| 33 feature branches permanently retained | `feature/p12-secondary-screens` merged and preserved
+**Target Branch History**| 34 feature branches permanently retained | `feature/p12-dark-mode-palette` merged and preserved
 
 ---
 
@@ -73,3 +73,4 @@ Branch | Commit | Description
 `feature/p12-folder-hero-cards` | `cbe64ef` | Quick-access folder showcase hero cards & breadcrumbs header
 `feature/p12-results-table` | `e2da600` | Revamped modern files table (36px, icons, badges) & exact substring match default with fuzzy: fallback
 `feature/p12-secondary-screens` | `b9330f5` | Modern secondary screens overhaul (Advanced Search, Index Mgmt, History, Settings, About) & unified component styling
+`feature/p12-dark-mode-palette` | `27ac532` | Ergonomic Linux dark mode palette, anti-glare pastels, ambient hero card tints
