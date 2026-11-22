@@ -1779,3 +1779,23 @@ Hash | Branch | Commit Message & Description
 3. **Git & Release Tagging**:
    - Developed on feature branch `feature/github-release-automation` (`b20ad71`), merged into `main` using non-fast-forward merge (`--no-ff`), and permanently retained branch (52 branches total).
    - Created annotated Git tag `v0.1.0` and pushed to `origin`: `git push origin v0.1.0`.
+
+---
+
+## Session 46: 2026-11-22 (Incorporate Comprehensive Future Works & Roadmap into README)
+
+### Objectives Addressed:
+1. **Root README Overhaul**:
+   - Updated root `README.md` to reflect full project completion across all 14 phases.
+   - Retained the official documentation table of contents pointing to the 10 modular guides in `docs/`.
+   - Embedded key performance metrics and benchmarks (<2ms latency, >200,000 files/s indexing, 32-byte arena, <35ms cold startup).
+   - Added complete installation instructions for Debian `.deb`, universal AppImage, and building from source.
+2. **Future Works & Engineering Roadmap Section**:
+   - Categorized into 4 structured tracks:
+     1. *Near-Term (v0.2.0)*: Global Spotlight/Raycast-Style Quick Launcher, System Tray daemon mode, Desktop Search Provider for GNOME/KRunner, and File Manager extensions (Nautilus, Dolphin, Thunar).
+     2. *Medium-Term (v0.3.0–v0.5.0)*: Local unprivileged OCR for scanned documents/images, transparent archive search (`.zip`, `.tar`, `.7z`), hardware-accelerated vector embeddings (`wgpu`/Vulkan), duplicate file finder, and inline audio waveform playback.
+     3. *Long-Term Vision (v1.0.0+)*: Local conversational document Q&A ("Ask Your Files" RAG via on-device SLMs), optional PIN-protected LAN search server, and FreeDesktop extended attribute file tagging (`user.xdg.tags`).
+     4. *Distribution Roadmap*: Flathub publication, Arch Linux AUR, Ubuntu Launchpad PPA, and Homebrew Linux.
+3. **Git Workflow Compliance**:
+   - Developed on dedicated branch `feature/readme-future-works-and-roadmap` (`d56b8e2`).
+   - Merged into `main` with non-fast-forward merge (`--no-ff`), permanently retained branch (53 total branches), and pushed to `origin/main`.
