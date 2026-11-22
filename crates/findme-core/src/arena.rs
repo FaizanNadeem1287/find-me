@@ -283,10 +283,18 @@ impl FileArena {
     pub fn count_under_path(&self, root: &Path) -> (u64, u64) {
         let clean_root = PathBuf::from(root.to_string_lossy().trim_end_matches('/'));
         if clean_root.as_os_str().is_empty() {
-            return (
-                self.active_len() as u64,
-                self.dirs.len().saturating_sub(1) as u64,
-            );
+            let mut files = 0u64;
+            let mut dirs = 0u64;
+            for record in &self.records {
+                if !record.flags.is_deleted() {
+                    if record.flags.is_dir() {
+                        dirs += 1;
+                    } else {
+                        files += 1;
+                    }
+                }
+            }
+            return (files, dirs);
         }
 
         let dir_count = self.dirs.len();
@@ -306,16 +314,26 @@ impl FileArena {
         }
 
         let mut file_count = 0u64;
+        let mut folder_count = subfolder_count;
         for record in &self.records {
             if !record.flags.is_deleted() {
                 let d_id = record.dir_id as usize;
                 if d_id < matching_dirs.len() && matching_dirs[d_id] {
-                    file_count += 1;
+                    if record.flags.is_dir() {
+                        // Empty directory record not registered as a parent in DirectoryTable
+                        if let Some(p) = self.reconstruct_path(record) {
+                            if self.dirs.find_id(&p).is_none() {
+                                folder_count += 1;
+                            }
+                        }
+                    } else {
+                        file_count += 1;
+                    }
                 }
             }
         }
 
-        (file_count, subfolder_count)
+        (file_count, folder_count)
     }
 
     /// Updates existing file metadata (size, mtime, flags)
