@@ -461,3 +461,49 @@ fn test_arena_clear_and_reuse() {
         Some(PathBuf::from("/var/log/syslog"))
     );
 }
+
+#[test]
+fn test_count_under_path_nested_and_exact() {
+    let mut arena = FileArena::new();
+    let _ = arena.add_file(Path::new("/home/user/file1.txt"), FileFlags::NONE, 100, 10);
+    let _ = arena.add_file(Path::new("/home/user/file2.txt"), FileFlags::NONE, 200, 10);
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/file3.pdf"),
+        FileFlags::NONE,
+        300,
+        10,
+    );
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/file4.zip"),
+        FileFlags::NONE,
+        400,
+        10,
+    );
+    let _ = arena.add_file(
+        Path::new("/home/user/Downloads/sub/file5.mp3"),
+        FileFlags::NONE,
+        500,
+        10,
+    );
+    let _ = arena.add_file(Path::new("/var/log/syslog"), FileFlags::NONE, 600, 10);
+
+    // Count under /home/user/Downloads
+    let (dl_files, dl_folders) = arena.count_under_path(Path::new("/home/user/Downloads"));
+    assert_eq!(dl_files, 3);
+    assert_eq!(dl_folders, 1);
+
+    // Count under /home/user
+    let (home_files, home_folders) = arena.count_under_path(Path::new("/home/user"));
+    assert_eq!(home_files, 5);
+    assert_eq!(home_folders, 2);
+
+    // Count under /home/user/Downloads/sub
+    let (sub_files, sub_folders) = arena.count_under_path(Path::new("/home/user/Downloads/sub"));
+    assert_eq!(sub_files, 1);
+    assert_eq!(sub_folders, 0);
+
+    // Count under non-existent path
+    let (none_files, none_folders) = arena.count_under_path(Path::new("/home/user/Documents"));
+    assert_eq!(none_files, 0);
+    assert_eq!(none_folders, 0);
+}
