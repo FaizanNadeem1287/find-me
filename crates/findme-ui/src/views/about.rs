@@ -2,8 +2,9 @@
 
 use crate::message::Message;
 use crate::state::AppState;
+use crate::theme::{self, colors};
 use iced::widget::{button, column, container, row, scrollable, text, Space};
-use iced::{Alignment, Element, Length};
+use iced::{Alignment, Color, Element, Length};
 
 /// Renders the About screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -16,21 +17,40 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     let version_str = env!("CARGO_PKG_VERSION");
 
     // 1. Hero Card
+    let monogram = container(text("FM").size(16).color(Color::WHITE))
+        .padding([6, 10])
+        .style(theme::pill_badge_style(colors::DARK_ACCENT, Color::WHITE));
+
     let hero_card = container(
         column![
             row![
-                text("🔍⚡ Find-Me").size(20),
-                Space::new().width(Length::Fixed(8.0)),
+                monogram,
+                text("Find-Me").size(22),
+                Space::new().width(Length::Fixed(6.0)),
                 container(text(format!("v{version_str}")).size(12))
-                    .padding([2, 6]),
+                    .padding([3, 8])
+                    .style(theme::pill_badge_style(
+                        if state.theme.is_dark() {
+                            colors::DARK_SELECTED
+                        } else {
+                            colors::LIGHT_SELECTED
+                        },
+                        if state.theme.is_dark() {
+                            colors::DARK_ACCENT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        },
+                    )),
             ]
+            .spacing(8)
             .align_y(Alignment::Center),
             text("Offline-first, high-performance desktop file search engine for Linux inspired by Windows Everything.")
                 .size(13),
         ]
-        .spacing(8),
+        .spacing(12),
     )
-    .padding(14)
+    .padding(18)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 2. Architectural Highlights Card
@@ -45,9 +65,10 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             text("• Zero-Copy Index Persistence: Memory-mapped binary disk cache with SIMD CRC32 validation").size(12),
             text("• Latency Budget: Sub-5 millisecond query evaluation across 1,000,000+ files").size(12),
         ]
-        .spacing(6),
+        .spacing(8),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 3. System Environment Card
@@ -80,9 +101,10 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 text(stats.formatted_memory()).size(12),
             ],
         ]
-        .spacing(6),
+        .spacing(8),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     // 4. License & Repository Card
@@ -94,20 +116,22 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                 text("Repository: https://github.com/Faizan-Nadeem/Find-Me").size(12),
                 Space::new().width(Length::Fill),
                 button(text("📋 Copy URL").size(11))
-                    .padding([3, 8])
+                    .padding([5, 12])
+                    .style(theme::secondary_btn_style(&state.theme))
                     .on_press(Message::CopyPath(
                         "https://github.com/Faizan-Nadeem/Find-Me".to_string(),
                     )),
             ]
             .align_y(Alignment::Center),
         ]
-        .spacing(6),
+        .spacing(8),
     )
-    .padding(12)
+    .padding(16)
+    .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
     let content = column![header, hero_card, tech_card, env_card, license_card,]
-        .spacing(12)
+        .spacing(14)
         .padding(16);
 
     scrollable(content)
