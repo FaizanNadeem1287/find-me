@@ -4,7 +4,7 @@ use crate::message::Message;
 use crate::state::{format_number, search_input_id, AppState};
 use crate::theme::{colors, hero_card_style, pill_badge_style, search_input_style};
 use iced::widget::{button, column, container, row, text, text_input, Space};
-use iced::{Alignment, Background, Border, Color, Element, Length, Shadow, Vector};
+use iced::{Alignment, Background, Border, Color, Element, Length, Shadow};
 
 /// Renders the revamped primary Search screen
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -339,11 +339,7 @@ fn render_hero_card<'a>(
                     width: if is_active { 1.5 } else { 1.0 },
                     radius: 14.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, if is_dark { 0.35 } else { 0.04 }),
-                    offset: Vector::new(0.0, 4.0),
-                    blur_radius: 12.0,
-                },
+                shadow: Shadow::default(),
                 ..Default::default()
             }
         })

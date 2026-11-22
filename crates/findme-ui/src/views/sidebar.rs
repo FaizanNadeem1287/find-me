@@ -4,7 +4,7 @@ use crate::message::{Message, ScreenId};
 use crate::state::AppState;
 use crate::theme::{colors, pill_badge_style, sidebar_item_style};
 use iced::widget::{button, column, container, row, scrollable, text, Space};
-use iced::{Alignment, Background, Border, Color, Element, Length, Shadow, Vector};
+use iced::{Alignment, Background, Border, Color, Element, Length, Shadow};
 
 /// Renders the revamped modern sidebar navigation panel
 pub fn view(state: &AppState) -> Element<'_, Message> {
@@ -32,11 +32,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     width: 0.0,
                     radius: 10.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
-                    offset: Vector::new(0.0, 2.0),
-                    blur_radius: 4.0,
-                },
+                shadow: Shadow::default(),
                 ..Default::default()
             });
 
@@ -80,11 +76,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
                     width: 0.0,
                     radius: 10.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
-                    offset: Vector::new(0.0, 2.0),
-                    blur_radius: 4.0,
-                },
+                shadow: Shadow::default(),
                 ..Default::default()
             });
 
