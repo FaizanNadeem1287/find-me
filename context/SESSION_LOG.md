@@ -1549,3 +1549,22 @@ Hash | Branch | Commit Message & Description
    - Committed on `feature/p13-svg-vector-icons` (`8a61515`) and merged into `main` via `--no-ff` (`df271af`). Permanently retained branch.
    - Updated Todoist task `6j4CfrcqJxFgH9xx` to `Completed` with audit comment `6j4CqR9RM59fHQxQ`.
 6. Preserved 36 total feature branches permanently in Git.
+
+---
+
+## Session 37: 2026-11-22 (Phase 14 Planning: Deep Content Extraction & Multimodal Semantic Search)
+
+### Objectives Addressed:
+1. Recalled and scoped Todoist task `6j4C2HrmhG6HMqWQ` from `Future Ideas` to active Phase 14 planning.
+2. Refined user vision for deep content-based search:
+   - Query examples: natural language requests like *"my CV in PDF where my name is Faizan and it is about AI"*.
+   - In-scope formats: Documents (PDF, CSV, Excel XLSX, PPTX, TXT, Word DOCX, Code files: Python, Dockerfile, Rust, Go, etc.), Audio (Whisper speech-to-text), Images (MobileCLIP / CLIP-ViT multimodal embeddings).
+   - Explicitly excluded: Video processing (omitted due to high CPU/memory overhead).
+3. Synchronized Todoist:
+   - Renamed task `6j4C2HrmhG6HMqWQ` to `[PHASE-14] Deep Content Extraction & Local Semantic Vector Search (Docs, Code, Audio, Images)`.
+   - Updated description with refined multimodal scope and video exclusion.
+   - Added architectural audit comment `6j4FVhXq9RW5cmjQ`.
+4. Authored comprehensive Phase 14 Architectural Design & Implementation Roadmap artifact:
+   - Location: `SEMANTIC_CONTENT_SEARCH_PLAN.md`
+   - Covers: multi-format extraction engine, quantized on-device embedding runtime (all-MiniLM-L6-v2), persistent HNSW vector store, hybrid BM25+vector RRF retrieval, non-blocking low-priority background indexing daemon, and Iced UI preview integration.
+5. Prepared detailed 6-task sub-milestone breakdown (Tasks 14.1 through 14.6) ready for user review.
