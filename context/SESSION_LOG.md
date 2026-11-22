@@ -1226,3 +1226,52 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Milestone Reached**: **Task 11.2 verified, merged, and completed on Todoist! Total 252 tests passing.**
+
+
+---
+
+## Session 29: 2026-11-22 (Completion of Task 11.3: Multi-Format Search Results Exporter `CSV`, `TXT`, `EFU` & `JSON`)
+
+### Objectives Addressed:
+1. Created Task 11.3: `[TASK-11.3] Core & CLI: Multi-Format Search Results Exporter (CSV, TXT & EFU File List)` (`6j49jQQMw8PhxWpQ`) in Todoist.
+2. Authored detailed implementation plan artifact: `task-11-3-implementation-plan.md`.
+3. Created feature branch `feature/p11-export-results` from `main` and moved Todoist task to `In Progress`.
+4. Implemented Multi-Format Search Results Exporter in `crates/findme-core/src/export.rs`:
+   - `ExportFormat` enum supporting `Txt`, `Csv`, `Efu`, and `Json`.
+   - Streaming writer `export_to_writer` and buffered file writer `export_to_file` with automatic parent directory creation.
+   - Plain Text (`.txt`): Newline-delimited list of absolute paths.
+   - CSV (`.csv`): RFC 4180 compliant CSV format with header (`"Name","Path","Size","Date Modified","Type"`), quote doubling (`""`), and comma/newline escaping.
+   - EFU (`.efu`): Windows Everything File List format (`Filename,Size,Date Modified,Date Created,Attributes`) with Windows FILETIME 64-bit mathematical conversion and attribute bitmasks (16 for directories, 32 for regular files).
+   - JSON (`.json`): Structured JSON array of `SearchResultItem` records.
+5. Extended CLI in `crates/findme-cli/src/lib.rs` and `src/main.rs`:
+   - Added command-line flags: `--export-csv <PATH>`, `--export-txt <PATH>`, `--export-efu <PATH>`, `--export-json <PATH>`.
+   - Built `search_arena_items` and `execute_cli_exports`.
+   - Extended `print_help` with documentation for new export flags.
+6. Extended UI in `crates/findme-ui/`:
+   - Added `Message::ExportResults(ExportFormat, PathBuf)` with notification dispatching.
+   - Scoped `IndexedRoot` in `test_app_index_management_screen_actions` to prevent background disk crawl contention.
+7. Authored comprehensive test suites:
+   - `crates/findme-core/tests/export_tests.rs`: 5 tests covering CSV RFC 4180 escaping, EFU Windows FILETIME conversion, TXT path streaming, JSON parsing, and parent directory creation.
+   - `crates/findme-cli/tests/cli_export_tests.rs`: 5 tests covering CLI export flag parsing, CSV/TXT E2E generation, EFU/JSON E2E generation, `-n` result truncation, and search arena item helpers.
+8. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings).
+   - Test suite: **262 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+9. Committed to `feature/p11-export-results` (`3e0f923`) and merged into `main` via non-fast-forward merge (`25219f8`).
+10. Retained `feature/p11-export-results` branch permanently (27 total branches preserved).
+11. Synchronized Todoist: posted implementation audit comment (`6j49pWvRvwR6r5JQ`) and marked task `6j49jQQMw8PhxWpQ` `Completed`.
+
+### Commits Created:
+Hash | Branch | Commit Message & Description
+:--- | :--- | :---
+`3e0f923` | `feature/p11-export-results` | `feat(cli,core): multi-format search results exporter csv txt efu json (Task 11.3)`
+`25219f8` (merge) | `main` | `feat(p11): multi-format search results exporter (Task 11.3)`
+
+### Todoist State Updates:
+- Task: `[TASK-11.3] Core & CLI: Multi-Format Search Results Exporter (CSV, TXT & EFU File List)` (`6j49jQQMw8PhxWpQ`) marked `Completed`.
+
+### Current Handoff State:
+- **Active Branch**: `main` (clean working tree).
+- **Milestone Reached**: **Task 11.3 verified, merged, and completed on Todoist! Total 262 tests passing.**
