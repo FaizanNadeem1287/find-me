@@ -1,8 +1,9 @@
 //! Comprehensive test suite for Dark/Light theming, system theme sync, and WCAG AA contrast verification
 
 use findme_ui::{
-    colors, contrast_ratio, custom_dark_theme, custom_light_theme, detect_system_theme, AppTheme,
-    FindMeApp, Message, ThemePreference,
+    card_style, colors, contrast_ratio, custom_dark_theme, custom_light_theme, detect_system_theme,
+    hero_card_style, pill_badge_style, search_input_style, sidebar_item_style, table_row_btn_style,
+    AppTheme, FindMeApp, Message, ThemePreference,
 };
 use tempfile::tempdir;
 
@@ -145,5 +146,88 @@ fn test_app_theme_toggle_and_rendering() {
     // Verify view renders cleanly again
     {
         let _ = app.view();
+    }
+}
+
+#[test]
+fn test_modern_design_system_tokens() {
+    // Canvas & Surface contrast verification
+    let light_text_contrast = contrast_ratio(colors::LIGHT_TEXT, colors::LIGHT_BG);
+    assert!(
+        light_text_contrast >= 4.5,
+        "Light theme text contrast {light_text_contrast:.2} must be >= 4.5:1 (WCAG AA)"
+    );
+
+    let dark_text_contrast = contrast_ratio(colors::DARK_TEXT, colors::DARK_BG);
+    assert!(
+        dark_text_contrast >= 4.5,
+        "Dark theme text contrast {dark_text_contrast:.2} must be >= 4.5:1 (WCAG AA)"
+    );
+
+    // Accent colors verification for UI components (>= 3.0:1)
+    let blue_contrast = contrast_ratio(colors::ACCENT_BLUE, colors::LIGHT_SURFACE);
+    assert!(
+        blue_contrast >= 3.0,
+        "Blue accent contrast {blue_contrast:.2} must be >= 3.0:1"
+    );
+
+    let purple_contrast = contrast_ratio(colors::ACCENT_PURPLE, colors::LIGHT_SURFACE);
+    assert!(
+        purple_contrast >= 3.0,
+        "Purple accent contrast {purple_contrast:.2} must be >= 3.0:1"
+    );
+
+    // Color accessors test
+    let dark = AppTheme::Dark;
+    assert_eq!(dark.bg_color(), colors::DARK_BG);
+    assert_eq!(dark.surface_color(), colors::DARK_SURFACE);
+    assert_eq!(dark.sidebar_color(), colors::DARK_SIDEBAR);
+
+    let light = AppTheme::Light;
+    assert_eq!(light.bg_color(), colors::LIGHT_BG);
+    assert_eq!(light.surface_color(), colors::LIGHT_SURFACE);
+    assert_eq!(light.sidebar_color(), colors::LIGHT_SIDEBAR);
+}
+
+#[test]
+fn test_modern_styling_helpers_instantiation() {
+    let dummy_iced_theme = custom_dark_theme();
+
+    for theme in [AppTheme::Light, AppTheme::Dark] {
+        // Card style
+        let card = card_style(&theme);
+        assert!(card.background.is_some());
+
+        // Hero card style
+        let hero = hero_card_style(&theme, colors::TINT_PURPLE);
+        assert!(hero.background.is_some());
+
+        // Sidebar item style
+        let sidebar_active = sidebar_item_style(&theme, true)(
+            &dummy_iced_theme,
+            iced::widget::button::Status::Active,
+        );
+        assert!(sidebar_active.background.is_some());
+        let sidebar_hover = sidebar_item_style(&theme, false)(
+            &dummy_iced_theme,
+            iced::widget::button::Status::Hovered,
+        );
+        assert!(sidebar_hover.background.is_some());
+
+        // Search input style
+        let input_style =
+            search_input_style(&theme)(&dummy_iced_theme, iced::widget::text_input::Status::Active);
+        assert_eq!(input_style.border.width, 1.0);
+
+        // Pill badge style
+        let badge = pill_badge_style(colors::ACCENT_PURPLE, colors::LIGHT_SURFACE);
+        assert!(badge.background.is_some());
+
+        // Table row button style
+        let row_style = table_row_btn_style(&theme, false)(
+            &dummy_iced_theme,
+            iced::widget::button::Status::Hovered,
+        );
+        assert!(row_style.background.is_some());
     }
 }

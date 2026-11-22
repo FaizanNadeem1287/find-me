@@ -1275,3 +1275,44 @@ Hash | Branch | Commit Message & Description
 ### Current Handoff State:
 - **Active Branch**: `main` (clean working tree).
 - **Milestone Reached**: **Task 11.3 verified, merged, and completed on Todoist! Total 262 tests passing.**
+
+---
+
+## Session 14: 2026-11-22 (Future Roadmap Planning: Vector-Based Semantic Search & RAG)
+
+### Objectives Addressed:
+1. Logged future roadmap task in Todoist under the `Future Ideas` section (`6j45xVg6MVfrmpWQ`) in the `Everything` project (`6j45wf6xPVCM2RJx`).
+2. Added task `[FUTURE] Vector-Based Semantic Search & Multimodal RAG Pipeline` (`id: 6j4C2HrmhG6HMqWQ`, priority: `p4`).
+3. Captured requirements for offline multimodal image search (natural language scene queries with local CLIP/SigLIP models), document/PDF semantic retrieval (e.g., CVs/resumes), and zero-cloud local vector indexing.
+
+
+---
+
+## Session 30: 2026-11-22 (Completion of Task 12.1: Modern Design System Tokens, Theming Engine & Color Palette)
+
+### Objectives Addressed:
+1. Created Task 12.1: `[TASK-12.1] UI: Modern Design System Tokens, Theming Engine & Color Palette (Pinterest/Notion Aesthetic)` (`6j49wM5VfRm87HJx`) in Todoist.
+2. Authored detailed implementation plan artifact: `task-12-1-implementation-plan.md`.
+3. Created feature branch `feature/p12-design-system` from `main` and moved Todoist task to `In Progress`.
+4. Extended and modernized `crates/findme-ui/src/theme.rs`:
+   - Defined light canvas `#F8F9FA` and dark canvas `#0B0F19`.
+   - Defined card surfaces (`#FFFFFF` / `#161F30`), sidebar surfaces (`#FFFFFF` / `#0F172A`).
+   - Defined ultra-thin borders (`rgba(0, 0, 0, 0.06)` / `rgba(255, 255, 255, 0.08)`) and dividers.
+   - Defined modern interactive states: hover (`#F3F4F6` / `#1E293B`) and selection (`#EEF2FF` / `#263352`).
+   - Defined high-contrast typography hierarchy colors: text (`#111827` / `#F9FAFB`), subtext (`#6B7280` / `#94A3B8`), muted (`#9CA3AF` / `#64748B`).
+   - Defined vibrant accents: Indigo/Purple (`#6366F1`), Blue (`#2563EB`), Amber (`#F59E0B`), Emerald (`#10B981`), Rose (`#F43F5E`), plus soft pastel background tints (`#F5F3FF`, `#EFF6FF`, `#FFFBEB`, `#ECFDF5`).
+   - Implemented zero-allocation helper styling functions for Iced 0.14: `card_style`, `hero_card_style`, `sidebar_item_style`, `search_input_style`, `pill_badge_style`, `table_row_btn_style`.
+5. Re-exported modern styling helpers in `crates/findme-ui/src/lib.rs`.
+6. Authored comprehensive integration tests in `crates/findme-ui/tests/theme_tests.rs`:
+   - Verified WCAG 2.1 Level AA contrast compliance (>= 4.5:1 for body text, >= 3.0:1 for UI controls).
+   - Verified instant instantiation of all styling closures for both Light and Dark modes.
+   - Verified color accessor methods on `AppTheme`.
+7. Executed pre-merge quality gate `.agents/skills/find-me-qa-verification/scripts/verify_task.sh`:
+   - Formatting check: PASS.
+   - Strict Clippy check: PASS (zero warnings with `-D warnings`).
+   - Test suite: **263 passing tests** across workspace (100% pass rate).
+   - Documentation tests: PASS.
+   - Git status: PASS.
+8. Committed to `feature/p12-design-system` and merged into `main` via non-fast-forward merge (`--no-ff`).
+9. Retained `feature/p12-design-system` branch permanently in Git.
+10. Synchronized Todoist: marked task `6j49wM5VfRm87HJx` `Completed`.

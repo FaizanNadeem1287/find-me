@@ -1,102 +1,199 @@
 //! Custom themes, color palettes, OS theme detection, and WCAG contrast for Find-Me
 
-use iced::Color;
+use iced::widget::{button, container, text_input};
+use iced::{Background, Border, Color, Shadow, Vector};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
 /// Precision color palettes adhering to the Linux desktop design specification
+/// and the Pinterest/Notion-inspired modern visual design system.
 pub mod colors {
     use iced::Color;
 
-    // Dark Theme Palette
-    pub const DARK_BG: Color = Color::from_rgb(
-        0x1a as f32 / 255.0,
-        0x1b as f32 / 255.0,
-        0x1e as f32 / 255.0,
-    ); // #1A1B1E
-    pub const DARK_SURFACE: Color = Color::from_rgb(
-        0x25 as f32 / 255.0,
-        0x26 as f32 / 255.0,
-        0x2b as f32 / 255.0,
-    ); // #25262B
-    pub const DARK_BORDER: Color = Color::from_rgb(
-        0x2c as f32 / 255.0,
-        0x2e as f32 / 255.0,
-        0x33 as f32 / 255.0,
-    ); // #2C2E33
-    pub const DARK_TEXT: Color = Color::from_rgb(
-        0xc1 as f32 / 255.0,
-        0xc2 as f32 / 255.0,
-        0xc5 as f32 / 255.0,
-    ); // #C1C2C5
-    pub const DARK_SUBTEXT: Color = Color::from_rgb(
-        0x90 as f32 / 255.0,
-        0x92 as f32 / 255.0,
-        0x96 as f32 / 255.0,
-    ); // #909296
-    pub const DARK_ACCENT: Color = Color::from_rgb(
-        0x33 as f32 / 255.0,
-        0x9a as f32 / 255.0,
-        0xf0 as f32 / 255.0,
-    ); // #339AF0
-    pub const DARK_SUCCESS: Color = Color::from_rgb(
-        0x40 as f32 / 255.0,
-        0xc0 as f32 / 255.0,
-        0x57 as f32 / 255.0,
-    ); // #40C057
-    pub const DARK_WARNING: Color = Color::from_rgb(
-        0xfc as f32 / 255.0,
-        0xc4 as f32 / 255.0,
-        0x19 as f32 / 255.0,
-    ); // #FCC419
-    pub const DARK_DANGER: Color = Color::from_rgb(
-        0xfa as f32 / 255.0,
-        0x52 as f32 / 255.0,
-        0x52 as f32 / 255.0,
-    ); // #FA5252
-
-    // Light Theme Palette
+    // Canvas Background
     pub const LIGHT_BG: Color = Color::from_rgb(
         0xf8 as f32 / 255.0,
         0xf9 as f32 / 255.0,
         0xfa as f32 / 255.0,
     ); // #F8F9FA
+    pub const DARK_BG: Color = Color::from_rgb(
+        0x0b as f32 / 255.0,
+        0x0f as f32 / 255.0,
+        0x19 as f32 / 255.0,
+    ); // #0B0F19
+
+    // Card & Panel Surfaces
     pub const LIGHT_SURFACE: Color = Color::from_rgb(1.0, 1.0, 1.0); // #FFFFFF
-    pub const LIGHT_BORDER: Color = Color::from_rgb(
-        0xde as f32 / 255.0,
-        0xe2 as f32 / 255.0,
-        0xe6 as f32 / 255.0,
-    ); // #DEE2E6
-    pub const LIGHT_TEXT: Color = Color::from_rgb(
-        0x21 as f32 / 255.0,
-        0x25 as f32 / 255.0,
+    pub const DARK_SURFACE: Color = Color::from_rgb(
+        0x16 as f32 / 255.0,
+        0x1f as f32 / 255.0,
+        0x30 as f32 / 255.0,
+    ); // #161F30
+
+    // Sidebar Surfaces
+    pub const LIGHT_SIDEBAR: Color = Color::from_rgb(1.0, 1.0, 1.0); // #FFFFFF
+    pub const DARK_SIDEBAR: Color = Color::from_rgb(
+        0x0f as f32 / 255.0,
+        0x17 as f32 / 255.0,
+        0x2a as f32 / 255.0,
+    ); // #0F172A
+
+    // Borders & Dividers
+    pub const LIGHT_BORDER: Color = Color::from_rgba(0.0, 0.0, 0.0, 0.06); // 6% black
+    pub const DARK_BORDER: Color = Color::from_rgba(1.0, 1.0, 1.0, 0.08); // 8% white
+    pub const LIGHT_DIVIDER: Color = Color::from_rgba(0.0, 0.0, 0.0, 0.04);
+    pub const DARK_DIVIDER: Color = Color::from_rgba(1.0, 1.0, 1.0, 0.05);
+
+    // Interactive States: Hover & Selection
+    pub const LIGHT_HOVER: Color = Color::from_rgb(
+        0xf3 as f32 / 255.0,
+        0xf4 as f32 / 255.0,
+        0xf6 as f32 / 255.0,
+    ); // #F3F4F6
+    pub const DARK_HOVER: Color = Color::from_rgb(
+        0x1e as f32 / 255.0,
         0x29 as f32 / 255.0,
-    ); // #212529
+        0x3b as f32 / 255.0,
+    ); // #1E293B
+
+    pub const LIGHT_SELECTED: Color = Color::from_rgb(
+        0xee as f32 / 255.0,
+        0xf2 as f32 / 255.0,
+        0xff as f32 / 255.0,
+    ); // #EEF2FF
+    pub const DARK_SELECTED: Color = Color::from_rgb(
+        0x26 as f32 / 255.0,
+        0x33 as f32 / 255.0,
+        0x52 as f32 / 255.0,
+    ); // #263352
+
+    // Typography & Text
+    pub const LIGHT_TEXT: Color = Color::from_rgb(
+        0x11 as f32 / 255.0,
+        0x18 as f32 / 255.0,
+        0x27 as f32 / 255.0,
+    ); // #111827 (Dark Charcoal)
+    pub const DARK_TEXT: Color = Color::from_rgb(
+        0xf9 as f32 / 255.0,
+        0xfa as f32 / 255.0,
+        0xfb as f32 / 255.0,
+    ); // #F9FAFB (Off-white)
+
     pub const LIGHT_SUBTEXT: Color = Color::from_rgb(
-        0x6c as f32 / 255.0,
-        0x6f as f32 / 255.0,
-        0x85 as f32 / 255.0,
-    ); // #6C6F85
+        0x6b as f32 / 255.0,
+        0x72 as f32 / 255.0,
+        0x80 as f32 / 255.0,
+    ); // #6B7280 (Gray)
+    pub const DARK_SUBTEXT: Color = Color::from_rgb(
+        0x94 as f32 / 255.0,
+        0xa3 as f32 / 255.0,
+        0xb8 as f32 / 255.0,
+    ); // #94A3B8 (Slate 400)
+
+    pub const LIGHT_MUTED: Color = Color::from_rgb(
+        0x9c as f32 / 255.0,
+        0xa3 as f32 / 255.0,
+        0xaf as f32 / 255.0,
+    ); // #9CA3AF
+    pub const DARK_MUTED: Color = Color::from_rgb(
+        0x64 as f32 / 255.0,
+        0x74 as f32 / 255.0,
+        0x8b as f32 / 255.0,
+    ); // #64748B
+
+    // Brand & Status Accents
     pub const LIGHT_ACCENT: Color = Color::from_rgb(
-        0x1c as f32 / 255.0,
-        0x7e as f32 / 255.0,
-        0xd6 as f32 / 255.0,
-    ); // #1C7ED6
+        0x25 as f32 / 255.0,
+        0x63 as f32 / 255.0,
+        0xeb as f32 / 255.0,
+    ); // #2563EB (Electric Blue)
+    pub const DARK_ACCENT: Color = Color::from_rgb(
+        0x3b as f32 / 255.0,
+        0x82 as f32 / 255.0,
+        0xf6 as f32 / 255.0,
+    ); // #3B82F6
+
     pub const LIGHT_SUCCESS: Color = Color::from_rgb(
-        0x37 as f32 / 255.0,
-        0xb2 as f32 / 255.0,
-        0x4d as f32 / 255.0,
-    ); // #37B24D
+        0x10 as f32 / 255.0,
+        0xb9 as f32 / 255.0,
+        0x81 as f32 / 255.0,
+    ); // #10B981 (Emerald)
+    pub const DARK_SUCCESS: Color = Color::from_rgb(
+        0x34 as f32 / 255.0,
+        0xd3 as f32 / 255.0,
+        0x99 as f32 / 255.0,
+    ); // #34D399
+
     pub const LIGHT_WARNING: Color = Color::from_rgb(
         0xf5 as f32 / 255.0,
-        0x9f as f32 / 255.0,
-        0x00 as f32 / 255.0,
-    ); // #F59F00
+        0x9e as f32 / 255.0,
+        0x0b as f32 / 255.0,
+    ); // #F59E0B (Warm Amber)
+    pub const DARK_WARNING: Color = Color::from_rgb(
+        0xfb as f32 / 255.0,
+        0xbf as f32 / 255.0,
+        0x24 as f32 / 255.0,
+    ); // #FBBF24
+
     pub const LIGHT_DANGER: Color = Color::from_rgb(
-        0xf0 as f32 / 255.0,
-        0x3e as f32 / 255.0,
-        0x3e as f32 / 255.0,
-    ); // #F03E3E
+        0xf4 as f32 / 255.0,
+        0x3f as f32 / 255.0,
+        0x5e as f32 / 255.0,
+    ); // #F43F5E (Rose)
+    pub const DARK_DANGER: Color = Color::from_rgb(
+        0xfb as f32 / 255.0,
+        0x71 as f32 / 255.0,
+        0x85 as f32 / 255.0,
+    ); // #FB7185
+
+    // Vibrant Category & Hero Folder Colors
+    pub const ACCENT_PURPLE: Color = Color::from_rgb(
+        0x63 as f32 / 255.0,
+        0x66 as f32 / 255.0,
+        0xf1 as f32 / 255.0,
+    ); // #6366F1 (Indigo / Purple)
+    pub const ACCENT_BLUE: Color = Color::from_rgb(
+        0x25 as f32 / 255.0,
+        0x63 as f32 / 255.0,
+        0xeb as f32 / 255.0,
+    ); // #2563EB (Electric Blue)
+    pub const ACCENT_AMBER: Color = Color::from_rgb(
+        0xf5 as f32 / 255.0,
+        0x9e as f32 / 255.0,
+        0x0b as f32 / 255.0,
+    ); // #F59E0B (Amber Gold)
+    pub const ACCENT_EMERALD: Color = Color::from_rgb(
+        0x10 as f32 / 255.0,
+        0xb9 as f32 / 255.0,
+        0x81 as f32 / 255.0,
+    ); // #10B981 (Emerald)
+    pub const ACCENT_ROSE: Color = Color::from_rgb(
+        0xf4 as f32 / 255.0,
+        0x3f as f32 / 255.0,
+        0x5e as f32 / 255.0,
+    ); // #F43F5E (Rose)
+
+    // Soft Category Background Tints (for card illustrations & badges)
+    pub const TINT_PURPLE: Color = Color::from_rgb(
+        0xf5 as f32 / 255.0,
+        0xf3 as f32 / 255.0,
+        0xff as f32 / 255.0,
+    ); // #F5F3FF
+    pub const TINT_BLUE: Color = Color::from_rgb(
+        0xef as f32 / 255.0,
+        0xf6 as f32 / 255.0,
+        0xff as f32 / 255.0,
+    ); // #EFF6FF
+    pub const TINT_AMBER: Color = Color::from_rgb(
+        0xff as f32 / 255.0,
+        0xfb as f32 / 255.0,
+        0xeb as f32 / 255.0,
+    ); // #FFFBEB
+    pub const TINT_EMERALD: Color = Color::from_rgb(
+        0xec as f32 / 255.0,
+        0xfd as f32 / 255.0,
+        0xf5 as f32 / 255.0,
+    ); // #ECFDF5
 }
 
 /// Active Application Theme identifier
@@ -126,6 +223,96 @@ impl AppTheme {
         match self {
             AppTheme::Dark => custom_dark_theme(),
             AppTheme::Light => custom_light_theme(),
+        }
+    }
+
+    /// Returns canvas background color for active theme
+    pub fn bg_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_BG
+        } else {
+            colors::LIGHT_BG
+        }
+    }
+
+    /// Returns card surface color for active theme
+    pub fn surface_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_SURFACE
+        } else {
+            colors::LIGHT_SURFACE
+        }
+    }
+
+    /// Returns sidebar surface color for active theme
+    pub fn sidebar_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_SIDEBAR
+        } else {
+            colors::LIGHT_SIDEBAR
+        }
+    }
+
+    /// Returns primary text color for active theme
+    pub fn text_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_TEXT
+        } else {
+            colors::LIGHT_TEXT
+        }
+    }
+
+    /// Returns secondary text color for active theme
+    pub fn subtext_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_SUBTEXT
+        } else {
+            colors::LIGHT_SUBTEXT
+        }
+    }
+
+    /// Returns muted text color for active theme
+    pub fn muted_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_MUTED
+        } else {
+            colors::LIGHT_MUTED
+        }
+    }
+
+    /// Returns border color for active theme
+    pub fn border_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_BORDER
+        } else {
+            colors::LIGHT_BORDER
+        }
+    }
+
+    /// Returns divider line color for active theme
+    pub fn divider_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_DIVIDER
+        } else {
+            colors::LIGHT_DIVIDER
+        }
+    }
+
+    /// Returns interactive hover color for active theme
+    pub fn hover_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_HOVER
+        } else {
+            colors::LIGHT_HOVER
+        }
+    }
+
+    /// Returns row selection color for active theme
+    pub fn selected_color(&self) -> Color {
+        if self.is_dark() {
+            colors::DARK_SELECTED
+        } else {
+            colors::LIGHT_SELECTED
         }
     }
 }
@@ -288,6 +475,263 @@ pub fn contrast_ratio(c1: Color, c2: Color) -> f32 {
     (lighter + 0.05) / (darker + 0.05)
 }
 
+// -----------------------------------------------------------------------------
+// Modern Design System Widget Styling Functions
+// -----------------------------------------------------------------------------
+
+/// Modern elevated card container style (12px rounded corners, soft border, elevation shadow)
+pub fn card_style(theme: &AppTheme) -> container::Style {
+    if theme.is_dark() {
+        container::Style {
+            background: Some(Background::Color(colors::DARK_SURFACE)),
+            border: Border {
+                color: colors::DARK_BORDER,
+                width: 1.0,
+                radius: 12.0.into(),
+            },
+            shadow: Shadow {
+                color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
+                offset: Vector::new(0.0, 4.0),
+                blur_radius: 16.0,
+            },
+            text_color: Some(colors::DARK_TEXT),
+            ..Default::default()
+        }
+    } else {
+        container::Style {
+            background: Some(Background::Color(colors::LIGHT_SURFACE)),
+            border: Border {
+                color: colors::LIGHT_BORDER,
+                width: 1.0,
+                radius: 12.0.into(),
+            },
+            shadow: Shadow {
+                color: Color::from_rgba(0.0, 0.0, 0.0, 0.04),
+                offset: Vector::new(0.0, 4.0),
+                blur_radius: 16.0,
+            },
+            text_color: Some(colors::LIGHT_TEXT),
+            ..Default::default()
+        }
+    }
+}
+
+/// Hero Folder Showcase Card container style (16px rounded corners, subtle colored background tint)
+pub fn hero_card_style(theme: &AppTheme, tint_color: Color) -> container::Style {
+    if theme.is_dark() {
+        container::Style {
+            background: Some(Background::Color(colors::DARK_SURFACE)),
+            border: Border {
+                color: tint_color.scale_alpha(0.3),
+                width: 1.0,
+                radius: 16.0.into(),
+            },
+            shadow: Shadow {
+                color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
+                offset: Vector::new(0.0, 4.0),
+                blur_radius: 16.0,
+            },
+            text_color: Some(colors::DARK_TEXT),
+            ..Default::default()
+        }
+    } else {
+        container::Style {
+            background: Some(Background::Color(tint_color)),
+            border: Border {
+                color: colors::LIGHT_BORDER,
+                width: 1.0,
+                radius: 16.0.into(),
+            },
+            shadow: Shadow {
+                color: Color::from_rgba(0.0, 0.0, 0.0, 0.05),
+                offset: Vector::new(0.0, 4.0),
+                blur_radius: 16.0,
+            },
+            text_color: Some(colors::LIGHT_TEXT),
+            ..Default::default()
+        }
+    }
+}
+
+/// Sidebar navigation item button style (pill-shaped, clean hover & active states)
+pub fn sidebar_item_style(
+    theme: &AppTheme,
+    active: bool,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    move |_theme, status| {
+        let (bg, fg) = if active {
+            if is_dark {
+                (
+                    Some(Background::Color(colors::DARK_SELECTED)),
+                    colors::DARK_TEXT,
+                )
+            } else {
+                (
+                    Some(Background::Color(colors::LIGHT_SELECTED)),
+                    colors::LIGHT_ACCENT,
+                )
+            }
+        } else {
+            match status {
+                button::Status::Hovered | button::Status::Pressed => {
+                    if is_dark {
+                        (
+                            Some(Background::Color(colors::DARK_HOVER)),
+                            colors::DARK_TEXT,
+                        )
+                    } else {
+                        (
+                            Some(Background::Color(colors::LIGHT_HOVER)),
+                            colors::LIGHT_TEXT,
+                        )
+                    }
+                }
+                _ => (
+                    None,
+                    if is_dark {
+                        colors::DARK_SUBTEXT
+                    } else {
+                        colors::LIGHT_SUBTEXT
+                    },
+                ),
+            }
+        };
+
+        button::Style {
+            background: bg,
+            text_color: fg,
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 8.0.into(),
+            },
+            shadow: Shadow::default(),
+            ..Default::default()
+        }
+    }
+}
+
+/// Modern pill-shaped search input container/widget style
+pub fn search_input_style(
+    theme: &AppTheme,
+) -> impl Fn(&iced::Theme, text_input::Status) -> text_input::Style {
+    let is_dark = theme.is_dark();
+    move |_theme, status| {
+        let (border_color, bg_color) = match status {
+            text_input::Status::Focused { .. } => {
+                if is_dark {
+                    (colors::DARK_ACCENT, colors::DARK_SURFACE)
+                } else {
+                    (colors::LIGHT_ACCENT, colors::LIGHT_SURFACE)
+                }
+            }
+            text_input::Status::Hovered => {
+                if is_dark {
+                    (colors::DARK_BORDER, colors::DARK_SURFACE)
+                } else {
+                    (Color::from_rgba(0.0, 0.0, 0.0, 0.15), colors::LIGHT_SURFACE)
+                }
+            }
+            _ => {
+                if is_dark {
+                    (colors::DARK_BORDER, colors::DARK_SURFACE)
+                } else {
+                    (colors::LIGHT_BORDER, colors::LIGHT_SURFACE)
+                }
+            }
+        };
+
+        text_input::Style {
+            background: Background::Color(bg_color),
+            border: Border {
+                color: border_color,
+                width: 1.0,
+                radius: 20.0.into(),
+            },
+            icon: if is_dark {
+                colors::DARK_MUTED
+            } else {
+                colors::LIGHT_MUTED
+            },
+            placeholder: if is_dark {
+                colors::DARK_MUTED
+            } else {
+                colors::LIGHT_MUTED
+            },
+            value: if is_dark {
+                colors::DARK_TEXT
+            } else {
+                colors::LIGHT_TEXT
+            },
+            selection: if is_dark {
+                colors::DARK_SELECTED
+            } else {
+                colors::LIGHT_SELECTED
+            },
+        }
+    }
+}
+
+/// Circular avatar or pill badge container style
+pub fn pill_badge_style(bg_color: Color, text_color: Color) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(bg_color)),
+        border: Border {
+            color: Color::TRANSPARENT,
+            width: 0.0,
+            radius: 999.0.into(),
+        },
+        shadow: Shadow::default(),
+        text_color: Some(text_color),
+        ..Default::default()
+    }
+}
+
+/// Modern table row button style (with generous row padding, subtle hover and active selection)
+pub fn table_row_btn_style(
+    theme: &AppTheme,
+    is_selected: bool,
+) -> impl Fn(&iced::Theme, button::Status) -> button::Style {
+    let is_dark = theme.is_dark();
+    move |_theme, status| {
+        let bg = if is_selected {
+            if is_dark {
+                Some(Background::Color(colors::DARK_SELECTED))
+            } else {
+                Some(Background::Color(colors::LIGHT_SELECTED))
+            }
+        } else {
+            match status {
+                button::Status::Hovered | button::Status::Pressed => {
+                    if is_dark {
+                        Some(Background::Color(colors::DARK_HOVER))
+                    } else {
+                        Some(Background::Color(colors::LIGHT_HOVER))
+                    }
+                }
+                _ => None,
+            }
+        };
+
+        button::Style {
+            background: bg,
+            text_color: if is_dark {
+                colors::DARK_TEXT
+            } else {
+                colors::LIGHT_TEXT
+            },
+            border: Border {
+                color: Color::TRANSPARENT,
+                width: 0.0,
+                radius: 6.0.into(),
+            },
+            shadow: Shadow::default(),
+            ..Default::default()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -320,5 +764,18 @@ mod tests {
             accent_contrast >= 3.0,
             "Light theme accent contrast {accent_contrast:.2} must be >= 3.0 for UI controls"
         );
+    }
+
+    #[test]
+    fn test_theme_color_accessors() {
+        let dark = AppTheme::Dark;
+        assert_eq!(dark.bg_color(), colors::DARK_BG);
+        assert_eq!(dark.surface_color(), colors::DARK_SURFACE);
+        assert_eq!(dark.text_color(), colors::DARK_TEXT);
+
+        let light = AppTheme::Light;
+        assert_eq!(light.bg_color(), colors::LIGHT_BG);
+        assert_eq!(light.surface_color(), colors::LIGHT_SURFACE);
+        assert_eq!(light.text_color(), colors::LIGHT_TEXT);
     }
 }
