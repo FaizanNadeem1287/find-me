@@ -709,11 +709,8 @@ impl FindMeApp {
                     .iter()
                     .map(|r| r.path.clone())
                     .collect();
-                let _ = self
-                    .engine
-                    .indexer()
-                    .write()
-                    .start_background_indexing(roots);
+                self.state.semantic_progress.is_indexing = true;
+                self.engine.start_semantic_indexing(roots);
                 self.state.notification =
                     Some("Semantic vector indexing started in background".to_string());
                 Task::none()
@@ -1319,6 +1316,21 @@ impl FindMeApp {
                             let q = self.state.query.clone();
                             return self.update(Message::ExecuteSearch(q));
                         }
+                    }
+                    EngineEvent::SemanticProgress(progress) => {
+                        self.state.semantic_progress = progress;
+                    }
+                    EngineEvent::SemanticIndexReady {
+                        indexed_chunks,
+                        total_files,
+                    } => {
+                        self.state.semantic_progress.is_indexing = false;
+                        self.state.semantic_chunks_count = indexed_chunks;
+                        self.state.notification = Some(format!(
+                            "Semantic vector indexing complete: {} files indexed ({} vector chunks)",
+                            crate::state::format_number(total_files as u64),
+                            crate::state::format_number(indexed_chunks as u64)
+                        ));
                     }
                     EngineEvent::Error(err_msg) => {
                         self.state.index_mgmt.indexing_state =
