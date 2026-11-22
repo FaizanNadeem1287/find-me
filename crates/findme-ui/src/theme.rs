@@ -1,7 +1,7 @@
 //! Custom themes, color palettes, OS theme detection, and WCAG contrast for Find-Me
 
 use iced::widget::{button, container, text_input};
-use iced::{Background, Border, Color, Shadow, Vector};
+use iced::{Background, Border, Color, Shadow};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -600,7 +600,7 @@ pub fn contrast_ratio(c1: Color, c2: Color) -> f32 {
 // Modern Design System Widget Styling Functions
 // -----------------------------------------------------------------------------
 
-/// Modern elevated card container style (12px rounded corners, soft border, elevation shadow)
+/// Modern elevated card container style (12px rounded corners, soft border, zero-flicker performance)
 pub fn card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style {
     let is_dark = theme.is_dark();
     move |_theme| {
@@ -612,11 +612,7 @@ pub fn card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style
                     width: 1.0,
                     radius: 12.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
-                    offset: Vector::new(0.0, 4.0),
-                    blur_radius: 16.0,
-                },
+                shadow: Shadow::default(),
                 text_color: Some(colors::DARK_TEXT),
                 ..Default::default()
             }
@@ -628,11 +624,7 @@ pub fn card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style
                     width: 1.0,
                     radius: 12.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.04),
-                    offset: Vector::new(0.0, 4.0),
-                    blur_radius: 16.0,
-                },
+                shadow: Shadow::default(),
                 text_color: Some(colors::LIGHT_TEXT),
                 ..Default::default()
             }
@@ -640,7 +632,7 @@ pub fn card_style(theme: &AppTheme) -> impl Fn(&iced::Theme) -> container::Style
     }
 }
 
-/// Hero Folder Showcase Card container style (16px rounded corners, subtle colored background tint)
+/// Hero Folder Showcase Card container style (16px rounded corners, subtle colored background tint, zero-flicker performance)
 pub fn hero_card_style(
     theme: &AppTheme,
     tint_color: Color,
@@ -655,11 +647,7 @@ pub fn hero_card_style(
                     width: 1.0,
                     radius: 16.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.35),
-                    offset: Vector::new(0.0, 4.0),
-                    blur_radius: 16.0,
-                },
+                shadow: Shadow::default(),
                 text_color: Some(colors::DARK_TEXT),
                 ..Default::default()
             }
@@ -671,11 +659,7 @@ pub fn hero_card_style(
                     width: 1.0,
                     radius: 16.0.into(),
                 },
-                shadow: Shadow {
-                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.05),
-                    offset: Vector::new(0.0, 4.0),
-                    blur_radius: 16.0,
-                },
+                shadow: Shadow::default(),
                 text_color: Some(colors::LIGHT_TEXT),
                 ..Default::default()
             }

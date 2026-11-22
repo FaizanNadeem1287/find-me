@@ -8,7 +8,7 @@ use crate::message::{
 use crate::state::{is_heavy_query, search_input_id, AppState};
 use crate::views;
 use iced::widget::{column, container, operation, row};
-use iced::{Element, Length, Size, Subscription, Task, Theme};
+use iced::{Background, Element, Length, Size, Subscription, Task, Theme};
 use std::sync::Arc;
 
 /// Configures window settings conforming to the Find-Me desktop specification
@@ -1078,10 +1078,26 @@ impl FindMeApp {
                 .height(Length::Fill)
         };
 
-        let base_layout: Element<'_, Message> = row![sidebar, workspace_content]
+        let workspace_container = container(workspace_content)
             .width(Length::Fill)
             .height(Length::Fill)
-            .into();
+            .style(move |_theme| container::Style {
+                background: Some(Background::Color(self.state.theme.bg_color())),
+                ..Default::default()
+            });
+
+        let base_layout: Element<'_, Message> = container(
+            row![sidebar, workspace_container]
+                .width(Length::Fill)
+                .height(Length::Fill),
+        )
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .style(move |_theme| container::Style {
+            background: Some(Background::Color(self.state.theme.bg_color())),
+            ..Default::default()
+        })
+        .into();
 
         if self.state.properties_modal.is_some() || self.state.context_menu.is_open {
             let mut layers: Vec<Element<'_, Message>> = vec![base_layout];
