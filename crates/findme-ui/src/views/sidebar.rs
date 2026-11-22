@@ -1,95 +1,458 @@
-//! Responsive sidebar navigation component
+//! Modern responsive sidebar navigation component inspired by Notion / Pinterest file workspace aesthetic
 
 use crate::message::{Message, ScreenId};
 use crate::state::AppState;
-use iced::widget::{button, column, container, scrollable, text};
-use iced::{Alignment, Element, Length};
+use crate::theme::{colors, pill_badge_style, sidebar_item_style};
+use iced::widget::{button, column, container, row, scrollable, text, Space};
+use iced::{Alignment, Background, Border, Color, Element, Length, Shadow, Vector};
 
-/// Renders the sidebar navigation panel
+/// Renders the revamped modern sidebar navigation panel
 pub fn view(state: &AppState) -> Element<'_, Message> {
+    let is_dark = state.theme.is_dark();
     let width = if state.sidebar_expanded {
-        Length::Fixed(220.0)
+        Length::Fixed(240.0)
     } else {
         Length::Fixed(68.0)
     };
 
-    // Header branding
-    let brand_title = if state.sidebar_expanded {
-        column![text("Find-Me").size(18), text("v0.1.0 • Desktop").size(11),].spacing(2)
+    // -------------------------------------------------------------------------
+    // 1. Workspace Monogram Header
+    // -------------------------------------------------------------------------
+    let brand_section: Element<'_, Message> = if state.sidebar_expanded {
+        // Monogram circular badge "FM"
+        let monogram = container(text("FM").size(11).color(Color::WHITE))
+            .width(Length::Fixed(30.0))
+            .height(Length::Fixed(30.0))
+            .align_x(Alignment::Center)
+            .align_y(Alignment::Center)
+            .style(|_theme| container::Style {
+                background: Some(Background::Color(Color::from_rgb(0.08, 0.10, 0.15))),
+                border: Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 15.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
+                    offset: Vector::new(0.0, 2.0),
+                    blur_radius: 4.0,
+                },
+                ..Default::default()
+            });
+
+        let ws_title = column![
+            text("Find-Me Core")
+                .size(13)
+                .color(state.theme.text_color()),
+            text("Indexed Files • Live Inotify")
+                .size(10)
+                .color(state.theme.muted_color()),
+        ]
+        .spacing(1);
+
+        let chevron = text("↕").size(12).color(state.theme.muted_color());
+
+        let header_row = row![
+            monogram,
+            ws_title,
+            Space::new().width(Length::Fill),
+            chevron
+        ]
+        .spacing(10)
+        .align_y(Alignment::Center);
+
+        button(header_row)
+            .width(Length::Fill)
+            .padding([8, 10])
+            .style(sidebar_item_style(&state.theme, false))
+            .on_press(Message::SwitchScreen(ScreenId::Search))
+            .into()
     } else {
-        column![text("FM").size(16), text("0.1").size(10)].spacing(2)
+        let monogram = container(text("FM").size(11).color(Color::WHITE))
+            .width(Length::Fixed(32.0))
+            .height(Length::Fixed(32.0))
+            .align_x(Alignment::Center)
+            .align_y(Alignment::Center)
+            .style(|_theme| container::Style {
+                background: Some(Background::Color(Color::from_rgb(0.08, 0.10, 0.15))),
+                border: Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 16.0.into(),
+                },
+                shadow: Shadow {
+                    color: Color::from_rgba(0.0, 0.0, 0.0, 0.2),
+                    offset: Vector::new(0.0, 2.0),
+                    blur_radius: 4.0,
+                },
+                ..Default::default()
+            });
+
+        button(
+            container(monogram)
+                .width(Length::Fill)
+                .align_x(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([8, 0])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::ToggleSidebar)
+        .into()
     };
 
-    let brand_section = container(brand_title).padding(12);
+    // -------------------------------------------------------------------------
+    // 2. Quick Search Pill
+    // -------------------------------------------------------------------------
+    let search_pill_section: Element<'_, Message> = if state.sidebar_expanded {
+        let search_icon = text("🔍").size(12).color(state.theme.muted_color());
+        let placeholder = text("Search files & folders...")
+            .size(12)
+            .color(state.theme.muted_color());
 
-    // Navigation links
-    let mut nav_items = column![].spacing(6);
+        let shortcut_pill = container(text("Ctrl+K").size(9).color(state.theme.subtext_color()))
+            .padding([2, 5])
+            .style(move |_theme| container::Style {
+                background: Some(Background::Color(if is_dark {
+                    colors::DARK_HOVER
+                } else {
+                    colors::LIGHT_HOVER
+                })),
+                border: Border {
+                    color: Color::TRANSPARENT,
+                    width: 0.0,
+                    radius: 4.0.into(),
+                },
+                ..Default::default()
+            });
+
+        let pill_inner = row![
+            search_icon,
+            placeholder,
+            Space::new().width(Length::Fill),
+            shortcut_pill
+        ]
+        .spacing(8)
+        .align_y(Alignment::Center);
+
+        button(pill_inner)
+            .width(Length::Fill)
+            .padding([7, 10])
+            .style(move |_theme, status| {
+                let border_col = match status {
+                    button::Status::Hovered | button::Status::Pressed => {
+                        if is_dark {
+                            colors::DARK_ACCENT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        }
+                    }
+                    _ => {
+                        if is_dark {
+                            colors::DARK_BORDER
+                        } else {
+                            colors::LIGHT_BORDER
+                        }
+                    }
+                };
+                button::Style {
+                    background: Some(Background::Color(if is_dark {
+                        colors::DARK_SURFACE
+                    } else {
+                        colors::LIGHT_SURFACE
+                    })),
+                    border: Border {
+                        color: border_col,
+                        width: 1.0,
+                        radius: 20.0.into(),
+                    },
+                    shadow: Shadow::default(),
+                    ..Default::default()
+                }
+            })
+            .on_press(Message::FocusSearchInput)
+            .into()
+    } else {
+        button(
+            container(text("🔍").size(14).color(state.theme.text_color()))
+                .width(Length::Fill)
+                .align_x(Alignment::Center),
+        )
+        .width(Length::Fill)
+        .padding([8, 0])
+        .style(sidebar_item_style(&state.theme, false))
+        .on_press(Message::FocusSearchInput)
+        .into()
+    };
+
+    // -------------------------------------------------------------------------
+    // 3. Primary Navigation Links
+    // -------------------------------------------------------------------------
+    let mut nav_items = column![].spacing(3);
 
     for screen in ScreenId::ALL {
         let is_active = state.active_screen == screen;
+
         let nav_btn = if state.sidebar_expanded {
-            let label_text = if is_active {
-                format!("▶ {}  {}", screen.icon(), screen.title())
-            } else {
-                format!("  {}  {}", screen.icon(), screen.title())
+            let label_row = match screen {
+                ScreenId::IndexManagement => {
+                    let roots_count = state.index_mgmt.roots.len();
+                    let count_badge =
+                        container(text(roots_count.to_string()).size(10).color(if is_active {
+                            colors::LIGHT_ACCENT
+                        } else {
+                            state.theme.muted_color()
+                        }))
+                        .padding([1, 6])
+                        .style(pill_badge_style(
+                            if is_active {
+                                colors::LIGHT_SELECTED
+                            } else {
+                                state.theme.hover_color()
+                            },
+                            colors::LIGHT_ACCENT,
+                        ));
+
+                    row![
+                        text(screen.icon()).size(14),
+                        text(screen.title()).size(13).color(if is_active {
+                            if is_dark {
+                                colors::DARK_TEXT
+                            } else {
+                                colors::LIGHT_ACCENT
+                            }
+                        } else {
+                            state.theme.text_color()
+                        }),
+                        Space::new().width(Length::Fill),
+                        count_badge,
+                    ]
+                    .spacing(10)
+                    .align_y(Alignment::Center)
+                }
+                _ => row![
+                    text(screen.icon()).size(14),
+                    text(screen.title()).size(13).color(if is_active {
+                        if is_dark {
+                            colors::DARK_TEXT
+                        } else {
+                            colors::LIGHT_ACCENT
+                        }
+                    } else {
+                        state.theme.text_color()
+                    }),
+                ]
+                .spacing(10)
+                .align_y(Alignment::Center),
             };
-            button(text(label_text).size(13))
+
+            button(label_row)
                 .width(Length::Fill)
-                .padding([8, 12])
+                .padding([7, 10])
+                .style(sidebar_item_style(&state.theme, is_active))
                 .on_press(Message::SwitchScreen(screen))
         } else {
             button(
-                container(text(screen.icon()).size(16))
+                container(text(screen.icon()).size(15))
                     .width(Length::Fill)
                     .align_x(Alignment::Center),
             )
             .width(Length::Fill)
-            .padding([8, 4])
+            .padding([8, 0])
+            .style(sidebar_item_style(&state.theme, is_active))
             .on_press(Message::SwitchScreen(screen))
         };
 
         nav_items = nav_items.push(nav_btn);
     }
 
-    let nav_scroll = scrollable(nav_items).height(Length::Fill);
+    // -------------------------------------------------------------------------
+    // 4. Hierarchical Directory Tree (When Expanded)
+    // -------------------------------------------------------------------------
+    let folder_tree_section: Element<'_, Message> = if state.sidebar_expanded {
+        let tree_header = row![
+            text("INDEX ROOTS & CATEGORIES")
+                .size(10)
+                .color(state.theme.muted_color()),
+            Space::new().width(Length::Fill),
+            button(text("+").size(12).color(state.theme.muted_color()))
+                .padding([1, 6])
+                .style(sidebar_item_style(&state.theme, false))
+                .on_press(Message::SwitchScreen(ScreenId::IndexManagement)),
+        ]
+        .align_y(Alignment::Center);
 
-    // Footer actions
+        let root_expanded = state.expanded_folders.contains("General Knowledge");
+        let chevron_symbol = if root_expanded { "▾" } else { "▸" };
+
+        let root_row = row![
+            button(
+                text(chevron_symbol)
+                    .size(11)
+                    .color(state.theme.muted_color())
+            )
+            .padding([2, 4])
+            .style(sidebar_item_style(&state.theme, false))
+            .on_press(Message::ToggleFolderTreeNode(
+                "General Knowledge".to_string()
+            )),
+            text("📁").size(13),
+            text("General Knowledge")
+                .size(12)
+                .color(state.theme.text_color()),
+        ]
+        .spacing(6)
+        .align_y(Alignment::Center);
+
+        let root_btn = button(root_row)
+            .width(Length::Fill)
+            .padding([5, 8])
+            .style(sidebar_item_style(&state.theme, false))
+            .on_press(Message::SelectFolderFilter(None));
+
+        let mut tree_col = column![tree_header, root_btn].spacing(3);
+
+        if root_expanded {
+            // Child categories with vibrant color badges
+            let subfolders = [
+                ("Onboarding", "🟣", colors::ACCENT_PURPLE, "Documents", "15"),
+                ("Design System", "🔵", colors::ACCENT_BLUE, "Projects", "22"),
+                ("Downloads", "🟠", colors::ACCENT_AMBER, "Downloads", "10"),
+                (
+                    "Media Assets",
+                    "🟢",
+                    colors::ACCENT_EMERALD,
+                    "Pictures",
+                    "8",
+                ),
+            ];
+
+            let mut sub_col = column![].spacing(2);
+
+            for (title, dot_icon, dot_color, path_filter, count_str) in subfolders {
+                let is_selected = state.active_folder_filter.as_deref() == Some(path_filter);
+
+                let badge = container(text(count_str).size(10).color(state.theme.muted_color()))
+                    .padding([1, 5])
+                    .style(pill_badge_style(
+                        state.theme.hover_color(),
+                        state.theme.muted_color(),
+                    ));
+
+                let item_row = row![
+                    Space::new().width(Length::Fixed(12.0)),
+                    text(dot_icon).size(10).color(dot_color),
+                    text(title).size(12).color(if is_selected {
+                        colors::ACCENT_BLUE
+                    } else {
+                        state.theme.text_color()
+                    }),
+                    Space::new().width(Length::Fill),
+                    badge,
+                ]
+                .spacing(8)
+                .align_y(Alignment::Center);
+
+                let item_btn = button(item_row)
+                    .width(Length::Fill)
+                    .padding([5, 8])
+                    .style(sidebar_item_style(&state.theme, is_selected))
+                    .on_press(Message::SelectFolderFilter(Some(path_filter.to_string())));
+
+                sub_col = sub_col.push(item_btn);
+            }
+
+            tree_col = tree_col.push(sub_col);
+        }
+
+        container(tree_col).padding([8, 0]).into()
+    } else {
+        Space::new().height(Length::Fixed(0.0)).into()
+    };
+
+    let scrollable_content =
+        scrollable(column![nav_items, folder_tree_section].spacing(10)).height(Length::Fill);
+
+    // -------------------------------------------------------------------------
+    // 5. Footer Actions: Collapse & Theming
+    // -------------------------------------------------------------------------
     let collapse_label = if state.sidebar_expanded {
-        "⇤ Collapse"
+        "⇤  Collapse"
     } else {
         "⇥"
     };
 
     let theme_label = if state.sidebar_expanded {
-        if state.theme.is_dark() {
-            "🌙 Dark Mode"
+        if is_dark {
+            "🌙  Dark Mode"
         } else {
-            "☀️ Light Mode"
+            "☀️  Light Mode"
         }
-    } else if state.theme.is_dark() {
+    } else if is_dark {
         "🌙"
     } else {
         "☀️"
     };
 
-    let collapse_btn = button(text(collapse_label).size(12))
+    let collapse_btn = button(
+        container(
+            text(collapse_label)
+                .size(12)
+                .color(state.theme.subtext_color()),
+        )
         .width(Length::Fill)
-        .padding([6, 10])
-        .on_press(Message::ToggleSidebar);
+        .align_x(if state.sidebar_expanded {
+            Alignment::Start
+        } else {
+            Alignment::Center
+        }),
+    )
+    .width(Length::Fill)
+    .padding([6, 10])
+    .style(sidebar_item_style(&state.theme, false))
+    .on_press(Message::ToggleSidebar);
 
-    let theme_btn = button(text(theme_label).size(12))
+    let theme_btn = button(
+        container(
+            text(theme_label)
+                .size(12)
+                .color(state.theme.subtext_color()),
+        )
         .width(Length::Fill)
-        .padding([6, 10])
-        .on_press(Message::ToggleTheme);
+        .align_x(if state.sidebar_expanded {
+            Alignment::Start
+        } else {
+            Alignment::Center
+        }),
+    )
+    .width(Length::Fill)
+    .padding([6, 10])
+    .style(sidebar_item_style(&state.theme, false))
+    .on_press(Message::ToggleTheme);
 
-    let footer_section = column![collapse_btn, theme_btn].spacing(6).padding(12);
+    let footer_section = column![collapse_btn, theme_btn].spacing(4);
 
-    let sidebar_layout = column![brand_section, nav_scroll, footer_section]
-        .width(width)
-        .height(Length::Fill);
+    let sidebar_layout = column![
+        brand_section,
+        search_pill_section,
+        scrollable_content,
+        footer_section
+    ]
+    .spacing(12)
+    .padding(12)
+    .width(width)
+    .height(Length::Fill);
 
     container(sidebar_layout)
         .width(width)
         .height(Length::Fill)
+        .style(move |_theme| container::Style {
+            background: Some(Background::Color(state.theme.sidebar_color())),
+            border: Border {
+                color: state.theme.border_color(),
+                width: 1.0,
+                radius: 0.0.into(),
+            },
+            ..Default::default()
+        })
         .into()
 }

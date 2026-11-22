@@ -269,12 +269,16 @@ impl FindMeApp {
                         && !modifiers.shift()
                         && !modifiers.alt()
                         && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("f"));
+                    let is_ctrl_k = modifiers.control()
+                        && !modifiers.shift()
+                        && !modifiers.alt()
+                        && matches!(key, iced::keyboard::Key::Character(ref s) if s.eq_ignore_ascii_case("k"));
                     let is_slash = key == iced::keyboard::Key::Character("/".into())
                         && !modifiers.control()
                         && !modifiers.alt()
                         && self.state.active_screen != ScreenId::Search;
 
-                    if is_ctrl_f || is_slash {
+                    if is_ctrl_f || is_ctrl_k || is_slash {
                         self.state.active_screen = ScreenId::Search;
                         return operation::focus(search_input_id());
                     }
@@ -404,6 +408,23 @@ impl FindMeApp {
             Message::ToggleSidebar => {
                 self.state.sidebar_expanded = !self.state.sidebar_expanded;
                 Task::none()
+            }
+            Message::ToggleFolderTreeNode(folder) => {
+                if self.state.expanded_folders.contains(&folder) {
+                    self.state.expanded_folders.remove(&folder);
+                } else {
+                    self.state.expanded_folders.insert(folder);
+                }
+                Task::none()
+            }
+            Message::SelectFolderFilter(opt_filter) => {
+                self.state.active_folder_filter = opt_filter.clone();
+                self.state.active_screen = ScreenId::Search;
+                let query = match opt_filter {
+                    Some(f) => format!("path:\"{}\"", f),
+                    None => String::new(),
+                };
+                self.update(Message::SearchInputChanged(query))
             }
             Message::WindowResized { width, height } => {
                 self.state.window_width = width;
