@@ -157,6 +157,7 @@ fn test_settings_json_persistence_roundtrip() {
         max_results: 10_000,
         exclude_hidden_files: false,
         exclude_system_paths: true,
+        ..AppSettings::default()
     };
 
     // Save to disk (verifying parent dir auto-creation)
