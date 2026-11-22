@@ -218,6 +218,15 @@ pub enum AdvancedSearchMessage {
     UpdateExactPhrase(String),
     UpdateAnyWords(String),
     UpdateNoneWords(String),
+    // Granular extension matrix variants:
+    SelectExtCategory(crate::advanced::ExtensionCategory),
+    ToggleExtension(String),
+    SelectAllInCategory(crate::advanced::ExtensionCategory),
+    ClearCategory(crate::advanced::ExtensionCategory),
+    ClearAllExtensions,
+    UpdateCustomExtInput(String),
+    AddCustomExtFromInput,
+    // Existing variants:
     ToggleExtDocuments(bool),
     ToggleExtCode(bool),
     ToggleExtImages(bool),

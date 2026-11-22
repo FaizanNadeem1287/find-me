@@ -411,3 +411,71 @@ fn test_advanced_view_rendering() {
     // Render the Advanced Search view
     let _view_element = findme_ui::views::advanced::view(&app.state);
 }
+
+#[test]
+fn test_granular_extension_matrix_and_user_scenario() {
+    let mut app = FindMeApp::new();
+    let _ = app.update(Message::SwitchScreen(ScreenId::AdvancedSearch));
+
+    // 1. Select Audio category
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::SelectExtCategory(findme_ui::advanced::ExtensionCategory::Audio),
+    ));
+    assert_eq!(
+        app.state.advanced_filters.active_ext_category,
+        findme_ui::advanced::ExtensionCategory::Audio
+    );
+
+    // 2. Select specifically OGG extension (User Request Scenario!)
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::ToggleExtension("ogg".to_string()),
+    ));
+    assert!(app.state.advanced_filters.is_extension_active("ogg"));
+    assert_eq!(app.state.advanced_filters.synthesize_query(), "ext:ogg");
+
+    // 3. Select FLAC as well
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::ToggleExtension("flac".to_string()),
+    ));
+    assert!(app.state.advanced_filters.is_extension_active("flac"));
+    let q = app.state.advanced_filters.synthesize_query();
+    assert!(q.contains("ogg"));
+    assert!(q.contains("flac"));
+    assert_eq!(q, "ext:flac;ogg");
+
+    // 4. View rendering with active ribbon
+    {
+        let _view_element = findme_ui::views::advanced::view(&app.state);
+    }
+
+    // 5. Select all in Audio category
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::SelectAllInCategory(findme_ui::advanced::ExtensionCategory::Audio),
+    ));
+    for ext in findme_ui::advanced::ExtensionCategory::Audio.extensions() {
+        assert!(app.state.advanced_filters.is_extension_active(ext));
+    }
+
+    // 6. Clear Audio category
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::ClearCategory(findme_ui::advanced::ExtensionCategory::Audio),
+    ));
+    for ext in findme_ui::advanced::ExtensionCategory::Audio.extensions() {
+        assert!(!app.state.advanced_filters.is_extension_active(ext));
+    }
+
+    // 7. Add custom extension tag
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::UpdateCustomExtInput("parquet".to_string()),
+    ));
+    let _ = app.update(Message::AdvancedSearch(
+        AdvancedSearchMessage::AddCustomExtFromInput,
+    ));
+    assert!(app.state.advanced_filters.is_extension_active("parquet"));
+    assert_eq!(app.state.advanced_filters.synthesize_query(), "ext:parquet");
+
+    // 8. Submit search with custom format
+    let _ = app.update(Message::AdvancedSearch(AdvancedSearchMessage::SubmitSearch));
+    assert_eq!(app.state.active_screen, ScreenId::Search);
+    assert_eq!(app.state.query, "ext:parquet");
+}

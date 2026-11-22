@@ -1,6 +1,6 @@
-//! Advanced Search visual filter builder screen
+//! Advanced Search visual filter builder screen with granular extension matrix
 
-use crate::advanced::{DatePreset, PresetFilter, SizeUnit};
+use crate::advanced::{DatePreset, ExtensionCategory, SizeUnit};
 use crate::icons::{self, Icon};
 use crate::message::{AdvancedSearchMessage, Message};
 use crate::state::AppState;
@@ -12,19 +12,6 @@ use iced::{Alignment, Color, Element, Length};
 pub fn view(state: &AppState) -> Element<'_, Message> {
     let filters = &state.advanced_filters;
     let synthesized = filters.synthesize_query();
-
-    // 1. Header & Live Query Preview Card
-    let header_title = column![
-        row![
-            icons::icon(Icon::Sliders, 18.0, colors::ACCENT_AMBER),
-            text("Advanced Search & Visual Query Builder").size(18),
-        ]
-        .spacing(8)
-        .align_y(Alignment::Center),
-        text("Construct precise multi-criteria file search queries without memorizing syntax")
-            .size(12),
-    ]
-    .spacing(4);
 
     let query_preview_text = if synthesized.is_empty() {
         "(No active filters — matches all files)".to_string()
@@ -40,7 +27,17 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     let query_card = container(
         column![
             row![
-                text("Generated Query Syntax:").size(13),
+                column![
+                    row![
+                        icons::icon(Icon::Sliders, 18.0, colors::ACCENT_AMBER),
+                        text("Advanced Search & Visual Query Builder").size(18),
+                    ]
+                    .spacing(8)
+                    .align_y(Alignment::Center),
+                    text("Construct precise multi-criteria file search queries without memorizing syntax")
+                        .size(12),
+                ]
+                .spacing(4),
                 Space::new().width(Length::Fill),
                 button(
                     row![
@@ -75,130 +72,233 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
-    // 2. Keywords & Text Matching Card
-    let keywords_card = container(
+    // 2. Keywords & Phrases Card (Chunked 2-Column Grid for Miller's Law UX)
+    let col1 = column![
         column![
-            text("Keywords & Phrases").size(14),
-            row![
-                text("All of these words:")
-                    .size(12)
-                    .width(Length::Fixed(160.0)),
-                text_input("e.g. project budget quarterly", &filters.all_words)
-                    .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAllWords(s)))
-                    .style(theme::search_input_style(&state.theme))
-                    .padding(8)
-                    .size(13)
-                    .width(Length::Fill),
-            ]
-            .spacing(8)
-            .align_y(Alignment::Center),
-            row![
-                text("Exact phrase:").size(12).width(Length::Fixed(160.0)),
-                text_input("e.g. annual financial report", &filters.exact_phrase)
-                    .on_input(|s| Message::AdvancedSearch(
-                        AdvancedSearchMessage::UpdateExactPhrase(s)
-                    ))
-                    .style(theme::search_input_style(&state.theme))
-                    .padding(8)
-                    .size(13)
-                    .width(Length::Fill),
-            ]
-            .spacing(8)
-            .align_y(Alignment::Center),
-            row![
-                text("Any of these words:")
-                    .size(12)
-                    .width(Length::Fixed(160.0)),
-                text_input("e.g. invoices receipts accounts", &filters.any_words)
-                    .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAnyWords(s)))
-                    .style(theme::search_input_style(&state.theme))
-                    .padding(8)
-                    .size(13)
-                    .width(Length::Fill),
-            ]
-            .spacing(8)
-            .align_y(Alignment::Center),
-            row![
-                text("None of these words:")
-                    .size(12)
-                    .width(Length::Fixed(160.0)),
-                text_input("e.g. draft temp backup", &filters.none_words)
-                    .on_input(
-                        |s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateNoneWords(s))
-                    )
-                    .style(theme::search_input_style(&state.theme))
-                    .padding(8)
-                    .size(13)
-                    .width(Length::Fill),
-            ]
-            .spacing(8)
-            .align_y(Alignment::Center),
+            text("All of these words:").size(12),
+            text_input("e.g. project budget quarterly", &filters.all_words)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAllWords(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(13),
         ]
-        .spacing(12),
-    )
-    .padding(16)
-    .style(theme::card_style(&state.theme))
-    .width(Length::Fill);
-
-    // 3. File Types & Extensions Card
-    let ext_checkboxes_row1 = row![
-        checkbox(filters.ext_documents)
-            .label("Documents (pdf, doc, txt, md)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtDocuments(b))),
-        checkbox(filters.ext_code)
-            .label("Source Code (rs, c, cpp, py, js, go)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtCode(b))),
-        checkbox(filters.ext_images)
-            .label("Images (png, jpg, svg, gif)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtImages(b))),
+        .spacing(4),
+        column![
+            text("Exact phrase:").size(12),
+            text_input("e.g. annual financial report", &filters.exact_phrase)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateExactPhrase(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(13),
+        ]
+        .spacing(4),
     ]
-    .spacing(16);
+    .spacing(10)
+    .width(Length::FillPortion(1));
 
-    let ext_checkboxes_row2 = row![
-        checkbox(filters.ext_audio)
-            .label("Audio (mp3, wav, flac, ogg)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtAudio(b))),
-        checkbox(filters.ext_video)
-            .label("Video (mp4, mkv, avi, webm)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtVideo(b))),
-        checkbox(filters.ext_archives)
-            .label("Archives (zip, tar, gz, xz, 7z)")
-            .text_size(12)
-            .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleExtArchives(b))),
+    let col2 = column![
+        column![
+            text("Any of these words:").size(12),
+            text_input("e.g. invoices receipts accounts", &filters.any_words)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateAnyWords(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(13),
+        ]
+        .spacing(4),
+        column![
+            text("None of these words:").size(12),
+            text_input("e.g. draft temp backup", &filters.none_words)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateNoneWords(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(13),
+        ]
+        .spacing(4),
     ]
-    .spacing(16);
+    .spacing(10)
+    .width(Length::FillPortion(1));
 
+    let keywords_grid = row![col1, col2].spacing(16);
+
+    let keywords_card =
+        container(column![text("Keywords & Phrases").size(14), keywords_grid,].spacing(12))
+            .padding(16)
+            .style(theme::card_style(&state.theme))
+            .width(Length::Fill);
+
+    // 3. Granular Extension Matrix Card
+    let matrix_header = row![
+        row![
+            icons::icon(Icon::Sliders, 16.0, colors::LIGHT_ACCENT),
+            text("File Types & Granular Extension Matrix").size(15),
+        ]
+        .spacing(6)
+        .align_y(Alignment::Center),
+        Space::new().width(Length::Fill),
+        text("Select specific file formats or categories (e.g. ogg, flac, rs, py)").size(11),
+    ]
+    .align_y(Alignment::Center);
+
+    // Active Extensions Ribbon (visible when any extensions are active)
+    let active_exts_count = filters.active_extensions.len();
+    let ribbon_section: Option<Element<'_, Message>> = if active_exts_count > 0 {
+        let mut chips_row =
+            row![text(format!("Active Formats ({}):", active_exts_count)).size(11),]
+                .spacing(6)
+                .align_y(Alignment::Center);
+
+        for ext in &filters.active_extensions {
+            let chip = container(
+                row![
+                    text(format!(".{}", ext)).size(11),
+                    button(icons::icon(Icon::Cross, 10.0, colors::LIGHT_DANGER))
+                        .padding(2)
+                        .style(theme::danger_btn_style(&state.theme))
+                        .on_press(Message::AdvancedSearch(
+                            AdvancedSearchMessage::ToggleExtension(ext.clone())
+                        )),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
+            )
+            .padding([2, 6])
+            .style(theme::subtle_card_style(&state.theme));
+
+            chips_row = chips_row.push(chip);
+        }
+
+        chips_row = chips_row.push(Space::new().width(Length::Fill));
+        chips_row = chips_row.push(
+            button(
+                row![
+                    icons::icon(Icon::Trash, 11.0, colors::LIGHT_DANGER),
+                    text("Clear All Formats").size(11),
+                ]
+                .spacing(4)
+                .align_y(Alignment::Center),
+            )
+            .padding([3, 8])
+            .style(theme::danger_btn_style(&state.theme))
+            .on_press(Message::AdvancedSearch(
+                AdvancedSearchMessage::ClearAllExtensions,
+            )),
+        );
+
+        Some(
+            container(chips_row)
+                .padding([6, 10])
+                .style(theme::hero_card_style(
+                    &state.theme,
+                    if state.theme.is_dark() {
+                        colors::DARK_HOVER
+                    } else {
+                        colors::TINT_BLUE
+                    },
+                ))
+                .width(Length::Fill)
+                .into(),
+        )
+    } else {
+        None
+    };
+
+    // Category Tabs Row
+    let mut category_tabs_row = row![].spacing(6).align_y(Alignment::Center);
+    for cat in ExtensionCategory::ALL {
+        let is_active = filters.active_ext_category == cat;
+        let btn = button(text(cat.title()).size(11))
+            .padding([5, 12])
+            .style(theme::chip_btn_style(&state.theme, is_active))
+            .on_press(Message::AdvancedSearch(
+                AdvancedSearchMessage::SelectExtCategory(cat),
+            ));
+        category_tabs_row = category_tabs_row.push(btn);
+    }
+
+    // Format Chips for Selected Category
+    let current_cat = filters.active_ext_category;
+    let format_actions_row = row![
+        text(format!("{} Formats:", current_cat.title())).size(12),
+        Space::new().width(Length::Fill),
+        button(text("Select All in Category").size(11))
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
+            .on_press(Message::AdvancedSearch(
+                AdvancedSearchMessage::SelectAllInCategory(current_cat),
+            )),
+        button(text("Clear Category").size(11))
+            .padding([3, 8])
+            .style(theme::secondary_btn_style(&state.theme))
+            .on_press(Message::AdvancedSearch(
+                AdvancedSearchMessage::ClearCategory(current_cat),
+            )),
+    ]
+    .spacing(6)
+    .align_y(Alignment::Center);
+
+    let mut format_chips_row = row![].spacing(6).align_y(Alignment::Center);
+    for &ext in current_cat.extensions() {
+        let is_selected = filters.is_extension_active(ext);
+        let label = if is_selected {
+            format!("✓ .{}", ext)
+        } else {
+            format!(".{}", ext)
+        };
+
+        let btn = button(text(label).size(11))
+            .padding([4, 10])
+            .style(theme::chip_btn_style(&state.theme, is_selected))
+            .on_press(Message::AdvancedSearch(
+                AdvancedSearchMessage::ToggleExtension(ext.to_string()),
+            ));
+        format_chips_row = format_chips_row.push(btn);
+    }
+
+    // Custom Extension Tag Adder
     let custom_ext_row = row![
-        text("Custom extensions:")
-            .size(12)
-            .width(Length::Fixed(160.0)),
-        text_input("e.g. toml, json, yaml, sql", &filters.custom_ext)
-            .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateCustomExt(s)))
-            .style(theme::search_input_style(&state.theme))
-            .padding(8)
-            .size(13)
-            .width(Length::Fill),
+        text_input(
+            "Add custom format (e.g. parquet, sqlite3, toml, env, sh)",
+            &filters.custom_ext_input
+        )
+        .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateCustomExtInput(s)))
+        .style(theme::search_input_style(&state.theme))
+        .padding(8)
+        .size(12)
+        .width(Length::Fill),
+        button(
+            row![
+                icons::icon(Icon::Plus, 11.0, Color::WHITE),
+                text("Add Format").size(11),
+            ]
+            .spacing(4)
+            .align_y(Alignment::Center),
+        )
+        .padding([6, 12])
+        .style(theme::primary_btn_style(&state.theme))
+        .on_press(Message::AdvancedSearch(
+            AdvancedSearchMessage::AddCustomExtFromInput,
+        )),
     ]
     .spacing(8)
     .align_y(Alignment::Center);
 
-    let ext_card = container(
-        column![
-            text("File Types & Extensions").size(14),
-            ext_checkboxes_row1,
-            ext_checkboxes_row2,
-            custom_ext_row,
-        ]
-        .spacing(12),
-    )
-    .padding(16)
-    .style(theme::card_style(&state.theme))
-    .width(Length::Fill);
+    let mut matrix_col = column![matrix_header,].spacing(10);
+
+    if let Some(ribbon) = ribbon_section {
+        matrix_col = matrix_col.push(ribbon);
+    }
+
+    matrix_col = matrix_col
+        .push(category_tabs_row)
+        .push(format_actions_row)
+        .push(format_chips_row)
+        .push(custom_ext_row);
+
+    let ext_card = container(matrix_col)
+        .padding(16)
+        .style(theme::card_style(&state.theme))
+        .width(Length::Fill);
 
     // 4. File Size Bounds Card
     let mut min_unit_buttons = row![].spacing(6);
@@ -214,7 +314,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     }
 
     let min_size_row = row![
-        text("Minimum Size:").size(12).width(Length::Fixed(160.0)),
+        text("Minimum Size:").size(12).width(Length::Fixed(140.0)),
         text_input("e.g. 10", &filters.size_min)
             .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSizeMin(s)))
             .style(theme::search_input_style(&state.theme))
@@ -239,7 +339,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     }
 
     let max_size_row = row![
-        text("Maximum Size:").size(12).width(Length::Fixed(160.0)),
+        text("Maximum Size:").size(12).width(Length::Fixed(140.0)),
         text_input("e.g. 500", &filters.size_max)
             .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSizeMax(s)))
             .style(theme::search_input_style(&state.theme))
@@ -263,7 +363,7 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     .style(theme::card_style(&state.theme))
     .width(Length::Fill);
 
-    // 5. Modification Date Card
+    // 5. Modification Date & Scope Constraints Card
     let mut date_buttons = row![].spacing(6);
     for preset in DatePreset::ALL {
         let is_active = filters.date_preset == preset;
@@ -276,59 +376,31 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
         date_buttons = date_buttons.push(btn);
     }
 
-    let date_card =
-        container(column![text("Modification Date").size(14), date_buttons,].spacing(12))
-            .padding(16)
-            .style(theme::card_style(&state.theme))
-            .width(Length::Fill);
-
-    // 6. Target Location & Exclusions Card
-    let search_path_row = row![
-        text("Search inside folder:")
-            .size(12)
-            .width(Length::Fixed(160.0)),
-        text_input(
-            "e.g. /home/user/projects or ~/Documents",
-            &filters.search_path
-        )
-        .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSearchPath(s)))
-        .style(theme::search_input_style(&state.theme))
-        .padding(8)
-        .size(13)
-        .width(Length::Fill),
-    ]
-    .spacing(8)
-    .align_y(Alignment::Center);
-
-    let exclude_path_row = row![
-        text("Exclude folder:").size(12).width(Length::Fixed(160.0)),
-        text_input(
-            "e.g. target or node_modules or .cache",
-            &filters.exclude_path
-        )
-        .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateExcludePath(s)))
-        .style(theme::search_input_style(&state.theme))
-        .padding(8)
-        .size(13)
-        .width(Length::Fill),
-    ]
-    .spacing(8)
-    .align_y(Alignment::Center);
-
-    let path_card = container(
+    let paths_col = row![
         column![
-            text("Target Location & Exclusions").size(14),
-            search_path_row,
-            exclude_path_row,
+            text("Search within folder:").size(12),
+            text_input("e.g. /home/user/projects or /media", &filters.search_path)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateSearchPath(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(12),
         ]
-        .spacing(12),
-    )
-    .padding(16)
-    .style(theme::card_style(&state.theme))
-    .width(Length::Fill);
+        .spacing(4)
+        .width(Length::FillPortion(1)),
+        column![
+            text("Exclude folder:").size(12),
+            text_input("e.g. node_modules or target", &filters.exclude_path)
+                .on_input(|s| Message::AdvancedSearch(AdvancedSearchMessage::UpdateExcludePath(s)))
+                .style(theme::search_input_style(&state.theme))
+                .padding(8)
+                .size(12),
+        ]
+        .spacing(4)
+        .width(Length::FillPortion(1)),
+    ]
+    .spacing(16);
 
-    // 7. Search Options Card
-    let options_row = row![
+    let flags_row = row![
         checkbox(filters.match_case)
             .label("Match Case (case:)")
             .text_size(12)
@@ -338,65 +410,30 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleMatchWholeWord(b))),
         checkbox(filters.regex_mode)
-            .label("Regular Expression Mode (regex:)")
+            .label("Regular Expression (regex:)")
             .text_size(12)
             .on_toggle(|b| Message::AdvancedSearch(AdvancedSearchMessage::ToggleRegexMode(b))),
     ]
     .spacing(20);
 
-    let options_card =
-        container(column![text("Search Options & Modes").size(14), options_row,].spacing(12))
-            .padding(16)
-            .style(theme::card_style(&state.theme))
-            .width(Length::Fill);
+    let scope_card = container(
+        column![
+            text("Modification Date & Search Scope").size(14),
+            date_buttons,
+            paths_col,
+            flags_row,
+        ]
+        .spacing(12),
+    )
+    .padding(16)
+    .style(theme::card_style(&state.theme))
+    .width(Length::Fill);
 
-    // 8. 1-Click Quick Template Presets
-    let template_btn = |label: &'static str, preset: PresetFilter| -> Element<'_, Message> {
-        button(
-            row![
-                icons::icon(Icon::Sparkles, 11.0, colors::ACCENT_AMBER),
-                text(label).size(11),
-            ]
-            .spacing(6)
-            .align_y(Alignment::Center),
-        )
-        .padding([5, 12])
-        .style(theme::secondary_btn_style(&state.theme))
-        .on_press(Message::AdvancedSearch(AdvancedSearchMessage::ApplyPreset(
-            preset,
-        )))
-        .into()
-    };
+    let main_content = column![query_card, keywords_card, ext_card, size_card, scope_card]
+        .spacing(14)
+        .padding(16);
 
-    let templates_row = row![
-        template_btn("Large Code (> 1 MB)", PresetFilter::LargeCode),
-        template_btn("Recent Docs (Past Week)", PresetFilter::RecentDocuments),
-        template_btn("Gigantic Files (> 1 GB)", PresetFilter::GiganticFiles),
-        template_btn("Archives Only", PresetFilter::ArchivesOnly),
-    ]
-    .spacing(8);
-
-    let templates_card =
-        container(column![text("1-Click Preset Templates").size(14), templates_row,].spacing(12))
-            .padding(16)
-            .style(theme::card_style(&state.theme))
-            .width(Length::Fill);
-
-    let form_content = column![
-        header_title,
-        query_card,
-        keywords_card,
-        ext_card,
-        size_card,
-        date_card,
-        path_card,
-        options_card,
-        templates_card,
-    ]
-    .spacing(14)
-    .padding(16);
-
-    scrollable(form_content)
+    scrollable(main_content)
         .width(Length::Fill)
         .height(Length::Fill)
         .into()
