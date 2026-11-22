@@ -117,6 +117,8 @@ pub enum Message {
     ShowProperties(String),
     /// Close file properties modal dialog
     CloseProperties,
+    /// Export active search results to a file
+    ExportResults(findme_core::ExportFormat, std::path::PathBuf),
     /// Background engine sent search results
     ResultsReceived {
         results: Vec<SearchResultItem>,

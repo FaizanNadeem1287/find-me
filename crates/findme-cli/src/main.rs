@@ -48,12 +48,13 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    // CLI mode triggered when --cli, --json, query provided in headless environment,
+    // CLI mode triggered when --cli, --json, export flags, query provided in headless environment,
     // or when query is given and display is explicitly not requested.
     let display_available = has_display_server();
     let is_headless = !display_available;
     let run_as_cli = opts.is_cli_mode
         || opts.is_json
+        || opts.has_export()
         || (is_headless && opts.query.is_some())
         || (opts.query.is_some() && !opts.is_gui_mode && is_headless);
 
