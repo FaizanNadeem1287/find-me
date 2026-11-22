@@ -28,11 +28,14 @@ pub enum SearchPredicate {
         pattern: String,
         case_sensitive: bool,
     },
+    /// Explicit typo-tolerant fuzzy search requested via fuzzy: prefix
+    Fuzzy(String),
 }
 
 impl PartialEq for SearchPredicate {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
+            (Self::Fuzzy(f1), Self::Fuzzy(f2)) => f1 == f2,
             (
                 Self::Text {
                     term: t1,
