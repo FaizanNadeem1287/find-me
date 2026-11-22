@@ -110,28 +110,28 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
     // -------------------------------------------------------------------------
     let folders_title = text("Folders").size(18).color(state.theme.text_color());
 
-    // Hero Card 1: Onboarding / Docs (Purple)
+    // Hero Card 1: Documents (Amber)
     let card1 = render_hero_card(
         &state.theme,
-        "Onboarding",
-        "15 files • 3 subfolders",
         "Documents",
-        colors::ACCENT_PURPLE,
+        "24 files • PDF & Notes",
+        "Documents",
+        colors::ACCENT_AMBER,
         if is_dark {
             colors::DARK_SURFACE
         } else {
-            colors::TINT_PURPLE
+            colors::TINT_AMBER
         },
-        &["M", "A"],
-        "Updated 2h",
+        &["K", "M", "A"],
+        "Docs",
         state.active_folder_filter.as_deref() == Some("Documents"),
     );
 
-    // Hero Card 2: Design System / Code (Blue)
+    // Hero Card 2: Code & Dev (Blue)
     let card2 = render_hero_card(
         &state.theme,
-        "Design System",
-        "22 files • fonts & colors",
+        "Code & Dev",
+        "58 files • Rust & Python",
         "Projects",
         colors::ACCENT_BLUE,
         if is_dark {
@@ -140,24 +140,24 @@ pub fn view(state: &AppState) -> Element<'_, Message> {
             colors::TINT_BLUE
         },
         &["D", "S"],
-        "v2.1",
+        "Dev",
         state.active_folder_filter.as_deref() == Some("Projects"),
     );
 
-    // Hero Card 3: Documents / Reports (Amber)
+    // Hero Card 3: Downloads & Media (Purple)
     let card3 = render_hero_card(
         &state.theme,
-        "Documents",
-        "10 files • 3 editors",
+        "Downloads & Media",
+        "18 files • Media & Zip",
         "Downloads",
-        colors::ACCENT_AMBER,
+        colors::ACCENT_PURPLE,
         if is_dark {
             colors::DARK_SURFACE
         } else {
-            colors::TINT_AMBER
+            colors::TINT_PURPLE
         },
-        &["K", "M", "A"],
-        "Recent",
+        &["M", "A"],
+        "Media",
         state.active_folder_filter.as_deref() == Some("Downloads"),
     );
 
